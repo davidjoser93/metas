@@ -9,9 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f4f1ea; /* Color de papel envejecido/crema */
+      --bg: #f4f1ea;
       --card-bg: #ffffff;
-      --pen-color: #1e293b; /* Color de tinta de bolígrafo oscuro */
+      --pen-color: #1e293b;
       --text: #0f172a;
       --text-muted: #475569;
       --highlight: #38bdf8;
@@ -21,7 +21,6 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      /* Aplicamos la fuente a mano a TODA la página */
       font-family: 'Kalam', cursive;
     }
 
@@ -39,12 +38,12 @@
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 40px; /* Más espacio entre secciones para el efecto cuaderno */
+      gap: 40px;
     }
 
     header {
       border-bottom: 3px solid var(--pen-color);
-      border-radius: 2% 95% 3% 97% / 93% 4% 97% 5%; /* Borde dibujado */
+      border-radius: 2% 95% 3% 97% / 93% 4% 97% 5%;
       padding-bottom: 14px;
       display: flex;
       justify-content: space-between;
@@ -64,39 +63,6 @@
     header p {
       color: var(--text-muted);
       font-size: 1.2rem;
-    }
-
-    .filter-badge {
-      background: #fef08a; /* Color de nota adhesiva amarilla */
-      border: 2px solid var(--pen-color);
-      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; /* Sketchy border */
-      padding: 8px 16px;
-      font-size: 1rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 2px 3px 0px rgba(0,0,0,0.1);
-      transform: rotate(-1deg);
-      flex-wrap: wrap;
-    }
-
-    .reset-btn {
-      background: #f43f5e;
-      color: white;
-      border: 2px solid var(--pen-color);
-      padding: 4px 12px;
-      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: none;
-      box-shadow: 1px 2px 0px var(--pen-color);
-      transition: transform 0.1s;
-    }
-
-    .reset-btn:active {
-      transform: translateY(2px);
-      box-shadow: 0px 0px 0px var(--pen-color);
     }
 
     .split-layout {
@@ -124,7 +90,6 @@
       position: relative;
     }
 
-    /* Variación aleatoria para que no todos los paneles sean iguales */
     .sketchy-panel:nth-child(even) {
       border-radius: 98% 2% 98% 2% / 2% 98% 2% 98%;
     }
@@ -152,7 +117,7 @@
       padding: 30px 40px 40px 60px;
       border: 1px solid #cbd5e1;
       border-radius: 4px 12px 12px 4px;
-      box-shadow: -4px 0px 0px #cbd5e1, 3px 5px 12px rgba(0,0,0,0.15); /* Lomo del cuaderno */
+      box-shadow: -4px 0px 0px #cbd5e1, 3px 5px 12px rgba(0,0,0,0.15);
       background-image: repeating-linear-gradient(
         transparent,
         transparent 29px,
@@ -180,6 +145,12 @@
       border-bottom: 2px dashed #1e3a8a;
       display: inline-block;
       line-height: 1.2;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .notebook-title:hover {
+      opacity: 0.7;
     }
 
     .notebook-checklist {
@@ -215,7 +186,7 @@
       width: 18px;
       height: 18px;
       border: 2px solid #1e3a8a;
-      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; /* Sketchy checkbox */
+      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
       line-height: 16px;
       text-align: center;
       font-size: 16px;
@@ -224,7 +195,7 @@
     }
 
     .notebook-entries {
-      display: flex;
+      display: none; /* Oculto por defecto */
       flex-direction: column;
       gap: 10px;
     }
@@ -305,7 +276,6 @@
       z-index: 2;
     }
 
-    /* Modificador para números en celdas con color de fondo */
     .cal-day[style*="background"] .cal-num {
       color: #fff;
       text-shadow: 1px 1px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000;
@@ -390,14 +360,13 @@
       align-items: center;
     }
 
-    /* Aseguramos que los gráficos sean adaptables */
     canvas {
       cursor: pointer;
       max-width: 100%;
       height: auto;
     }
 
-    /* --- MEDIA QUERIES PARA MÓVILES EN VERTICAL --- */
+    /* --- MEDIA QUERIES PARA MÓVILES --- */
     @media (max-width: 768px) {
       body {
         padding: 12px;
@@ -416,11 +385,6 @@
         font-size: 1rem;
       }
 
-      .filter-badge {
-        font-size: 0.9rem;
-        padding: 6px 12px;
-      }
-
       .split-layout {
         gap: 20px;
       }
@@ -434,7 +398,6 @@
         font-size: 1.4rem;
       }
 
-      /* Ajuste del Cuaderno para no perder tanto padding en pantallas angostas */
       .notebook-page {
         padding: 20px 15px 25px 35px;
         font-size: 1.05rem;
@@ -451,7 +414,7 @@
       }
 
       .notebook-target-item {
-        align-items: flex-start; /* Ayuda a que el check quede arriba si el texto ocupa 2 renglones */
+        align-items: flex-start;
         margin-bottom: 6px;
       }
       
@@ -460,7 +423,6 @@
         margin-top: 3px;
       }
 
-      /* Ajuste del calendario para que los 7 días entren bien */
       .calendar-grid {
         gap: 4px;
       }
@@ -496,16 +458,11 @@
   <header>
     <div>
       <h1>Mis Metas</h1>
-      <p>Mi bitácora y avance de objetivos (Bullet Journal)</p>
-    </div>
-    <div class="filter-badge">
-      <span id="filterStatusText">Viendo: Todo el cuaderno</span>
-      <button class="reset-btn" id="resetFilterBtn" onclick="resetFilters()">Borrar Filtro</button>
+      <p>Mi bitácora y avance de objetivos</p>
     </div>
   </header>
 
   <section class="sketchy-panel" id="sectionRegistro">
-    <div class="panel-header" style="border:none; margin-bottom: 0;">Cuaderno de Avances</div>
     <div class="registro-container" id="registroMetasContainer"></div>
   </section>
 
@@ -671,35 +628,29 @@
     updateView();
   }
 
-  function resetFilters() {
-    activeFilterMeta = null;
-    activeFilterDate = null;
-    updateView();
+  // Función para desplegar u ocultar la lista de entradas del cuaderno
+  function toggleEntries(element) {
+    const page = element.closest('.notebook-page');
+    if (!page) return;
+    
+    const entries = page.querySelector('.notebook-entries');
+    if (entries) {
+      if (window.getComputedStyle(entries).display === 'none') {
+        entries.style.display = 'flex';
+      } else {
+        entries.style.display = 'none';
+      }
+    }
+  }
+
+  function renderCalendars() {
+    renderMonthCalendar("calendarAug", 2026, 7);
+    renderMonthCalendar("calendarSep", 2026, 8);
   }
 
   function updateView() {
-    const filterText = document.getElementById("filterStatusText");
-    const resetBtn = document.getElementById("resetFilterBtn");
-    
     const isFiltering = activeFilterMeta !== null || activeFilterDate !== null;
     const activeMetas = getActiveMetas();
-    let statusParts = [];
-    
-    if (activeFilterMeta) {
-      statusParts.push(`Dibujos de: <strong style="color: ${GOAL_CONFIG[activeFilterMeta].color}">${activeFilterMeta}</strong>`);
-    }
-    if (activeFilterDate) {
-      const [y, m, d] = activeFilterDate.split("-");
-      statusParts.push(`Página del: <strong>${d}/${m}/${y}</strong>`);
-    }
-
-    if (isFiltering) {
-      filterText.innerHTML = statusParts.join(' | ');
-      resetBtn.style.display = "inline-block";
-    } else {
-      filterText.textContent = "Viendo: Todo el cuaderno";
-      resetBtn.style.display = "none";
-    }
 
     renderRegistroMetas();
 
@@ -728,8 +679,7 @@
       sectionSep.style.display = "";
     }
 
-    renderMonthCalendar("calendarAug", 2026, 7);
-    renderMonthCalendar("calendarSep", 2026, 8);
+    renderCalendars();
 
     const augChartsWrap = document.getElementById("augChartsWrap");
     const listAug = document.getElementById("listAug");
@@ -805,7 +755,8 @@
       page.className = "notebook-page";
 
       const displayTitle = activeFilterMeta && group.metas.includes(activeFilterMeta) ? activeFilterMeta : group.title;
-      let html = `<div class="notebook-title">${displayTitle}</div>`;
+      // Añadido onclick al título
+      let html = `<div class="notebook-title" onclick="toggleEntries(this)">${displayTitle}</div>`;
 
       if (metasWithTargets.length > 0) {
         metasWithTargets.forEach(g => {
@@ -858,6 +809,7 @@
 
   function renderMonthCalendar(containerId, year, month) {
     const grid = document.getElementById(containerId);
+    if (!grid) return;
     grid.innerHTML = "";
 
     const daysOfWeek = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -871,6 +823,7 @@
     const firstDayIndex = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const todayStr = "2026-09-13";
+    const currentMeta = hoveredMeta || activeFilterMeta;
 
     for (let i = 0; i < firstDayIndex; i++) {
       const emptyCell = document.createElement("div");
@@ -889,11 +842,11 @@
       if (dateStr === activeFilterDate) cell.classList.add("active-day");
 
       const dayEvents = CALENDAR_LOGS.filter(e => e.date === dateStr);
-      
       let isDimmed = false;
+
       if (dayEvents.length > 0) {
-        if (activeFilterMeta) {
-          const matchingEvents = dayEvents.filter(e => e.meta === activeFilterMeta);
+        if (currentMeta) {
+          const matchingEvents = dayEvents.filter(e => e.meta === currentMeta);
           if (matchingEvents.length > 0) {
             cell.style.background = GOAL_CONFIG[matchingEvents[0].meta].color;
           } else {
@@ -907,6 +860,9 @@
             cell.style.background = `repeating-linear-gradient(45deg, ${cols[0]}, ${cols[0]} 10px, ${cols[1] || cols[0]} 10px, ${cols[1] || cols[0]} 20px)`;
           }
         }
+      } else {
+        // Atenuamos los días vacíos si hay un objetivo enfocado actualmente
+        if (currentMeta) isDimmed = true;
       }
 
       if (activeFilterDate && dateStr !== activeFilterDate) {
@@ -1247,7 +1203,6 @@
     }
   }
 
-  // Modificado para obtener las coordenadas relativas al Canvas y permitir CSS max-width: 100%
   function handleCanvasClick(e, canvasId) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
@@ -1255,7 +1210,6 @@
     const regions = canvasClickRegions[canvasId] || [];
     const rect = canvas.getBoundingClientRect();
     
-    // Calculamos el factor de escala porque el canvas puede ser más pequeño por CSS
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
@@ -1286,7 +1240,6 @@
     }
   }
 
-  // Modificado igual que Click para manejar el escalado responsivo
   function handleCanvasMouseMove(e, canvasId) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
@@ -1329,6 +1282,7 @@
       hoveredMeta = foundMeta;
       e.target.style.cursor = foundMeta ? 'pointer' : 'default';
       redrawVisibleCharts();
+      renderCalendars();
     }
   }
 
@@ -1336,6 +1290,7 @@
     if (hoveredMeta !== null) {
       hoveredMeta = null;
       redrawVisibleCharts();
+      renderCalendars();
     }
   }
 
