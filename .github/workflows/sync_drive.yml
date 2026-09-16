@@ -15,7 +15,7 @@ jobs:
 
       - name: Descargar index.html desde Google Drive
         run: |
-          FILE_ID="1XB9wzRwg0FGizLWw2SHeTFKGwPusi1TN"
+          FILE_ID="1VxG21BHdOL9MU-LYQ7_tgDfUA8031GxO"
           curl -L "https://drive.usercontent.google.com/download?id=${FILE_ID}&export=download" -o index.html
 
       - name: Hacer commit y push si hay cambios
