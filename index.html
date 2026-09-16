@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Metas - Cuaderno</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f1ea; /* Color de papel envejecido/crema */
+      --card-bg: #ffffff;
+      --pen-color: #1e293b; /* Color de tinta de bolígrafo oscuro */
+      --text: #0f172a;
+      --text-muted: #475569;
+      --highlight: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      /* Aplicamos la fuente a mano a TODA la página */
+      font-family: 'Kalam', cursive;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: radial-gradient(#d4d4d8 1px, transparent 1px);
+      background-size: 20px 20px;
+      color: var(--text);
+      padding: 24px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 40px; /* Más espacio entre secciones para el efecto cuaderno */
+    }
+
+    header {
+      border-bottom: 3px solid var(--pen-color);
+      border-radius: 2% 95% 3% 97% / 93% 4% 97% 5%; /* Borde dibujado */
+      padding-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    header h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: var(--pen-color);
+      letter-spacing: 0.02em;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+    }
+
+    .filter-badge {
+      background: #fef08a; /* Color de nota adhesiva amarilla */
+      border: 2px solid var(--pen-color);
+      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; /* Sketchy border */
+      padding: 8px 16px;
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 2px 3px 0px rgba(0,0,0,0.1);
+      transform: rotate(-1deg);
+      flex-wrap: wrap;
+    }
+
+    .reset-btn {
+      background: #f43f5e;
+      color: white;
+      border: 2px solid var(--pen-color);
+      padding: 4px 12px;
+      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+      box-shadow: 1px 2px 0px var(--pen-color);
+      transition: transform 0.1s;
+    }
+
+    .reset-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0px 0px 0px var(--pen-color);
+    }
+
+    .split-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+      .split-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sketchy-panel {
+      background: var(--card-bg);
+      border: 3px solid var(--pen-color);
+      border-radius: 2% 98% 2% 98% / 98% 2% 98% 2%;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 4px 6px 0px rgba(0,0,0,0.05);
+      position: relative;
+    }
+
+    /* Variación aleatoria para que no todos los paneles sean iguales */
+    .sketchy-panel:nth-child(even) {
+      border-radius: 98% 2% 98% 2% / 2% 98% 2% 98%;
+    }
+
+    .panel-header {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--pen-color);
+      text-align: center;
+      border-bottom: 2px dashed var(--pen-color);
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+
+    .registro-container {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    
+    .notebook-page {
+      background-color: #fdfbf7;
+      color: #1e3a8a;
+      position: relative;
+      padding: 30px 40px 40px 60px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px 12px 12px 4px;
+      box-shadow: -4px 0px 0px #cbd5e1, 3px 5px 12px rgba(0,0,0,0.15); /* Lomo del cuaderno */
+      background-image: repeating-linear-gradient(
+        transparent,
+        transparent 29px,
+        #94a3b8 30px
+      );
+      line-height: 30px;
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .notebook-page::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 40px;
+      width: 2px;
+      background-color: #ef4444; 
+    }
+
+    .notebook-title {
+      font-size: 1.9rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      border-bottom: 2px dashed #1e3a8a;
+      display: inline-block;
+      line-height: 1.2;
+    }
+
+    .notebook-checklist {
+      margin-bottom: 20px;
+    }
+    
+    .notebook-checklist-title {
+      font-weight: 700;
+      font-size: 1.3rem;
+      margin-top: 10px;
+      margin-bottom: 5px;
+    }
+
+    .notebook-target-list {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .notebook-target-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .notebook-target-item.completed {
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+      opacity: 0.8;
+    }
+
+    .notebook-checkbox {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #1e3a8a;
+      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; /* Sketchy checkbox */
+      line-height: 16px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      background: white;
+    }
+
+    .notebook-entries {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .notebook-entry {
+      display: block;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .cal-header {
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--pen-color);
+      border-bottom: 2px solid var(--pen-color);
+      padding-bottom: 4px;
+      border-radius: 50% 50% 50% 50% / 10% 10% 90% 90%;
+    }
+
+    .cal-day {
+      background: transparent;
+      border: 2px solid var(--pen-color);
+      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+      min-height: 70px;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.1s ease;
+      overflow: hidden;
+    }
+
+    .cal-day:hover {
+      transform: scale(1.05) rotate(2deg);
+      box-shadow: 2px 2px 0px var(--pen-color);
+      z-index: 5;
+    }
+
+    .cal-day.empty {
+      border: 2px dashed #94a3b8;
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    .cal-day.empty:hover {
+      transform: none;
+      box-shadow: none;
+      z-index: 1;
+    }
+
+    .cal-day.today {
+      border: 3px solid #f43f5e;
+      box-shadow: inset 0 0 0 2px #fef08a;
+    }
+    
+    .cal-day.active-day {
+      border-width: 3px;
+      box-shadow: 3px 3px 0px var(--pen-color);
+      transform: translateY(-2px);
+    }
+
+    .cal-day.dimmed {
+      opacity: 0.25;
+      filter: grayscale(0.8);
+    }
+
+    .cal-num {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--pen-color);
+      z-index: 2;
+    }
+
+    /* Modificador para números en celdas con color de fondo */
+    .cal-day[style*="background"] .cal-num {
+      color: #fff;
+      text-shadow: 1px 1px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000;
+    }
+
+    .cal-badge-count {
+      align-self: flex-end;
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: var(--card-bg);
+      border: 2px solid var(--pen-color);
+      padding: 0px 6px;
+      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+      color: var(--pen-color);
+      z-index: 2;
+    }
+
+    .log-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .log-list-container::-webkit-scrollbar {
+      width: 8px;
+    }
+    .log-list-container::-webkit-scrollbar-thumb {
+      background: var(--pen-color);
+      border-radius: 4px;
+    }
+
+    .log-group {
+      background: transparent;
+      border: 2px solid var(--pen-color);
+      border-left-width: 6px;
+      border-radius: 2% 95% 3% 97% / 93% 4% 97% 5%;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 2px 2px 0px rgba(0,0,0,0.05);
+    }
+
+    .log-group-header {
+      font-weight: 700;
+      font-size: 1.2rem;
+      border-bottom: 2px dashed #94a3b8;
+      padding-bottom: 4px;
+    }
+
+    .log-item-text {
+      font-size: 1rem;
+      color: var(--text);
+      padding-left: 14px;
+      position: relative;
+    }
+    
+    .log-item-text::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--pen-color);
+      font-size: 1.2rem;
+    }
+
+    .log-item-date {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: block;
+      margin-left: 14px;
+      font-style: italic;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Aseguramos que los gráficos sean adaptables */
+    canvas {
+      cursor: pointer;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* --- MEDIA QUERIES PARA MÓVILES EN VERTICAL --- */
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+        background-size: 15px 15px;
+      }
+      
+      .container {
+        gap: 20px;
+      }
+      
+      header h1 {
+        font-size: 2.1rem;
+      }
+      
+      header p {
+        font-size: 1rem;
+      }
+
+      .filter-badge {
+        font-size: 0.9rem;
+        padding: 6px 12px;
+      }
+
+      .split-layout {
+        gap: 20px;
+      }
+
+      .sketchy-panel {
+        padding: 16px;
+        gap: 16px;
+      }
+      
+      .panel-header {
+        font-size: 1.4rem;
+      }
+
+      /* Ajuste del Cuaderno para no perder tanto padding en pantallas angostas */
+      .notebook-page {
+        padding: 20px 15px 25px 35px;
+        font-size: 1.05rem;
+        line-height: 24px;
+        background-image: repeating-linear-gradient(transparent, transparent 23px, #94a3b8 24px);
+      }
+      
+      .notebook-page::before {
+        left: 20px;
+      }
+
+      .notebook-title {
+        font-size: 1.6rem;
+      }
+
+      .notebook-target-item {
+        align-items: flex-start; /* Ayuda a que el check quede arriba si el texto ocupa 2 renglones */
+        margin-bottom: 6px;
+      }
+      
+      .notebook-checkbox {
+        flex-shrink: 0;
+        margin-top: 3px;
+      }
+
+      /* Ajuste del calendario para que los 7 días entren bien */
+      .calendar-grid {
+        gap: 4px;
+      }
+
+      .cal-day {
+        min-height: 55px;
+        padding: 4px;
+      }
+
+      .cal-num {
+        font-size: 0.95rem;
+      }
+      
+      .cal-badge-count {
+        font-size: 0.65rem;
+        padding: 0 4px;
+      }
+      
+      .cal-header {
+        font-size: 0.9rem;
+      }
+
+      .log-group {
+        padding: 10px 12px;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div>
+      <h1>Mis Metas</h1>
+      <p>Mi bitácora y avance de objetivos (Bullet Journal)</p>
+    </div>
+    <div class="filter-badge">
+      <span id="filterStatusText">Viendo: Todo el cuaderno</span>
+      <button class="reset-btn" id="resetFilterBtn" onclick="resetFilters()">Borrar Filtro</button>
+    </div>
+  </header>
+
+  <section class="sketchy-panel" id="sectionRegistro">
+    <div class="panel-header" style="border:none; margin-bottom: 0;">Cuaderno de Avances</div>
+    <div class="registro-container" id="registroMetasContainer"></div>
+  </section>
+
+  <section class="split-layout" id="sectionAug">
+    <div class="sketchy-panel">
+      <div class="panel-header">Agosto 2026</div>
+      <div class="calendar-grid" id="calendarAug"></div>
+    </div>
+    <div class="sketchy-panel" id="augRightPanel">
+      <div class="panel-header" id="augRightTitle">Distribución de Agosto</div>
+      <div id="augChartsWrap" style="display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100%;">
+        <div class="canvas-container">
+          <canvas id="pieAugCanvas" width="480" height="230"></canvas>
+        </div>
+      </div>
+      <div class="log-list-container" id="listAug" style="display: none;"></div>
+    </div>
+  </section>
+
+  <section class="split-layout" id="sectionSep">
+    <div class="sketchy-panel">
+      <div class="panel-header">Septiembre 2026</div>
+      <div class="calendar-grid" id="calendarSep"></div>
+    </div>
+    <div class="sketchy-panel" id="sepRightPanel">
+      <div class="panel-header" id="sepRightTitle">Distribución de Septiembre</div>
+      <div id="sepChartsWrap" style="display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100%;">
+        <div class="canvas-container">
+          <canvas id="pieSepCanvas" width="480" height="230"></canvas>
+        </div>
+      </div>
+      <div class="log-list-container" id="listSep" style="display: none;"></div>
+    </div>
+  </section>
+
+  <section class="split-layout">
+    <div class="sketchy-panel">
+      <div class="panel-header">Distribución Global (Proporción)</div>
+      <div class="canvas-container">
+        <canvas id="pieChartGeneral" width="500" height="320"></canvas>
+      </div>
+    </div>
+
+    <div class="sketchy-panel">
+      <div class="panel-header">Distribución Global (Cantidad)</div>
+      <div class="canvas-container">
+        <canvas id="barGeneralCanvas" width="540" height="320"></canvas>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  const GOAL_CONFIG = {
+    "Practicar manejo": { color: "#f97316" },
+    "Tocar Piano": { color: "#ec4899" },
+    "Hacer ejercicio": { color: "#15803d" },
+    "Maestría de Sistemas": { color: "#3b82f6" },
+    "Aprende en Realidad": { color: "#06b6d4" },
+    "Arte en realidad": { color: "#a855f7" },
+    "Inteligencia Artificial": { color: "#8b5cf6" },
+    "Video Juegos": { color: "#eab308" },
+    "Álbum de barajitas": { color: "#f43f5e" },
+    "Yar-Yur": { color: "#14b8a6" },
+    "Ahorrar": { color: "#10b981" },
+    "Personal": { color: "#f59e0b" }
+  };
+
+  const DATA_GOALS = [
+    { title: "Practicar manejo", targets: [{ name: "Reparar la puerta del Mazda", done: true, completedDate: "2026-09-03" }, { name: "Pintar el Mazda", done: false }, { name: "Actualizar Licencias", done: false }] },
+    { title: "Tocar Piano", targets: [{ name: "Tocar una vez a la semana", done: false }] },
+    { title: "Hacer ejercicio", targets: [{ name: "Hacer ejercicio una vez a la semana", done: false }] },
+    { title: "Maestría de Sistemas", targets: [{ name: "Graduarme de la maestría", done: false }, { name: "Hacer catálogo de proyectos de Sistemas", done: false }, { name: "Inscribirme en el Colegio de Ingenieros", done: false }] },
+    { title: "Aprende en Realidad", targets: [{ name: "Actualizar la app", done: false }, { name: "Mejorar el menú de la aplicación", done: false }, { name: "Premio si se escanean todos los QR", done: false }, { name: "Activar el escaneo de los cubos", done: false }, { name: "Imprimir en 3D cubos y stickers en colores", done: false }] },
+    { title: "Arte en realidad", targets: [{ name: "Diseñar escultura de la guacamaya", done: false }, { name: "Diseñar dioramas con tarjetas NFC", done: false }, { name: "Diseñar esculturas del Nacimiento", done: false }, { name: "Primera escultura con impresión 3D", done: false }] },
+    { title: "Inteligencia Artificial", targets: [{ name: "Hacer flujo de nodos completo", done: false }, { name: "Hacer 3D personajes Ser Feliz Hoy", done: false }, { name: "Animaciones personajes Ser Feliz Hoy", done: true, completedDate: "2026-08-31" }] },
+    { title: "Video Juegos", targets: [{ name: "Jugar Hogwarts Legacy", done: false }] },
+    { title: "Álbum de barajitas", targets: [{ name: "Llenar el álbum de Toy Story 5", done: false }] },
+    { title: "Yar-Yur", targets: [{ name: "Hacer dashboard completo de Yar-Yur", done: false }, { name: "Catálogo de proyectos realizados", done: false }] },
+    { title: "Ahorrar", targets: [{ name: "Registro y control continuo de cuentas", done: false }] },
+    { title: "Personal", targets: [{ name: "Tiempo familiar, afectos y organización", done: false }] }
+  ];
+
+  const CALENDAR_LOGS = [
+    { date: "2026-08-23", meta: "Hacer ejercicio", text: "20 minutos de la rutina 'Día del cuerpo tonificado'" },
+    { date: "2026-08-24", meta: "Aprende en Realidad", text: "Publicación de nuevo short: Transformación del calor en energía mecánica" },
+    { date: "2026-08-25", meta: "Inteligencia Artificial", text: "Avance flujo de nodos: texturing por prompt adaptado a la geometría 3D" },
+    { date: "2026-08-26", meta: "Inteligencia Artificial", text: "Texturing: instalación de modelo de IA que describe imágenes en texto" },
+    { date: "2026-08-27", meta: "Yar-Yur", text: "Realización de visual para SCJ" },
+    { date: "2026-08-28", meta: "Inteligencia Artificial", text: "Pruebas de referencia visual y adaptación de textura en geometría 3D" },
+    { date: "2026-08-28", meta: "Practicar manejo", text: "Limpieza de inyectores espirales traseros Mazda" },
+    { date: "2026-08-29", meta: "Álbum de barajitas", text: "Pegado de barajitas en el álbum de Toy Story" },
+    { date: "2026-08-30", meta: "Personal", text: "Misa en la Tahona y almuerzo en casa de María Teresa" },
+    { date: "2026-08-31", meta: "Inteligencia Artificial", text: "Animación del 6to aniversario de Ser Feliz Hoy", isCompletion: true },
+    { date: "2026-08-31", meta: "Practicar manejo", text: "Pastillas Corolla Rectificación de disco Graduación y limpieza" },
+    { date: "2026-09-01", meta: "Ahorrar", text: "Pago de la segunda quincena de agosto" },
+    { date: "2026-09-02", meta: "Ahorrar", text: "Control y balance de cuentas" },
+    { date: "2026-09-03", meta: "Ahorrar", text: "Control y balance de cuentas" },
+    { date: "2026-09-03", meta: "Practicar manejo", text: "Reparar la puerta del Mazda", isCompletion: true },
+    { date: "2026-09-04", meta: "Ahorrar", text: "Control y balance de cuentas" },
+    { date: "2026-09-05", meta: "Maestría de Sistemas", text: "Programación tableta Savoy (Catálogo de proyectos de Sistemas)" },
+    { date: "2026-09-06", meta: "Álbum de barajitas", text: "Pegado de barajitas en el álbum de Toy Story" },
+    { date: "2026-09-07", meta: "Personal", text: "Aniversario de padres en Neblina (pasta trío de salsas y focaccia)" },
+    { date: "2026-09-07", meta: "Aprende en Realidad", text: "Publicación de nuevo short: Características del motor Stirling" },
+    { date: "2026-09-08", meta: "Maestría de Sistemas", text: "Presentación a Nestlé del sistema Yar-Yur Canal Moderno Savoy" },
+    { date: "2026-09-09", meta: "Personal", text: "Tarde familiar en La Cascada: Dorado y Roles de Canela" },
+    { date: "2026-09-10", meta: "Maestría de Sistemas", text: "Firma de actas de graduandos" },
+    { date: "2026-09-11", meta: "Ahorrar", text: "Pago del 50% del sistema de información Yar-Yur System Canal Moderno Savoy" },
+    { date: "2026-09-11", meta: "Practicar manejo", text: "Volver a intentar reparar el alternador del Mazda" },
+    { date: "2026-09-12", meta: "Personal", text: "Visita al circo con la familia de María Teresa" },
+    { date: "2026-09-13", meta: "Personal", text: "Organización de cajas" },
+    { date: "2026-09-13", meta: "Yar-Yur", text: "Respaldo de mis proyectos" },
+    { date: "2026-09-14", meta: "Inteligencia Artificial", text: "Instalación de lo siguiente que hace falta para el flujo de nodos completo" },
+    { date: "2026-09-14", meta: "Practicar manejo", text: "Reparación del alternador del Mazda" }
+  ];
+
+  let activeFilterMeta = null;
+  let activeFilterDate = null;
+  let hoveredMeta = null;
+  const canvasClickRegions = {};
+
+  const DAYS_ES = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const MONTHS_ES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+  const DAYS_FULL_ES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+  const MONTHS_FULL_ES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+  function formatShortDateEs(dateStr) {
+    const [y, m, d] = dateStr.split("-");
+    return `${d}/${m}/${y.substring(2)}`;
+  }
+
+  function formatDateEs(dateStr) {
+    const [y, m, d] = dateStr.split("-");
+    const dateObj = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+    const dayName = DAYS_ES[dateObj.getDay()];
+    const monthName = MONTHS_ES[dateObj.getMonth()];
+    return `${dayName} ${d} ${monthName} ${y}`;
+  }
+
+  function formatNotebookDate(dateStr) {
+    const [y, m, d] = dateStr.split("-");
+    const dateObj = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+    const dayName = DAYS_FULL_ES[dateObj.getDay()];
+    const monthName = MONTHS_FULL_ES[dateObj.getMonth()].toLowerCase(); 
+    return `${dayName} ${parseInt(d)} de ${monthName} del ${y}`;
+  }
+
+  function getActiveMetas() {
+    if (activeFilterMeta) return [activeFilterMeta];
+    if (activeFilterDate) return [...new Set(CALENDAR_LOGS.filter(l => l.date === activeFilterDate).map(l => l.meta))];
+    return [];
+  }
+
+  function setMetaFilter(meta) {
+    activeFilterMeta = activeFilterMeta === meta ? null : meta;
+    activeFilterDate = null;
+    updateView();
+  }
+
+  function setDateFilter(dateStr) {
+    activeFilterDate = activeFilterDate === dateStr ? null : dateStr;
+    activeFilterMeta = null;
+    updateView();
+  }
+
+  function resetFilters() {
+    activeFilterMeta = null;
+    activeFilterDate = null;
+    updateView();
+  }
+
+  function updateView() {
+    const filterText = document.getElementById("filterStatusText");
+    const resetBtn = document.getElementById("resetFilterBtn");
+    
+    const isFiltering = activeFilterMeta !== null || activeFilterDate !== null;
+    const activeMetas = getActiveMetas();
+    let statusParts = [];
+    
+    if (activeFilterMeta) {
+      statusParts.push(`Dibujos de: <strong style="color: ${GOAL_CONFIG[activeFilterMeta].color}">${activeFilterMeta}</strong>`);
+    }
+    if (activeFilterDate) {
+      const [y, m, d] = activeFilterDate.split("-");
+      statusParts.push(`Página del: <strong>${d}/${m}/${y}</strong>`);
+    }
+
+    if (isFiltering) {
+      filterText.innerHTML = statusParts.join(' | ');
+      resetBtn.style.display = "inline-block";
+    } else {
+      filterText.textContent = "Viendo: Todo el cuaderno";
+      resetBtn.style.display = "none";
+    }
+
+    renderRegistroMetas();
+
+    const sectionAug = document.getElementById("sectionAug");
+    const sectionSep = document.getElementById("sectionSep");
+
+    if (isFiltering) {
+      const augHasLogs = CALENDAR_LOGS.some(l => 
+        l.date.startsWith("2026-08") && 
+        (!activeFilterMeta || l.meta === activeFilterMeta) && 
+        (!activeFilterDate || l.date === activeFilterDate)
+      );
+      const isAugFilterDate = activeFilterDate && activeFilterDate.startsWith("2026-08");
+      
+      const sepHasLogs = CALENDAR_LOGS.some(l => 
+        l.date.startsWith("2026-09") && 
+        (!activeFilterMeta || l.meta === activeFilterMeta) && 
+        (!activeFilterDate || l.date === activeFilterDate)
+      );
+      const isSepFilterDate = activeFilterDate && activeFilterDate.startsWith("2026-09");
+
+      sectionAug.style.display = (augHasLogs || isAugFilterDate) ? "" : "none";
+      sectionSep.style.display = (sepHasLogs || isSepFilterDate) ? "" : "none";
+    } else {
+      sectionAug.style.display = "";
+      sectionSep.style.display = "";
+    }
+
+    renderMonthCalendar("calendarAug", 2026, 7);
+    renderMonthCalendar("calendarSep", 2026, 8);
+
+    const augChartsWrap = document.getElementById("augChartsWrap");
+    const listAug = document.getElementById("listAug");
+    const augTitle = document.getElementById("augRightTitle");
+
+    const sepChartsWrap = document.getElementById("sepChartsWrap");
+    const listSep = document.getElementById("listSep");
+    const sepTitle = document.getElementById("sepRightTitle");
+
+    if (isFiltering) {
+      augChartsWrap.style.display = "none";
+      listAug.style.display = "flex";
+      augTitle.textContent = activeFilterDate ? "Apuntes del Día" : "Apuntes de Agosto (Filtrado)";
+      renderGroupedLogList("listAug", "2026-08", activeFilterDate ? null : activeMetas, activeFilterDate);
+
+      sepChartsWrap.style.display = "none";
+      listSep.style.display = "flex";
+      sepTitle.textContent = activeFilterDate ? "Apuntes del Día" : "Apuntes de Septiembre (Filtrado)";
+      renderGroupedLogList("listSep", "2026-09", activeFilterDate ? null : activeMetas, activeFilterDate);
+    } else {
+      augChartsWrap.style.display = "flex";
+      listAug.style.display = "none";
+      augTitle.textContent = "Distribución de Agosto";
+
+      sepChartsWrap.style.display = "flex";
+      listSep.style.display = "none";
+      sepTitle.textContent = "Distribución de Septiembre";
+    }
+
+    redrawVisibleCharts();
+  }
+
+  function renderRegistroMetas() {
+    const container = document.getElementById("registroMetasContainer");
+    container.innerHTML = "";
+
+    const customGroups = [
+      { title: "Practicar manejo, Tocar Piano y Hacer ejercicio", metas: ["Practicar manejo", "Tocar Piano", "Hacer ejercicio"] },
+      { title: "Maestría de Sistemas", metas: ["Maestría de Sistemas"] },
+      { title: "Aprende en Realidad", metas: ["Aprende en Realidad"] },
+      { title: "Arte en realidad", metas: ["Arte en realidad"] },
+      { title: "Inteligencia Artificial, Video Juegos y Álbum de barajitas", metas: ["Inteligencia Artificial", "Video Juegos", "Álbum de barajitas"] },
+      { title: "Yar-Yur", metas: ["Yar-Yur"] },
+      { title: "Ahorrar", metas: ["Ahorrar"] },
+      { title: "Personal", metas: ["Personal"] }
+    ];
+
+    let hasVisibleContent = false;
+
+    customGroups.forEach(group => {
+      let logs = CALENDAR_LOGS.filter(l => group.metas.includes(l.meta));
+      let metasWithTargets = DATA_GOALS.filter(g => group.metas.includes(g.title) && g.targets && g.targets.length > 0);
+
+      if (activeFilterMeta) {
+        if (!group.metas.includes(activeFilterMeta)) return;
+        logs = logs.filter(l => l.meta === activeFilterMeta);
+        metasWithTargets = metasWithTargets.filter(g => g.title === activeFilterMeta);
+      }
+
+      if (activeFilterDate) {
+        logs = logs.filter(l => l.date === activeFilterDate);
+        metasWithTargets = metasWithTargets.filter(g => {
+            const hasActivityToday = logs.some(l => l.meta === g.title);
+            const completedTargetToday = g.targets.some(t => t.completedDate === activeFilterDate);
+            return hasActivityToday || completedTargetToday;
+        });
+      }
+
+      if (logs.length === 0 && metasWithTargets.length === 0) return;
+      hasVisibleContent = true;
+
+      const page = document.createElement("div");
+      page.className = "notebook-page";
+
+      const displayTitle = activeFilterMeta && group.metas.includes(activeFilterMeta) ? activeFilterMeta : group.title;
+      let html = `<div class="notebook-title">${displayTitle}</div>`;
+
+      if (metasWithTargets.length > 0) {
+        metasWithTargets.forEach(g => {
+          if (g.targets.length > 0) {
+            html += `<div class="notebook-checklist">`;
+            if (group.metas.length > 1 && !activeFilterMeta) {
+              html += `<div class="notebook-checklist-title">${g.title}:</div>`;
+            }
+            
+            html += `<ul class="notebook-target-list">`;
+            g.targets.forEach(t => {
+              const isTargetOfThisDay = activeFilterDate && t.completedDate === activeFilterDate;
+              const textStyle = isTargetOfThisDay ? "font-weight: bold; color: #f43f5e;" : "";
+              
+              html += `
+                <li class="notebook-target-item ${t.done ? 'completed' : ''}">
+                  <span class="notebook-checkbox">${t.done ? '✓' : ''}</span>
+                  <span style="${textStyle}">${t.name}${t.done && t.completedDate ? ` (${formatShortDateEs(t.completedDate)})` : ''}</span>
+                </li>
+              `;
+            });
+            html += `</ul></div>`;
+          }
+        });
+      }
+
+      if (logs.length > 0) {
+        html += `<div class="notebook-entries">`;
+        logs.sort((a, b) => a.date.localeCompare(b.date)).forEach(log => {
+          const dateStr = formatNotebookDate(log.date);
+          const logText = log.isCompletion ? `<strong>${log.text}</strong>` : log.text;
+          
+          html += `
+            <div class="notebook-entry">
+              <strong>${dateStr}:</strong> ${logText}
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+
+      page.innerHTML = html;
+      container.appendChild(page);
+    });
+
+    if (!hasVisibleContent) {
+      container.innerHTML = `<div class="notebook-page"><div class="notebook-title">Página en blanco</div><p>No hay apuntes para esta selección.</p></div>`;
+    }
+  }
+
+  function renderMonthCalendar(containerId, year, month) {
+    const grid = document.getElementById(containerId);
+    grid.innerHTML = "";
+
+    const daysOfWeek = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+    daysOfWeek.forEach(d => {
+      const header = document.createElement("div");
+      header.className = "cal-header";
+      header.textContent = d;
+      grid.appendChild(header);
+    });
+
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayStr = "2026-09-13";
+
+    for (let i = 0; i < firstDayIndex; i++) {
+      const emptyCell = document.createElement("div");
+      emptyCell.className = "cal-day empty";
+      grid.appendChild(emptyCell);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const monthStr = String(month + 1).padStart(2, "0");
+      const dayStr = String(day).padStart(2, "0");
+      const dateStr = `${year}-${monthStr}-${dayStr}`;
+
+      const cell = document.createElement("div");
+      cell.className = "cal-day";
+      if (dateStr === todayStr) cell.classList.add("today");
+      if (dateStr === activeFilterDate) cell.classList.add("active-day");
+
+      const dayEvents = CALENDAR_LOGS.filter(e => e.date === dateStr);
+      
+      let isDimmed = false;
+      if (dayEvents.length > 0) {
+        if (activeFilterMeta) {
+          const matchingEvents = dayEvents.filter(e => e.meta === activeFilterMeta);
+          if (matchingEvents.length > 0) {
+            cell.style.background = GOAL_CONFIG[matchingEvents[0].meta].color;
+          } else {
+            isDimmed = true;
+          }
+        } else {
+          if (dayEvents.length === 1) {
+            cell.style.background = (GOAL_CONFIG[dayEvents[0].meta] || { color: "#334155" }).color;
+          } else {
+            const cols = dayEvents.map(e => (GOAL_CONFIG[e.meta] || { color: "#334155" }).color);
+            cell.style.background = `repeating-linear-gradient(45deg, ${cols[0]}, ${cols[0]} 10px, ${cols[1] || cols[0]} 10px, ${cols[1] || cols[0]} 20px)`;
+          }
+        }
+      }
+
+      if (activeFilterDate && dateStr !== activeFilterDate) {
+          isDimmed = true;
+      }
+
+      if (isDimmed) cell.classList.add("dimmed");
+
+      cell.innerHTML = `
+        <div class="cal-num">${day}</div>
+        ${dayEvents.length > 0 ? `<div class="cal-badge-count">${dayEvents.length} act.</div>` : ''}
+      `;
+
+      cell.onclick = () => setDateFilter(dateStr);
+      grid.appendChild(cell);
+    }
+  }
+
+  function renderGroupedLogList(containerId, filterYearMonth, filterMetas, filterDate) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+
+    const logs = CALENDAR_LOGS.filter(l => {
+      const matchMonth = filterYearMonth ? l.date.startsWith(filterYearMonth) : true;
+      let matchMeta = true;
+      if (filterMetas !== null && filterMetas !== undefined) {
+        if (filterMetas.length === 0) matchMeta = false;
+        else matchMeta = filterMetas.includes(l.meta);
+      }
+      const matchDate = filterDate ? l.date === filterDate : true;
+      return matchMonth && matchMeta && matchDate;
+    });
+
+    if (logs.length === 0) {
+      container.innerHTML = `<div style="font-style: italic; color: var(--text-muted);">Sin trazos en esta hoja.</div>`;
+      return;
+    }
+
+    const grouped = {};
+    logs.forEach(log => {
+      if (!grouped[log.meta]) grouped[log.meta] = [];
+      grouped[log.meta].push(log);
+    });
+
+    for (const meta in grouped) {
+      const groupLogs = grouped[meta];
+      const conf = GOAL_CONFIG[meta] || { color: "#1e293b" };
+
+      const groupDiv = document.createElement("div");
+      groupDiv.className = "log-group";
+      groupDiv.style.borderLeftColor = conf.color;
+
+      let html = `<div class="log-group-header" style="color: ${conf.color}">${meta}</div>`;
+
+      groupLogs.forEach(log => {
+        const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(log.date)}</span>` : '';
+        const textSpan = log.isCompletion ? `<strong>${log.text}</strong>` : log.text;
+
+        html += `
+          <div class="log-item-text" style="--pen-color: ${conf.color}">
+            <span>${textSpan}</span>
+            ${dateSpan}
+          </div>
+        `;
+      });
+
+      groupDiv.innerHTML = html;
+      container.appendChild(groupDiv);
+    }
+  }
+
+  function drawMonthlyPieChart(canvasId, filterYearMonth) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    canvasClickRegions[canvasId] = [];
+
+    const activeMetas = getActiveMetas();
+    const counts = {};
+    const filteredLogs = filterYearMonth 
+      ? CALENDAR_LOGS.filter(l => l.date.startsWith(filterYearMonth))
+      : CALENDAR_LOGS;
+
+    filteredLogs.forEach(log => {
+      counts[log.meta] = (counts[log.meta] || 0) + 1;
+    });
+
+    const entries = Object.keys(counts)
+      .map(meta => ({
+        meta,
+        count: counts[meta],
+        color: (GOAL_CONFIG[meta] || { color: "#64748b" }).color
+      }))
+      .sort((a, b) => b.count - a.count || a.meta.localeCompare(b.meta));
+
+    const total = entries.reduce((sum, item) => sum + item.count, 0);
+    if (total === 0) {
+      ctx.fillStyle = "#475569";
+      ctx.font = "italic 16px 'Kalam', cursive";
+      ctx.textAlign = "center";
+      ctx.fillText("Sin actividades", canvas.width / 2, canvas.height / 2);
+      return;
+    }
+
+    const centerX = 130;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(95, canvas.height / 2 - 20);
+    let startAngle = -Math.PI / 2;
+
+    entries.forEach(item => {
+      const sliceAngle = (item.count / total) * 2 * Math.PI;
+      const endAngle = startAngle + sliceAngle;
+
+      let isSelected = false;
+      let isDimmed = false;
+
+      if (hoveredMeta) {
+        isSelected = item.meta === hoveredMeta;
+        isDimmed = item.meta !== hoveredMeta;
+      } else {
+        isSelected = activeMetas.includes(item.meta);
+        isDimmed = activeMetas.length > 0 && !isSelected;
+      }
+
+      const activeRadius = isSelected ? radius + 8 : radius;
+
+      ctx.save();
+      if (isDimmed) ctx.globalAlpha = 0.25;
+
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, activeRadius, startAngle, endAngle);
+      ctx.closePath();
+      
+      ctx.fillStyle = item.color;
+      ctx.fill();
+
+      ctx.lineWidth = isSelected ? 4 : 2;
+      ctx.strokeStyle = "#1e293b";
+      ctx.stroke();
+      ctx.restore();
+
+      canvasClickRegions[canvasId].push({
+        type: 'pie',
+        meta: item.meta,
+        startAngle,
+        endAngle,
+        centerX,
+        centerY,
+        radius: activeRadius
+      });
+
+      startAngle = endAngle;
+    });
+
+    const legendX = 260;
+    let legendY = Math.max(30, centerY - (entries.length * 12));
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+
+    entries.forEach(item => {
+      let isSelected = false;
+      let isDimmed = false;
+
+      if (hoveredMeta) {
+        isSelected = item.meta === hoveredMeta;
+        isDimmed = item.meta !== hoveredMeta;
+      } else {
+        isSelected = activeMetas.includes(item.meta);
+        isDimmed = activeMetas.length > 0 && !isSelected;
+      }
+
+      ctx.save();
+      if (isDimmed) ctx.globalAlpha = 0.3;
+
+      ctx.beginPath();
+      ctx.rect(legendX, legendY - 8, 16, 16);
+      ctx.fillStyle = item.color;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#1e293b";
+      ctx.stroke();
+
+      ctx.fillStyle = "#0f172a"; 
+      ctx.font = isSelected ? "bold 15px 'Kalam', cursive" : "15px 'Kalam', cursive";
+      ctx.fillText(`${item.meta} (${item.count})`, legendX + 26, legendY);
+      ctx.restore();
+
+      canvasClickRegions[canvasId].push({
+        type: 'bar',
+        meta: item.meta,
+        x: legendX,
+        y: legendY - 10,
+        w: 180,
+        h: 20
+      });
+
+      legendY += 24;
+    });
+  }
+
+  function drawBarChartOrdered(canvasId, filterYearMonth) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!canvasClickRegions[canvasId]) canvasClickRegions[canvasId] = [];
+
+    const activeMetas = getActiveMetas();
+
+    const counts = {};
+    DATA_GOALS.forEach(g => { counts[g.title] = 0; });
+
+    const filteredLogs = filterYearMonth 
+      ? CALENDAR_LOGS.filter(l => l.date.startsWith(filterYearMonth))
+      : CALENDAR_LOGS;
+
+    filteredLogs.forEach(log => {
+      counts[log.meta] = (counts[log.meta] || 0) + 1;
+    });
+
+    const sortedGoals = [...DATA_GOALS].sort((a, b) => counts[b.title] - counts[a.title] || a.title.localeCompare(b.title));
+
+    const labels = sortedGoals.map(g => g.title);
+    const values = labels.map(k => counts[k]);
+    const maxVal = Math.max(5, ...values);
+
+    const padLeft = 40;
+    const padBottom = 100;
+    const padTop = 30;
+    const padRight = 20;
+    const chartW = canvas.width - padLeft - padRight;
+    const chartH = canvas.height - padTop - padBottom;
+
+    ctx.strokeStyle = "#1e293b";
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(padLeft, padTop - 10);
+    ctx.lineTo(padLeft, padTop + chartH);
+    ctx.lineTo(padLeft + chartW + 10, padTop + chartH);
+    ctx.stroke();
+
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "14px 'Kalam', cursive";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    const steps = 4;
+    for (let i = 0; i <= steps; i++) {
+      const val = Math.round((maxVal / steps) * i);
+      const y = padTop + chartH - (i / steps) * chartH;
+      ctx.fillText(val, padLeft - 10, y);
+
+      if (i > 0) {
+        ctx.beginPath();
+        ctx.strokeStyle = "#94a3b8";
+        ctx.setLineDash([4, 4]);
+        ctx.moveTo(padLeft, y);
+        ctx.lineTo(padLeft + chartW, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
+    const slotW = chartW / labels.length;
+    const barW = Math.min(24, slotW * 0.7);
+
+    labels.forEach((meta, idx) => {
+      const val = counts[meta];
+      const barH = (val / maxVal) * chartH;
+      const x = padLeft + idx * slotW + (slotW - barW) / 2;
+      const y = padTop + chartH - barH;
+      const color = (GOAL_CONFIG[meta] || { color: "#38bdf8" }).color;
+
+      let isSelected = false;
+      let isDimmed = false;
+
+      if (hoveredMeta) {
+        isSelected = meta === hoveredMeta;
+        isDimmed = meta !== hoveredMeta;
+      } else {
+        isSelected = activeMetas.includes(meta);
+        isDimmed = activeMetas.length > 0 && !isSelected;
+      }
+
+      ctx.save();
+      if (isDimmed) ctx.globalAlpha = 0.25;
+
+      ctx.beginPath();
+      if (val === 0) {
+        ctx.rect(x, padTop + chartH - 2, barW, 2);
+      } else {
+        ctx.rect(x, y, barW, barH);
+      }
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.lineWidth = isSelected ? 3 : 2;
+      ctx.strokeStyle = "#1e293b";
+      ctx.stroke();
+
+      ctx.fillStyle = "#0f172a";
+      ctx.textAlign = "center";
+      ctx.font = isSelected ? "bold 15px 'Kalam', cursive" : "15px 'Kalam', cursive";
+      ctx.fillText(val, x + barW / 2, val === 0 ? padTop + chartH - 12 : y - 10);
+
+      ctx.save();
+      ctx.translate(x + barW / 2 + 5, padTop + chartH + 15);
+      ctx.rotate(-Math.PI / 4);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#0f172a";
+      ctx.font = isSelected ? "bold 14px 'Kalam', cursive" : "14px 'Kalam', cursive";
+      ctx.fillText(meta.length > 15 ? meta.substring(0, 14) + '…' : meta, 0, 0);
+      ctx.restore();
+
+      ctx.restore();
+
+      canvasClickRegions[canvasId].push({
+        type: 'bar',
+        meta,
+        x: x - 4,
+        y: padTop,
+        w: barW + 8,
+        h: chartH + padBottom
+      });
+    });
+  }
+
+  function redrawVisibleCharts() {
+    drawMonthlyPieChart("pieChartGeneral", null);
+    drawBarChartOrdered("barGeneralCanvas", null);
+
+    const isFiltering = activeFilterMeta !== null || activeFilterDate !== null;
+    if (!isFiltering) {
+      drawMonthlyPieChart("pieAugCanvas", "2026-08");
+      drawMonthlyPieChart("pieSepCanvas", "2026-09");
+    }
+  }
+
+  // Modificado para obtener las coordenadas relativas al Canvas y permitir CSS max-width: 100%
+  function handleCanvasClick(e, canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    
+    const regions = canvasClickRegions[canvasId] || [];
+    const rect = canvas.getBoundingClientRect();
+    
+    // Calculamos el factor de escala porque el canvas puede ser más pequeño por CSS
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    for (const reg of regions) {
+      if (reg.type === 'pie') {
+        const dx = x - reg.centerX;
+        const dy = y - reg.centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist <= reg.radius) {
+          let angle = Math.atan2(dy, dx);
+          if (angle < -Math.PI / 2) angle += 2 * Math.PI;
+
+          if (angle >= reg.startAngle && angle <= reg.endAngle) {
+            setMetaFilter(reg.meta);
+            return;
+          }
+        }
+      } else if (reg.type === 'bar') {
+        if (x >= reg.x && x <= reg.x + reg.w && y >= reg.y && y <= reg.y + reg.h) {
+          setMetaFilter(reg.meta);
+          return;
+        }
+      }
+    }
+  }
+
+  // Modificado igual que Click para manejar el escalado responsivo
+  function handleCanvasMouseMove(e, canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    const regions = canvasClickRegions[canvasId] || [];
+    const rect = canvas.getBoundingClientRect();
+    
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    
+    let foundMeta = null;
+
+    for (const reg of regions) {
+      if (reg.type === 'pie') {
+        const dx = x - reg.centerX;
+        const dy = y - reg.centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist <= reg.radius) {
+          let angle = Math.atan2(dy, dx);
+          if (angle < -Math.PI / 2) angle += 2 * Math.PI;
+
+          if (angle >= reg.startAngle && angle <= reg.endAngle) {
+            foundMeta = reg.meta;
+            break;
+          }
+        }
+      } else if (reg.type === 'bar') {
+        if (x >= reg.x && x <= reg.x + reg.w && y >= reg.y && y <= reg.y + reg.h) {
+          foundMeta = reg.meta;
+          break;
+        }
+      }
+    }
+
+    if (hoveredMeta !== foundMeta) {
+      hoveredMeta = foundMeta;
+      e.target.style.cursor = foundMeta ? 'pointer' : 'default';
+      redrawVisibleCharts();
+    }
+  }
+
+  function handleCanvasMouseLeave(e, canvasId) {
+    if (hoveredMeta !== null) {
+      hoveredMeta = null;
+      redrawVisibleCharts();
+    }
+  }
+
+  function init() {
+    updateView();
+
+    const canvasIds = [
+      "pieChartGeneral", "barGeneralCanvas",
+      "pieAugCanvas", "pieSepCanvas"
+    ];
+
+    canvasIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("click", (e) => handleCanvasClick(e, id));
+        el.addEventListener("mousemove", (e) => handleCanvasMouseMove(e, id));
+        el.addEventListener("mouseleave", (e) => handleCanvasMouseLeave(e, id));
+      }
+    });
+  }
+
+  window.onload = init;
+</script>
+
+</body>
+</html>
