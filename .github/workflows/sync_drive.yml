@@ -1,0 +1,31 @@
+name: Sincronizar index.html desde Google Drive
+
+on:
+  schedule:
+    # Se ejecuta todos los días a las 16:30 UTC (12:30 pm hora de Venezuela, UTC-4)
+    - cron: '40 16 * * *'
+  workflow_dispatch: # Permite ejecutarlo manualmente con un clic en cualquier momento
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Descargar index.html desde Google Drive
+        run: |
+          FILE_ID="1XB9wzRwg0FGizLWw2SHeTFKGwPusi1TN"
+          curl -L "https://drive.usercontent.google.com/download?id=${FILE_ID}&export=download" -o index.html
+
+      - name: Hacer commit y push si hay cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --staged --quiet; then
+            echo "No se detectaron cambios en index.html."
+          else
+            git commit -m "Auto-sync: actualización diaria de metas desde Drive"
+            git push
+          fi
