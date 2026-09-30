@@ -1,1825 +1,1337 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proyectos Yar-Yur</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        
-        /* Animaciones */
-        .fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
-        .fade-in { animation: fadeIn 0.3s ease-out forwards; }
-        .slide-in-right { animation: slideInRight 0.3s ease-out forwards; }
-        
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        
-        /* Scrollbars */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
-        
-        /* Colores Categorías */
-        .dot-rendimiento { background-color: #2563eb; color: white; box-shadow: 0 0 8px rgba(37, 99, 235, 0.4); } 
-        .dot-visual { background-color: #16a34a; color: white; box-shadow: 0 0 8px rgba(22, 163, 74, 0.4); } 
-        .dot-plano { background-color: #9333ea; color: white; box-shadow: 0 0 8px rgba(147, 51, 234, 0.4); } 
-        .dot-muestra { background-color: #ca8a04; color: white; box-shadow: 0 0 8px rgba(202, 138, 4, 0.4); } 
-        .dot-produccion { background-color: #ea580c; color: white; box-shadow: 0 0 8px rgba(234, 88, 12, 0.4); } 
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Metas - Cuaderno</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --card-bg: #ffffff;
+      --pen-color: #1e293b;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --highlight: #38bdf8;
+    }
 
-        /* Loader */
-        .loader {
-            border: 3px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 3px solid #3b82f6;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Kalam', cursive;
+    }
 
-        /* Resaltado */
-        .highlight-text {
-            background-color: #fef08a;
-            color: #1e293b;
-            padding: 0 2px;
-            border-radius: 2px;
-            font-weight: 600;
-        }
-    </style>
-</head>
-<body class="bg-white text-slate-800 h-screen w-screen overflow-hidden flex flex-col relative">
+    body {
+      background-color: var(--bg);
+      background-image: radial-gradient(#d4d4d8 1px, transparent 1px);
+      background-size: 20px 20px;
+      color: var(--text);
+      padding: 24px;
+      line-height: 1.5;
+    }
 
-    <div id="loading-indicator" class="fixed top-4 right-4 bg-white shadow-md rounded-full px-4 py-2 flex items-center gap-3 z-50 text-sm font-medium text-slate-50 transition-opacity opacity-0 pointer-events-none">
-        <div class="loader"></div>
-        <span id="loading-text">Indexando archivos...</span>
-    </div>
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
 
-    <div id="search-view" class="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 transition-all duration-500 ease-in-out bg-white">
-        <div class="w-full max-w-2xl text-center fade-in-up">
-            <h1 class="text-4xl md:text-5xl font-black text-slate-900 mb-8 tracking-tight">Proyectos <span class="text-amber-500">Yar-Yur</span></h1>
-            <div class="relative group">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="h-6 w-6 text-slate-400 group-focus-within:text-amber-500 transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
-                <input type="text" id="main-search-input" disabled
-                    class="block w-full pl-12 pr-4 py-4 text-lg bg-slate-50 border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-500/10 transition-all shadow-sm placeholder-slate-400 disabled:opacity-50 disabled:cursor-not-allowed" 
-                    placeholder="Buscar cliente, año (ej. 2026), mes..." autocomplete="off">
-            </div>
-        </div>
-    </div>
+    header {
+      border-bottom: 3px solid var(--pen-color);
+      border-radius: 2% 95% 3% 97% / 93% 4% 97% 5%;
+      padding-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
 
-    <!-- NUEVA VISTA: Auditoría de Enlaces -->
-    <div id="enlaces-view" class="absolute inset-0 z-[45] bg-slate-50 flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
-        <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 shadow-sm relative z-20">
-            <div class="flex items-center gap-4">
-                <button onclick="closeEnlacesView()" class="p-2 -ml-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors group" title="Ir al inicio">
-                    <svg class="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                </button>
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800">Auditoría de Enlaces (2025 - 2026)</h2>
-                    <p class="text-xs text-slate-500" id="enlaces-count">0 proyectos</p>
-                </div>
-            </div>
-            
-            <div class="flex flex-col md:flex-row items-end md:items-center gap-3 flex-wrap justify-end">
-                <div class="flex items-center gap-2">
-                    <button onclick="filterEnlaces('todos')" id="btn-enlaces-todos" class="px-4 py-1.5 rounded-full text-sm font-bold bg-slate-600 text-white shadow-md transition-colors">Todos</button>
-                    <button onclick="filterEnlaces('buenos')" id="btn-enlaces-buenos" class="px-4 py-1.5 rounded-full text-sm font-bold bg-green-100 text-green-700 hover:bg-green-200 transition-colors">Buenos</button>
-                    <button onclick="filterEnlaces('malos')" id="btn-enlaces-malos" class="px-4 py-1.5 rounded-full text-sm font-bold bg-red-100 text-red-700 hover:bg-red-200 transition-colors">Por Corregir</button>
-                </div>
-                <div class="w-full md:w-px h-px md:h-6 bg-slate-200 mx-1"></div>
-                <div class="flex items-center gap-2 flex-wrap justify-end">
-                    <button onclick="toggleEnlaceFiltro('sinMensual')" id="btn-filtro-sin-mensual" class="px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors border border-slate-200">Sin Mensual</button>
-                    <button onclick="toggleEnlaceFiltro('conMensual')" id="btn-filtro-con-mensual" class="px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors border border-slate-200">Con Mensual</button>
-                    <button onclick="toggleEnlaceFiltro('sinTrello')" id="btn-filtro-sin-trello" class="px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors border border-slate-200">Sin Trello</button>
-                    <button onclick="toggleEnlaceFiltro('conTrello')" id="btn-filtro-con-trello" class="px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors border border-slate-200">Con Trello</button>
-                </div>
-            </div>
-        </header>
-        <main class="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
-            <div class="max-w-5xl mx-auto flex flex-col gap-3" id="enlaces-container">
-            </div>
-        </main>
-    </div>
+    header h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: var(--pen-color);
+      letter-spacing: 0.02em;
+    }
 
-    <div id="year-dashboard-view" class="absolute inset-0 z-40 bg-slate-50 flex flex-col translate-x-full transition-transform duration-300 ease-in-out">
-        <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 shadow-sm relative z-20">
-            <div class="flex items-center gap-4">
-                <button onclick="closeYearDashboardView()" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-slate-200 hover:border-blue-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    Atrás al Buscador
-                </button>
-                <div class="border-l border-slate-200 pl-4 h-8 flex items-center">
-                    <h2 class="text-xl font-bold text-slate-800" id="year-dashboard-title">Dashboard Anual</h2>
-                </div>
-            </div>
-        </header>
-        <main class="flex-1 overflow-hidden flex flex-col lg:flex-row relative z-10">
-            <div class="lg:w-1/3 p-4 md:p-6 lg:border-r border-slate-200 overflow-y-auto bg-white flex flex-col z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-                <h3 class="text-2xl font-black text-slate-800 mb-2 cursor-pointer hover:text-amber-500 transition-colors" onclick="openChartDetails(null, window.currentDashboardYear, 'General', 'TODAS')" title="Ver año completo en calendario">Resumen General <span id="year-dashboard-label" class="text-amber-500"></span></h3>
-                <p class="text-sm text-slate-500 mb-6">Haz clic en una barra o en el título general para explorar.</p>
-                <div class="relative flex-1 min-h-[350px] w-full">
-                    <canvas id="yearGeneralChart"></canvas>
-                </div>
-            </div>
-            <div class="lg:w-2/3 p-4 md:p-8 overflow-y-auto custom-scrollbar bg-slate-50">
-                <p class="text-sm text-slate-500 mb-4 font-medium md:hidden">Desliza hacia abajo para ver los meses</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6" id="year-months-grid">
-                </div>
-            </div>
-        </main>
-    </div>
+    header p {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+    }
 
-    <!-- HEADER CHART DETAILS VIEW -->
-    <div id="chart-details-view" class="absolute inset-0 z-40 bg-slate-50 flex flex-col translate-x-full transition-transform duration-300 ease-in-out">
-        <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 shadow-sm relative z-20">
-            <div class="flex items-center gap-4 flex-1">
-                <div id="chart-details-nav-buttons" class="flex items-center">
-                    <button id="btn-close-chart-details" onclick="closeChartDetailsView()" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-slate-200 hover:border-blue-200">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                        Atrás al Dashboard
-                    </button>
-                    <button id="btn-back-chart-details" onclick="goBackChartDetails()" class="hidden flex items-center gap-2 px-3 py-1.5 text-sm font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors shadow-sm border border-amber-200 hover:border-amber-300">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
-                        Desfiltrar
-                    </button>
-                </div>
-                
-                <div class="border-l border-slate-200 pl-4 flex flex-col justify-center">
-                    <h2 class="text-lg font-bold text-slate-800 leading-tight" id="chart-details-title">Filtrando Datos</h2>
-                    <div class="flex items-center gap-2 mt-0.5">
-                        <p class="text-xs text-slate-500 font-medium" id="chart-details-subtitle">Exploración</p>
-                        <div id="chart-details-links" class="flex items-center gap-2"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="flex flex-wrap items-center justify-end gap-3">
-                <div id="chart-details-category-filters" class="flex flex-wrap gap-2 text-xs md:text-sm font-bold transition-all duration-300"></div>
-            </div>
-        </header>
-        
-        <main class="flex-1 overflow-hidden flex flex-col lg:flex-row">
-            <div class="lg:w-1/3 xl:w-[400px] p-6 lg:border-r border-slate-200 bg-white flex flex-col z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)] h-full overflow-hidden">
-                <h3 class="text-xl font-black text-slate-800 mb-1" id="pie-chart-title">Distribución</h3>
-                <p class="text-sm text-slate-500 mb-4" id="pie-chart-desc">Haz clic en la torta o la leyenda para filtrar.</p>
-                
-                <div class="relative w-full flex flex-col items-center flex-1 min-h-0">
-                    <div class="w-full h-[220px] shrink-0 relative">
-                        <canvas id="detailsPieChart"></canvas>
-                    </div>
-                    <div id="detailsPieLegend" class="mt-4 flex flex-col gap-2 overflow-y-auto custom-scrollbar w-full flex-1 pb-4"></div>
-                </div>
-            </div>
-            <div class="lg:flex-1 p-4 md:p-6 overflow-hidden bg-slate-50 flex flex-col">
-                <div class="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden slide-in-right">
-                    <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
-                        <span class="font-bold text-slate-700 text-sm uppercase tracking-wide">Calendario de Actividades</span>
-                        <span id="details-entries-count" class="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-bold"></span>
-                    </div>
-                    <div id="details-calendar-container" class="flex-1 overflow-y-auto custom-scrollbar p-6 flex flex-row flex-wrap justify-center items-start gap-8 scroll-smooth relative"></div>
-                </div>
-            </div>
-        </main>
-    </div>
+    .split-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
 
-    <div id="results-view" class="absolute inset-0 z-20 bg-slate-50 flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
-        <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 shadow-sm relative">
-            <div class="flex items-center gap-4 flex-1">
-                <button onclick="closeResults()" class="p-2 -ml-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors group" title="Ir al inicio">
-                    <svg class="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                </button>
-                <div>
-                    <h2 class="text-xl font-bold text-slate-800" id="results-title">Resultados</h2>
-                    <p class="text-xs text-slate-500" id="results-subtitle">Selecciona un cliente</p>
-                </div>
-            </div>
-            
-            <div id="client-filter-container" class="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 hidden md:block"></div>
-            
-            <div class="flex items-center gap-3 w-full md:w-auto">
-                <div class="w-full md:w-64 relative">
-                     <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" id="header-search-input" 
-                        class="w-full pl-9 pr-4 py-2 bg-slate-100 border-none rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                        placeholder="Nueva búsqueda...">
-                </div>
-            </div>
-             <div id="client-filter-container-mobile" class="md:hidden w-full flex justify-center"></div>
-        </header>
-        <main class="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
-            <div id="results-container" class="max-w-4xl mx-auto fade-in"></div>
-        </main>
-    </div>
+    @media (max-width: 1100px) {
+      .split-layout {
+        grid-template-columns: 1fr;
+      }
+    }
 
-    <div id="project-list-view" class="absolute inset-0 z-30 bg-slate-50 flex flex-col translate-x-full transition-transform duration-300 ease-in-out">
-        <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 shadow-sm relative">
-            <div class="flex items-center gap-4">
-                <button onclick="closeProjectListView()" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-slate-200 hover:border-blue-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    Atrás
-                </button>
-                <div class="border-l border-slate-200 pl-4 h-8 flex items-center">
-                    <h2 class="text-xl font-bold text-slate-800" id="project-list-title">Proyectos</h2>
-                </div>
-            </div>
-            <div id="project-filter-container" class="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 hidden md:block"></div>
-            <div class="w-20"></div>
-        </header>
-        <div id="project-filter-container-mobile" class="md:hidden w-full flex justify-center bg-white pb-2 border-b border-slate-100"></div>
+    .sketchy-panel {
+      background: var(--card-bg);
+      border: 3px solid var(--pen-color);
+      border-radius: 2% 98% 2% 98% / 98% 2% 98% 2%;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 4px 6px 0px rgba(0,0,0,0.05);
+      position: relative;
+    }
 
-        <main class="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
-            <div id="project-list-container" class="max-w-4xl mx-auto space-y-3 fade-in"></div>
-        </main>
-    </div>
+    .sketchy-panel:nth-child(even) {
+      border-radius: 98% 2% 98% 2% / 2% 98% 2% 98%;
+    }
 
-    <div id="final-view" class="absolute inset-0 z-40 bg-slate-50 flex flex-col translate-x-full transition-transform duration-300 ease-in-out">
-        <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 shadow-sm z-50 relative">
-            <div class="flex items-center gap-4 flex-1">
-                <button onclick="closeFinalView()" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-slate-200 hover:border-blue-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    Atrás
-                </button>
-                
-                <div class="border-l border-slate-200 pl-4 flex flex-col justify-center">
-                    <h2 class="text-lg font-bold text-slate-800 leading-tight" id="final-view-title">Proyecto</h2>
-                    <div class="flex items-center gap-3 mt-1">
-                        <div id="final-view-links" class="flex items-center gap-2"></div>
-                    </div>
-                </div>
-            </div>
+    .panel-header {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--pen-color);
+      text-align: center;
+      border-bottom: 2px dashed var(--pen-color);
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
 
-            <div id="active-search-filter-container" class="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 hidden md:block"></div>
-            
-            <div id="category-filters" class="flex flex-wrap gap-3 text-sm font-bold transition-all duration-300"></div>
-        </header>
-        
-        <main class="flex-1 overflow-hidden">
-            <div class="h-full w-full max-w-7xl mx-auto p-4 md:p-6 flex flex-col">
-                <div class="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden slide-in-right">
-                    <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                        <span class="font-bold text-slate-700 text-sm uppercase tracking-wide">Calendario de Actividades</span>
-                        <span id="entries-count-badge" class="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-bold"></span>
-                    </div>
-                    <div id="final-calendar-container" class="flex-1 overflow-y-auto custom-scrollbar p-6 flex flex-row flex-wrap justify-center items-start gap-8 scroll-smooth relative"></div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Panel lateral -->
-    <div id="day-panel-backdrop" onclick="closeDayPanel()" class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[9998] opacity-0 pointer-events-none transition-opacity duration-300"></div>
-    <div id="day-details-panel" class="fixed inset-y-0 right-0 w-[85vw] sm:w-96 md:w-[400px] bg-white shadow-[-10px_0_30px_rgba(0,0,0,0.15)] z-[9999] transform translate-x-full transition-transform duration-300 flex flex-col border-l border-slate-200">
-        <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center shrink-0">
-            <div>
-                <h3 id="day-panel-title" class="font-black text-xl text-slate-800 tracking-tight">Fecha</h3>
-                <p id="day-panel-subtitle" class="text-xs font-bold text-blue-600 uppercase mt-0.5">0 entradas</p>
-            </div>
-            <button onclick="closeDayPanel()" class="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-200 rounded-full transition-colors focus:outline-none">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-        <div id="day-panel-content" class="flex-1 overflow-y-auto p-5 flex flex-col gap-4 bg-slate-50 custom-scrollbar">
-        </div>
-    </div>
+    .registro-container {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
     
-    <!-- Contenedor para Toast Messages -->
-    <div id="toast-container" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-[10000] flex flex-col gap-2 pointer-events-none"></div>
-
-    <script>
-        const PERSONAL_FILES = [
-            '2025-01 ENERO 2025.json', '2025-02 FEBRERO 2025.json', '2025-03 MARZO 2025.json', '2025-04 ABRIL 2025.json',
-            '2025-05 MAYO 2025.json', '2025-06 JUNIO 2025.json', '2025-07 JULIO 2025.json', '2025-08 AGOSTO 2025.json',
-            '2025-09 SEPTIEMBRE 2025.json', '2025-10 OCTUBRE 2025.json', '2025-11 NOVIEMBRE 2025.json', '2025-12 DICIEMBRE 2025.json',
-            '2026-01 ENERO 2026.json', '2026-02 FEBRERO 2026.json', '2026-03 MARZO 2026.json', '2026-04 ABRIL 2026.json',
-            '2026-05 MAYO 2026.json', '2026-06 JUNIO 2026.json', '2026-07 JULIO 2026.json', '2026-08 AGOSTO 2026.json',
-            '2026-09 SEPTIEMBRE 2026.json', '2026-10 OCTUBRE 2026.json', '2026-11 NOVIEMBRE 2026.json', '2026-12 DICIEMBRE 2026.json'
-        ];
-        const COMPANY_FILES = [
-            'proyectos-inversiones-yar-yur-2022.json', 'proyectos-inversiones-yar-yur-2023.json',
-            'proyectos-inversiones-yar-yur-2024.json', 'proyectos-inversiones-yar-yur-2025.json',
-            'proyectos-inversiones-yar-yur-2026.json'
-        ];
-        
-        const FORCED_CLIENTS = [
-            'CHARCUTERIA TOVAR', 'ISOLA FOODS', 'TIA SU', 'INVERSIONES VI&CO 10', 'INVERSIONES ZOAH',
-            'LUBRICANTES BLITZ 2000', 'TODO CONSTRUCCION', 'CERVEZA CHUMACEIRO', 'GRUPO CASHEW',
-            'LA VIENESA', 'BIG WADE', 'VESPEX', 'CONFECCIONES TREVI', 'CAFE CITY', 'REMIGTON CENTER',
-            'CORPORACION RETAIL', 'BRANYESKA', 'RONALD', 'PRINGLES', 'GRUPO KAIZEN', 'LUIS MARQUEZ',
-            'SAMSUNG', 'SAJYS DELICIOUS CAKE', 'PIZZERIA MAMARRACHOS', 'RUANSA', 'MARIO SACRIPANTI',
-            'HOLY MARY', 'PAYALL', 'CHEF TONY', 'VILLA BRAIDA', 'LEDDY', 'NEW ARRIVAL', 'ARIZONA',
-            'NUDELI', 'TUCHELA2', 'DISTRIBUIDORA BELL NUTRI', 'ADVENTURE', 'ONLY PAN', 'EL GARZON',
-            'INVERSIONES CANAIMA', 'BOLIPUERTOS', 'AVELINA', 'INVERSIONES VI&CO10', 'AZUCAR MONTALBAN',
-            'CARGILL', 'BRANYESCKA', 'CHICO KALOHA', 'INVERSIONES KARAKA', 'KASU', 'BODEGA CREATIVA',
-            'MAILOS CHIPS', 'CARMINE', 'PEPBOYS', 'LABORATORIO BUKA', 'TABACALERA NACIONAL', 'MIMADITO',
-            'CERVECERIA ZULIA', 'POTIO', 'ORCAS', 'LA CARNITA', 'SURA DE VZLA', 'MARIA PIA', 'EXCHANGE',
-            'CASA GOURMET', 'MOTUL', 'COCOS GROUP', 'SERVICIOS FUNERARIOS', 'UNICARNES', 'GRUPO MISTRAL',
-            'AKTIVA BRANDS', 'P&G', 'BRAYESCKA', 'MARÍA PÍA', 'ALEJANDRO MORALES', 'PAN PARIS',
-            'ALEJANDRO MORALE', 'DONACION A POLICIA', 'LUIS FELIPE LONA', 'PANDERIA CUMBRES',
-            'PAÑALES VICO10', 'DOÑA JURA', 'ALIZZETS', 'LAVANSAN', 'COMPAÑIA ANONIMA DE CINES UNIDOS',
-            'LA CASA DE LAS TEJAS', 'NATIONAL SALES (NASRI)', 'ANIBAL GUTIERREZ', 'FRATELSA', 'ONLYPAN',
-            'INVERSIONES PELUCHES' 
-        ];
-
-        const GRAY_STYLE = 'bg-slate-100 text-slate-600 border-slate-200';
-        const TRELLO_COLORS = {
-            'lime': GRAY_STYLE, 'yellow': GRAY_STYLE, 'orange': GRAY_STYLE, 'red': GRAY_STYLE,
-            'purple': GRAY_STYLE, 'blue': GRAY_STYLE, 'sky': GRAY_STYLE, 'pink': GRAY_STYLE,
-            'green': GRAY_STYLE, 'black': 'bg-slate-800 text-white border-slate-900', 'default': GRAY_STYLE
-        };
-
-        const CAT_STYLES = {
-            'RENDIMIENTO': { card: 'bg-blue-100 border-blue-200 hover:border-blue-500 hover:ring-1 hover:ring-blue-500 hover:shadow-md', badge: 'bg-white text-blue-700 border-blue-200', dotClass: 'dot-rendimiento', btnColor: 'bg-blue-600 hover:bg-blue-700' },
-            'VISUAL': { card: 'bg-green-100 border-green-200 hover:border-green-500 hover:ring-1 hover:ring-green-500 hover:shadow-md', badge: 'bg-white text-green-700 border-green-200', dotClass: 'dot-visual', btnColor: 'bg-green-600 hover:bg-green-700' },
-            'PLANO MECÁNICO': { card: 'bg-purple-100 border-purple-200 hover:border-purple-500 hover:ring-1 hover:ring-purple-500 hover:shadow-md', badge: 'bg-white text-purple-700 border-purple-200', dotClass: 'dot-plano', btnColor: 'bg-purple-600 hover:bg-purple-700' },
-            'MUESTRA': { card: 'bg-yellow-50 border-yellow-200 hover:border-yellow-600 hover:ring-1 hover:ring-yellow-600 hover:shadow-md', badge: 'bg-white text-yellow-700 border-yellow-300', dotClass: 'dot-muestra', btnColor: 'bg-yellow-600 hover:bg-yellow-700' },
-            'PRODUCCIÓN': { card: 'bg-orange-100 border-orange-200 hover:border-orange-500 hover:ring-1 hover:ring-orange-500 hover:shadow-md', badge: 'bg-white text-orange-700 border-orange-200', dotClass: 'dot-produccion', btnColor: 'bg-orange-500 hover:bg-orange-600' },
-            'OTRO': { card: 'bg-slate-100 border-slate-200 hover:border-slate-500 hover:ring-1 hover:ring-slate-500 hover:shadow-md', badge: 'bg-white text-slate-600 border-slate-200', dotClass: 'bg-slate-400 text-white', btnColor: 'bg-slate-500 hover:bg-slate-600' }
-        };
-
-        const CAT_PRIORITY = {
-            'PRODUCCIÓN': 5, 'MUESTRA': 4, 'PLANO MECÁNICO': 3, 'VISUAL': 2, 'RENDIMIENTO': 1, 'OTRO': 0
-        };
-
-        const PASTEL_COLORS = [
-            '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', 
-            '#E2CBF7', '#F2C6E7', '#FFC6D9', '#D5E8D4', '#FFF2CC', 
-            '#F8CECC', '#E1D5E7', '#DAE8FC', '#D4E1F9', '#FBE5C8'
-        ];
-
-        const MONTH_NAMES = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
-        
-        let mergedData = []; 
-        let activeSearchQuery = '';
-        let currentClientName = '';
-        let projectGroupsCache = {}; 
-        let activeCategoryFilter = null;
-        
-        let isClientListFiltered = true; 
-        let isProjectListFiltered = true;
-        let isFinalViewFiltered = true;
-        
-        let viewMode = 'CLIENT'; 
-        let currentEnlacesFilter = 'todos'; 
-        let enlacesFiltros = { sinMensual: false, conMensual: false, sinTrello: false, conTrello: false };
-        
-        let yearChartInstances = []; 
-        let detailsPieChartInstance = null;
-        
-        window.chartDetailsState = {
-            year: null, month: null, monthName: null, category: null,
-            level: 'CLIENT', selectedClient: null, selectedProject: null, baseItems: []
-        };
-
-        window.currentDashboardYear = null; 
-        window.currentPieClickCallback = null;
-        window.currentPieOriginalLabels = [];
-        window.currentRenderedFinalItems = []; 
-
-        const loadingIndicator = document.getElementById('loading-indicator');
-        const mainInput = document.getElementById('main-search-input');
-        const headerInput = document.getElementById('header-search-input');
-        
-        const searchView = document.getElementById('search-view');
-        const resultsView = document.getElementById('results-view');
-        const projectListView = document.getElementById('project-list-view');
-        const finalView = document.getElementById('final-view');
-        const yearDashboardView = document.getElementById('year-dashboard-view');
-        const chartDetailsView = document.getElementById('chart-details-view');
-        const enlacesView = document.getElementById('enlaces-view');
-        
-        const resultsContainer = document.getElementById('results-container');
-        const projectListContainer = document.getElementById('project-list-container');
-
-        // Manejador de Toast Global
-        window.showToast = function(msg) {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-            const toast = document.createElement('div');
-            toast.className = 'bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium transition-opacity duration-300 opacity-0';
-            toast.innerText = msg;
-            container.appendChild(toast);
-            
-            setTimeout(() => toast.classList.remove('opacity-0'), 10);
-            
-            setTimeout(() => {
-                toast.classList.add('opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        };
-
-        // Función para copiar ruta al portapapeles
-        window.copyLocalPath = function(path, el) {
-            navigator.clipboard.writeText(path).then(() => {
-                const originalHtml = el.innerHTML;
-                el.innerHTML = '<svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> COPIADO';
-                
-                window.showToast('ruta local copiada con éxito');
-                
-                setTimeout(() => {
-                    el.innerHTML = originalHtml;
-                }, 2000);
-            }).catch(err => {
-                console.error('Error al copiar:', err);
-                alert('Error al copiar al portapapeles');
-            });
-        };
-
-        function normalizeStr(str) { return str.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); }
-
-        window.onload = loadAllData;
-
-        async function loadAllData() {
-            loadingIndicator.style.opacity = '1';
-            try {
-                const personalPromises = PERSONAL_FILES.map(file => fetch(file).then(r => r.ok ? r.json() : null).catch(e => null));
-                const companyPromises = COMPANY_FILES.map(file => fetch(file).then(r => r.ok ? r.json() : null).catch(e => null));
-                const [personalResults, companyResults] = await Promise.all([ Promise.all(personalPromises), Promise.all(companyPromises) ]);
-                const validPersonal = personalResults.filter(d => d !== null);
-                const validCompany = companyResults.filter(d => d !== null);
-
-                processAndMergeData(validPersonal, validCompany);
-                
-                mainInput.disabled = false;
-                mainInput.focus();
-            } catch (e) {
-                console.error("Error fatal iniciando la app:", e);
-                mainInput.placeholder = "Error al conectar con archivos locales.";
-            } finally {
-                loadingIndicator.style.opacity = '0';
-            }
-        }
-
-        function processAndMergeData(personalRawList, companyRawList) {
-            let flatPersonal = [];
-            const realClientsSet = new Set();
-            FORCED_CLIENTS.forEach(fc => realClientsSet.add(fc));
-
-            companyRawList.forEach((compData, idx) => {
-                if (!compData) return;
-                const fileName = COMPANY_FILES[idx] || "";
-                if (fileName.includes('2022')) return;
-                const cardsList = compData.cards || (Array.isArray(compData) ? compData : []);
-                if (!Array.isArray(cardsList)) return;
-                cardsList.forEach(card => {
-                    if (card.closed) return;
-                    let num = null;
-                    const match = card.name.match(/^((?:TENTATIVO\s+)?\d{2,4}(?:_\d+)?\/\d{2})/i);
-                    if (match) num = match[1];
-                    else num = "EXT-" + card.id;
-                    let cleanName = match ? card.name.substring(num.length).replace(/^[\s\-\.]+/, '') : card.name;
-                    let parts = cleanName.split(/[-–—]/);
-                    let potentialClient = parts[0] ? parts[0].trim() : "SIN CLIENTE";
-                    if (potentialClient.toUpperCase().includes("TENTATIVO") && parts[1]) potentialClient = parts[1].trim();
-                    if (potentialClient && potentialClient.length > 2) realClientsSet.add(potentialClient.toUpperCase());
-                });
-            });
-
-            if (Array.isArray(personalRawList)) {
-                personalRawList.forEach(fileContent => {
-                    if (Array.isArray(fileContent)) {
-                        fileContent.forEach(table => {
-                            if (table && table.proyectos && Array.isArray(table.proyectos)) {
-                                table.proyectos.forEach(p => {
-                                    if (!p.trabajoDiseno) return;
-                                    if (p.trabajoDiseno.toUpperCase().includes('AUTORIZA')) return;
-                                    const searchText = `${p.cliente || ''} ${p.tituloProyecto || ''} ${p.numeroProyecto || ''} ${p.descripcion || ''} ${p.check || ''}`;
-                                    
-                                    let rawLink = String(p.trello || p.trelloUrl || p.enlaceTrello || p.url || "").trim();
-                                    let finalLinkMensual = "";
-                                    
-                                    if (rawLink.includes('trello.com/c/')) {
-                                        finalLinkMensual = rawLink;
-                                    } else if (/^[a-zA-Z0-9]{8}$/.test(rawLink)) {
-                                        finalLinkMensual = `https://trello.com/c/${rawLink}`;
-                                    } else {
-                                        let pStr = JSON.stringify(p);
-                                        let matchFull = pStr.match(/trello\.com\/c\/([a-zA-Z0-9]{8})/i);
-                                        if (matchFull) {
-                                            finalLinkMensual = `https://trello.com/c/${matchFull[1]}`;
-                                        } else {
-                                            let matchShort = pStr.match(/"trello"\s*:\s*"([a-zA-Z0-9]{8})"/i);
-                                            if (matchShort) {
-                                                finalLinkMensual = `https://trello.com/c/${matchShort[1]}`;
-                                            } else {
-                                                finalLinkMensual = rawLink;
-                                            }
-                                        }
-                                    }
-
-                                    let driveMatch = JSON.stringify(p).match(/(https:\/\/drive\.google\.com\/[a-zA-Z0-9\/\-_?=&.]+)/i);
-                                    if (driveMatch && !p.drive) {
-                                        p.drive = driveMatch[1];
-                                    }
-
-                                    if (finalLinkMensual && finalLinkMensual.includes('trello.com')) {
-                                        p.trelloUrl = finalLinkMensual;
-                                    }
-                                    
-                                    flatPersonal.push({ ...p, mesGrupo: table.mes, searchIndex: searchText, linkMensual: finalLinkMensual });
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-
-            let companyProjectsMap = {}; 
-            
-            companyRawList.forEach((compData, idx) => {
-                if (!compData) return;
-                const fileName = COMPANY_FILES[idx] || "";
-                const yearMatch = fileName.match(/202[0-9]/);
-                const sourceYear = yearMatch ? yearMatch[0] : "EXT"; 
-
-                const lists = compData.lists || [];
-                const restrictedListIds = new Set();
-                lists.forEach(l => {
-                    const name = l.name ? l.name.toUpperCase().trim() : '';
-                    if (name === 'COMPRAS' || name === 'TERMINADO DE COMPRAS') restrictedListIds.add(l.id);
-                });
-
-                let cardsList = compData.cards || (Array.isArray(compData) ? compData : []);
-                if (!Array.isArray(cardsList)) return;
-                const labelsMap = {};
-                if(compData.labels) compData.labels.forEach(l => labelsMap[l.id] = l);
-
-                cardsList.forEach(card => {
-                    if(card.closed) return;
-                    if (card.idList && restrictedListIds.has(card.idList)) return;
-                    let num = null;
-                    const match = card.name.match(/^((?:TENTATIVO\s+)?\d{2,4}(?:_\d+)?\/\d{2})/i); 
-                    if(match) num = match[1].toUpperCase(); else num = "EXT-" + card.id; 
-                    let cleanName = match ? card.name.substring(num.length).replace(/^[\s\-\.]+/, '') : card.name;
-                    let parts = cleanName.split(/[-–—]/); 
-                    let client = parts[0] ? parts[0].trim() : "SIN CLIENTE";
-                    if (client.toUpperCase().includes("TENTATIVO") && parts[1]) client = parts[1].trim();
-                    let title = parts.slice(1).join(' ').trim() || client;
-
-                    if (sourceYear === '2022' && !realClientsSet.has(client.toUpperCase())) {
-                        client = "2022"; title = match ? cleanName : card.name;
-                    }
-
-                    if (!match && parts.length === 1 && sourceYear !== '2022') { title = card.name; client = "VARIOS"; }
-
-                    const tags = (card.idLabels || []).map(id => labelsMap[id]).filter(t => t);
-                    const tagNames = tags.map(t => t.name).join(' ');
-                    const companySearchIndex = `${card.name} ${client} ${title} ${num} ${tagNames} ${card.desc || ''}`;
-                    
-                    let trelloDate = "";
-                    if (card.due) {
-                        const d = new Date(card.due); trelloDate = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-                    } else if (card.dateLastActivity) {
-                        const d = new Date(card.dateLastActivity); trelloDate = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-                    }
-
-                    companyProjectsMap[num] = {
-                        numeroProyecto: match ? num : '', rawId: num, cliente: client, tituloProyecto: title,
-                        trelloUrl: card.url || `https://trello.com/c/${card.shortLink}`, tags: tags, fecha: trelloDate,
-                        isExternal: true, sourceYear: sourceYear, searchIndex: companySearchIndex
-                    };
-                });
-            });
-
-            flatPersonal.forEach(p => {
-                const num = p.numeroProyecto ? p.numeroProyecto.trim() : null;
-                if(num && companyProjectsMap[num]) {
-                    const comp = companyProjectsMap[num];
-                    p.cliente = comp.cliente; p.tituloProyecto = comp.tituloProyecto;
-                    p.trelloTags = comp.tags; 
-                    p.linkTrello = comp.trelloUrl || ""; 
-                    p.trelloUrl = p.linkMensual || comp.trelloUrl || p.trelloUrl; 
-                    p.sourceYear = comp.sourceYear; 
-                    p.searchIndex += " " + comp.searchIndex; comp.merged = true;
-                } else {
-                    p.linkTrello = ""; 
-                    p.trelloUrl = p.linkMensual || p.trelloUrl;
-                }
-            });
-
-            Object.values(companyProjectsMap).forEach(comp => {
-                if(!comp.merged) {
-                    flatPersonal.push({
-                        cliente: comp.cliente, tituloProyecto: comp.tituloProyecto, numeroProyecto: comp.numeroProyecto,
-                        descripcion: "Registro externo en Trello.", fecha: comp.fecha, trabajoDiseno: "PRODUCCIÓN", 
-                        isExternal: true, trelloTags: comp.tags, trelloUrl: comp.trelloUrl, sourceYear: comp.sourceYear, 
-                        entries: [], searchIndex: comp.searchIndex,
-                        linkMensual: "", linkTrello: comp.trelloUrl || "" 
-                    });
-                }
-            });
-
-            mergedData = flatPersonal;
-        }
-
-        mainInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(mainInput.value); });
-        headerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') performSearch(headerInput.value); });
-
-        function performSearch(query) {
-            const cleanQuery = query.trim();
-            if (!cleanQuery) return;
-            const lowerQuery = cleanQuery.toLowerCase();
-
-            if (lowerQuery === 'enlaces') {
-                openEnlacesView();
-                resultsView.classList.add('translate-y-full');
-                projectListView.classList.add('translate-x-full');
-                finalView.classList.add('translate-x-full');
-                chartDetailsView.classList.add('translate-x-full');
-                yearDashboardView.classList.add('translate-x-full');
-                return;
-            }
-
-            if (lowerQuery === 'clientes') {
-                viewMode = 'CLIENT';
-                activeSearchQuery = ''; 
-                isClientListFiltered = false; 
-                renderClientSelectionList();
-                openResultsView();
-                document.getElementById('results-title').innerText = "Listado General de Clientes";
-                headerInput.value = "";
-                return;
-            }
-
-            const yearMatch = cleanQuery.match(/^202[0-9]$/);
-            if (yearMatch) {
-                showYearDashboard(yearMatch[0]);
-                return;
-            }
-
-            viewMode = 'CLIENT';
-            activeSearchQuery = cleanQuery;
-            isClientListFiltered = true;
-            renderClientSelectionList();
-            
-            if (!projectListView.classList.contains('translate-x-full')) closeProjectListView();
-            chartDetailsView.classList.add('translate-x-full');
-            yearDashboardView.classList.add('translate-x-full');
-            openResultsView();
-            headerInput.value = activeSearchQuery;
-        }
-
-        function openEnlacesView() {
-            currentEnlacesFilter = 'todos';
-            enlacesFiltros = { sinMensual: false, conMensual: false, sinTrello: false, conTrello: false };
-            renderEnlacesView();
-            searchView.classList.add('-translate-y-full', 'opacity-0');
-            enlacesView.classList.remove('translate-y-full');
-        }
-
-        function closeEnlacesView() {
-            mainInput.value = '';
-            enlacesView.classList.add('translate-y-full');
-            searchView.classList.remove('-translate-y-full', 'opacity-0');
-            setTimeout(() => mainInput.focus(), 500);
-        }
-
-        function filterEnlaces(type) {
-            currentEnlacesFilter = type;
-            renderEnlacesView();
-        }
-
-        function toggleEnlaceFiltro(filtro) {
-            enlacesFiltros[filtro] = !enlacesFiltros[filtro];
-            renderEnlacesView();
-        }
-
-        function updateEnlacesButtons() {
-            const btnTodos = document.getElementById('btn-enlaces-todos');
-            const btnBuenos = document.getElementById('btn-enlaces-buenos');
-            const btnMalos = document.getElementById('btn-enlaces-malos');
-            
-            btnTodos.className = "px-4 py-1.5 rounded-full text-sm font-bold transition-colors " + (currentEnlacesFilter === 'todos' ? 'bg-slate-600 text-white shadow-md' : 'bg-slate-200 text-slate-600 hover:bg-slate-300');
-            btnBuenos.className = "px-4 py-1.5 rounded-full text-sm font-bold transition-colors " + (currentEnlacesFilter === 'buenos' ? 'bg-green-600 text-white shadow-md' : 'bg-green-100 text-green-700 hover:bg-green-200');
-            btnMalos.className = "px-4 py-1.5 rounded-full text-sm font-bold transition-colors " + (currentEnlacesFilter === 'malos' ? 'bg-red-600 text-white shadow-md' : 'bg-red-100 text-red-700 hover:bg-red-200');
-
-            const btnSinMensual = document.getElementById('btn-filtro-sin-mensual');
-            const btnConMensual = document.getElementById('btn-filtro-con-mensual');
-            const btnSinTrello = document.getElementById('btn-filtro-sin-trello');
-            const btnConTrello = document.getElementById('btn-filtro-con-trello');
-
-            const activeClass = 'bg-amber-100 text-amber-700 border-amber-300 shadow-sm';
-            const inactiveClass = 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200';
-
-            btnSinMensual.className = `px-3 py-1.5 rounded-full text-xs font-bold transition-colors border ${enlacesFiltros.sinMensual ? activeClass : inactiveClass}`;
-            btnConMensual.className = `px-3 py-1.5 rounded-full text-xs font-bold transition-colors border ${enlacesFiltros.conMensual ? activeClass : inactiveClass}`;
-            btnSinTrello.className = `px-3 py-1.5 rounded-full text-xs font-bold transition-colors border ${enlacesFiltros.sinTrello ? activeClass : inactiveClass}`;
-            btnConTrello.className = `px-3 py-1.5 rounded-full text-xs font-bold transition-colors border ${enlacesFiltros.conTrello ? activeClass : inactiveClass}`;
-        }
-
-        function renderEnlacesView() {
-            const projectMap = {};
-            
-            const getTrelloId = (link) => {
-                if (!link) return "";
-                let m = String(link).match(/trello\.com\/c\/([a-zA-Z0-9]{8})/i);
-                if (m) return m[1];
-                let clean = String(link).trim();
-                if (/^[a-zA-Z0-9]{8}$/.test(clean)) return clean;
-                return clean;
-            };
-
-            mergedData.forEach(item => {
-                const num = item.numeroProyecto ? item.numeroProyecto.trim() : null;
-                if (!num) return;
-                
-                const is25or26 = num.match(/\/(25|26)$/);
-                if (!is25or26) return;
-                
-                if (!projectMap[num]) {
-                    projectMap[num] = {
-                        numero: num,
-                        cliente: item.cliente || 'SIN CLIENTE',
-                        titulo: item.tituloProyecto || '',
-                        linkMensual: item.linkMensual || '',
-                        linkTrello: item.linkTrello || ''
-                    };
-                } else {
-                    if (!projectMap[num].linkMensual && item.linkMensual) projectMap[num].linkMensual = item.linkMensual;
-                    if (!projectMap[num].linkTrello && item.linkTrello) projectMap[num].linkTrello = item.linkTrello;
-                    if (item.tituloProyecto && projectMap[num].titulo === '') projectMap[num].titulo = item.tituloProyecto;
-                }
-            });
-            
-            let projects = Object.values(projectMap);
-            
-            projects.sort((a, b) => {
-                const getVal = (num) => {
-                    const match = num.match(/(\d+)(?:_\d+)?\/(\d+)/);
-                    if(!match) return 0;
-                    return parseInt(match[2], 10) * 10000 + parseInt(match[1], 10);
-                };
-                return getVal(a.numero) - getVal(b.numero);
-            });
-            
-            projects = projects.filter(p => {
-                const idMensual = getTrelloId(p.linkMensual);
-                const idTrello = getTrelloId(p.linkTrello);
-                
-                const isMatch = (idMensual === idTrello) && idMensual !== '' && idMensual !== 'http' && idMensual !== 'https';
-                const hasMensual = idMensual !== '' && idMensual !== 'http' && idMensual !== 'https';
-                const hasTrello = idTrello !== '' && idTrello !== 'http' && idTrello !== 'https';
-
-                if (currentEnlacesFilter === 'buenos' && !isMatch) return false;
-                if (currentEnlacesFilter === 'malos' && isMatch) return false;
-
-                if (enlacesFiltros.sinMensual && hasMensual) return false;
-                if (enlacesFiltros.conMensual && !hasMensual) return false;
-                if (enlacesFiltros.sinTrello && hasTrello) return false;
-                if (enlacesFiltros.conTrello && !hasTrello) return false;
-
-                return true;
-            });
-            
-            document.getElementById('enlaces-count').innerText = `${projects.length} proyectos encontrados`;
-            
-            const container = document.getElementById('enlaces-container');
-            let html = '';
-            
-            projects.forEach(p => {
-                const idMensual = getTrelloId(p.linkMensual);
-                const idTrello = getTrelloId(p.linkTrello);
-                const isMatch = (idMensual === idTrello) && idMensual !== '' && idMensual !== 'http' && idMensual !== 'https';
-                
-                const rowClass = isMatch ? 'bg-green-50 border-green-300 shadow-[0_0_8px_rgba(34,197,94,0.15)]' : 'bg-red-50 border-red-300 shadow-[0_0_8px_rgba(239,68,68,0.15)]';
-                const textClass = isMatch ? 'text-green-800' : 'text-red-800';
-                const iconMatch = isMatch 
-                    ? `<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>` 
-                    : `<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
-
-                const mensualUrl = p.linkMensual;
-                const trelloUrl = p.linkTrello;
-
-                const linkMensualEl = mensualUrl ? `<a href="${mensualUrl}" target="_blank" class="text-[11px] font-bold bg-white/80 hover:bg-white border border-slate-300 px-2 py-1 rounded text-blue-600 truncate max-w-[200px] flex items-center gap-1 shadow-sm transition-colors" title="${mensualUrl}">JSON MENSUAL <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>` : `<span class="text-[11px] font-bold text-slate-400 italic px-2 py-1 bg-white/40 border border-slate-200 rounded">Sin JSON Mensual</span>`;
-                const linkTrelloEl = trelloUrl ? `<a href="${trelloUrl}" target="_blank" class="text-[11px] font-bold bg-white/80 hover:bg-white border border-slate-300 px-2 py-1 rounded text-sky-600 truncate max-w-[200px] flex items-center gap-1 shadow-sm transition-colors" title="${trelloUrl}">JSON TRELLO <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M19 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 15H7V7h5v10zm5-4h-3V7h3v6z"/></svg></a>` : `<span class="text-[11px] font-bold text-slate-400 italic px-2 py-1 bg-white/40 border border-slate-200 rounded">Sin JSON Trello</span>`;
-
-                html += `
-                <div class="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl border ${rowClass} gap-4 transition-all hover:-translate-y-0.5">
-                    <div class="flex items-center gap-4 flex-1 w-full overflow-hidden">
-                        <div class="shrink-0 flex items-center justify-center bg-white rounded-full p-2 border border-white/50 shadow-sm">
-                            ${iconMatch}
-                        </div>
-                        <div class="flex flex-col flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-0.5">
-                                <span class="font-mono font-black text-lg ${textClass}">${p.numero}</span>
-                                <span class="text-[10px] font-bold text-slate-500 uppercase bg-white/60 px-2 py-0.5 rounded border border-slate-200/50 truncate max-w-[150px] sm:max-w-none">${p.cliente}</span>
-                            </div>
-                            <span class="text-sm font-semibold text-slate-700 truncate" title="${p.titulo}">${p.titulo}</span>
-                        </div>
-                    </div>
-                    <div class="flex flex-row items-center gap-2 w-full md:w-auto shrink-0 bg-white/40 p-2.5 rounded-lg border border-white/60">
-                        ${linkMensualEl}
-                        ${linkTrelloEl}
-                    </div>
-                </div>`;
-            });
-            
-            if (projects.length === 0) {
-                html = `<div class="text-center py-20 text-slate-400 font-medium bg-white rounded-xl border border-slate-200 shadow-sm">No hay proyectos que coincidan con este filtro.</div>`;
-            }
-            
-            container.innerHTML = html;
-            updateEnlacesButtons();
-        }
-
-        function createReusableChart(ctx, counts, year, monthNum, useShortLabels, fontSize, chartTitleText) {
-            const fullLabels = ['RENDIMIENTO', 'VISUAL', 'PLANO MECÁNICO', 'MUESTRA', 'PRODUCCIÓN'];
-            const shortLabels = ['REND', 'VIS', 'PLANO', 'MUES', 'PROD'];
-            const displayLabels = useShortLabels ? shortLabels : fullLabels;
-            const data = fullLabels.map(l => counts[l] || 0);
-            const monthName = monthNum ? MONTH_NAMES[monthNum - 1] : "General";
-
-            return new Chart(ctx, {
-                type: 'bar',
-                plugins: [ChartDataLabels],
-                data: {
-                    labels: displayLabels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: ['rgba(37, 99, 235, 0.8)', 'rgba(22, 163, 74, 0.8)', 'rgba(147, 51, 234, 0.8)', 'rgba(202, 138, 4, 0.8)', 'rgba(234, 88, 12, 0.8)'],
-                        borderColor: ['rgb(37, 99, 235)', 'rgb(22, 163, 74)', 'rgb(147, 51, 234)', 'rgb(202, 138, 4)', 'rgb(234, 88, 12)'],
-                        borderWidth: 1, borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    layout: { padding: { top: fontSize + 15 } },
-                    onClick: (event, elements, chart) => {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const category = fullLabels[index];
-                            if (counts[category] > 0) {
-                                openChartDetails(monthNum, year, monthName, category);
-                            }
-                        }
-                    },
-                    onHover: (event, elements, chart) => {
-                        const isClickable = elements.length > 0 && counts[fullLabels[elements[0].index]] > 0;
-                        event.native.target.style.cursor = isClickable ? 'pointer' : 'default';
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        title: { 
-                            display: !!chartTitleText, 
-                            text: chartTitleText,
-                            font: { size: 16, family: "'Inter', sans-serif", weight: 'bold' }, 
-                            padding: { bottom: 20 }
-                        },
-                        datalabels: {
-                            anchor: 'end', align: 'top', color: '#334155',
-                            font: { size: fontSize, weight: 'black', family: "'Inter', sans-serif" },
-                            formatter: function(value) { return value > 0 ? value : ''; }
-                        }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, grace: '20%', ticks: { stepSize: 1, display: false }, grid: { display: false, drawBorder: false } },
-                        x: { ticks: { font: { family: "'Inter', sans-serif", weight: 'bold', size: useShortLabels ? 10 : 12 } }, grid: { display: false, drawBorder: false } }
-                    }
-                }
-            });
-        }
-
-        function showYearDashboard(yearStr) {
-            const targetYear = parseInt(yearStr, 10);
-            window.currentDashboardYear = targetYear; 
-            document.getElementById('year-dashboard-label').innerText = yearStr;
-
-            const yearData = mergedData.filter(item => {
-                if (item.isExternal) return false;
-                if (item.fecha) {
-                    const [d, m, y] = item.fecha.split('/');
-                    return parseInt(y, 10) === targetYear;
-                }
-                return false;
-            });
-
-            if (yearChartInstances.length > 0) {
-                yearChartInstances.forEach(c => c.destroy());
-                yearChartInstances = [];
-            }
-
-            const generalCounts = { 'RENDIMIENTO': 0, 'VISUAL': 0, 'PLANO MECÁNICO': 0, 'MUESTRA': 0, 'PRODUCCIÓN': 0 };
-            const monthlyCounts = {};
-            for(let i = 1; i <= 12; i++) {
-                monthlyCounts[i] = { 'RENDIMIENTO': 0, 'VISUAL': 0, 'PLANO MECÁNICO': 0, 'MUESTRA': 0, 'PRODUCCIÓN': 0 };
-            }
-
-            yearData.forEach(item => {
-                let cat = item.trabajoDiseno ? item.trabajoDiseno.toUpperCase().trim() : 'OTRO';
-                const m = parseInt(item.fecha.split('/')[1], 10);
-                if (generalCounts[cat] !== undefined) generalCounts[cat]++;
-                if (monthlyCounts[m] && monthlyCounts[m][cat] !== undefined) monthlyCounts[m][cat]++;
-            });
-
-            const ctxGen = document.getElementById('yearGeneralChart').getContext('2d');
-            const genChart = createReusableChart(ctxGen, generalCounts, targetYear, null, false, 24, null);
-            yearChartInstances.push(genChart);
-
-            let gridHtml = '';
-            MONTH_NAMES.forEach((monthName, idx) => {
-                gridHtml += `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col h-[280px] hover:shadow-md transition-shadow">
-                    <div class="flex justify-between items-center mb-1">
-                        <h4 class="font-bold text-slate-700 tracking-wide cursor-pointer hover:text-amber-500 transition-colors" onclick="openChartDetails(${idx + 1}, ${targetYear}, '${monthName}', 'TODAS')" title="Ver mes completo">${monthName}</h4>
-                    </div>
-                    <div class="relative flex-1 w-full"><canvas id="monthChart_${idx + 1}"></canvas></div>
-                </div>`;
-            });
-            document.getElementById('year-months-grid').innerHTML = gridHtml;
-
-            MONTH_NAMES.forEach((monthName, idx) => {
-                const mNum = idx + 1;
-                const ctxM = document.getElementById(`monthChart_${mNum}`).getContext('2d');
-                const mChart = createReusableChart(ctxM, monthlyCounts[mNum], targetYear, mNum, true, 13, null);
-                yearChartInstances.push(mChart);
-            });
-
-            searchView.classList.add('-translate-y-full', 'opacity-0');
-            resultsView.classList.add('translate-y-full');
-            projectListView.classList.add('translate-x-full');
-            finalView.classList.add('translate-x-full');
-            chartDetailsView.classList.add('translate-x-full');
-            if (typeof enlacesView !== 'undefined') enlacesView.classList.add('translate-y-full');
-            yearDashboardView.classList.remove('translate-x-full');
-        }
-
-        function closeYearDashboardView() {
-            yearDashboardView.classList.add('translate-x-full');
-            searchView.classList.remove('-translate-y-full', 'opacity-0');
-            mainInput.value = '';
-            viewMode = 'CLIENT'; 
-            setTimeout(() => mainInput.focus(), 500);
-        }
-
-        function renderDetailsPieChart(labels, data, onClick, displayLabels = null) {
-            const ctx = document.getElementById('detailsPieChart').getContext('2d');
-            if (detailsPieChartInstance) detailsPieChartInstance.destroy();
-
-            const chartLabels = displayLabels || labels;
-            const bgColors = chartLabels.map((_, i) => PASTEL_COLORS[i % PASTEL_COLORS.length]);
-            
-            window.currentPieClickCallback = onClick;
-            window.currentPieOriginalLabels = labels;
-
-            detailsPieChartInstance = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: chartLabels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: bgColors,
-                        borderWidth: 2,
-                        borderColor: '#ffffff',
-                        hoverOffset: 10
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }, 
-                        datalabels: { display: false }
-                    },
-                    onClick: (event, elements) => {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            onClick(window.currentPieOriginalLabels[index]); 
-                        }
-                    },
-                    onHover: (event, elements) => {
-                        event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
-                    }
-                }
-            });
-
-            const legendContainer = document.getElementById('detailsPieLegend');
-            let legendHTML = '';
-            
-            chartLabels.forEach((displayLabel, i) => {
-                const color = PASTEL_COLORS[i % PASTEL_COLORS.length];
-                const val = data[i];
-                const originalLabel = labels[i];
-                const safeOriginalLabel = originalLabel.replace(/'/g, "\'").replace(/"/g, "&quot;");
-                
-                legendHTML += `
-                    <div onclick="if(window.currentPieClickCallback) window.currentPieClickCallback('${safeOriginalLabel}')" 
-                         class="flex items-center gap-2 cursor-pointer hover:bg-slate-100 p-1.5 rounded-md transition-colors group">
-                        <span class="w-3 h-3 rounded-full shrink-0 shadow-sm" style="background-color: ${color}; border: 1px solid rgba(0,0,0,0.05)"></span>
-                        <span class="text-xs font-semibold text-slate-700 truncate group-hover:text-amber-600 transition-colors" title="${displayLabel}">${displayLabel}</span>
-                        <span class="text-xs font-bold text-slate-400 ml-auto bg-slate-100 px-1.5 py-0.5 rounded">${val}</span>
-                    </div>
-                `;
-            });
-            
-            legendContainer.innerHTML = legendHTML;
-        }
-
-        function openChartDetails(monthNum, year, monthName, category) {
-            window.chartDetailsState = {
-                year: year, month: monthNum, monthName: monthName, category: category,
-                level: 'CLIENT', selectedClient: null, selectedProject: null, baseItems: []
-            };
-
-            window.chartDetailsState.baseItems = mergedData.filter(item => {
-                if (item.isExternal) return false;
-                let cat = item.trabajoDiseno ? item.trabajoDiseno.toUpperCase().trim() : 'OTRO';
-                if (category !== 'TODAS' && cat !== category) return false;
-                if (!item.fecha) return false;
-                const [d, m, yStr] = item.fecha.split('/');
-                if (parseInt(yStr, 10) !== year) return false;
-                if (monthNum !== null && parseInt(m, 10) !== monthNum) return false;
-                return true;
-            });
-
-            viewMode = 'CHART_DETAILS';
-            yearDashboardView.classList.add('translate-x-full');
-            chartDetailsView.classList.remove('translate-x-full');
-            
-            renderChartDetailsView();
-        }
-
-        function updateDetailsHeader(title, subtitle, showBackBtn, trelloHtml = '') {
-            document.getElementById('chart-details-title').innerText = title;
-            document.getElementById('chart-details-subtitle').innerText = subtitle;
-            
-            const btnClose = document.getElementById('btn-close-chart-details');
-            const btnBack = document.getElementById('btn-back-chart-details');
-            
-            if (showBackBtn) {
-                btnClose.classList.add('hidden');
-                btnBack.classList.remove('hidden');
-            } else {
-                btnClose.classList.remove('hidden');
-                btnBack.classList.add('hidden');
-            }
-
-            const linksContainer = document.getElementById('chart-details-links');
-            if (linksContainer) {
-                linksContainer.innerHTML = trelloHtml;
-            }
-        }
-
-        function toggleChartDetailsCategory(c) {
-            const state = window.chartDetailsState;
-            const newCat = (state.category === c) ? 'TODAS' : c;
-            state.category = newCat;
-            
-            state.baseItems = mergedData.filter(item => {
-                if (item.isExternal) return false;
-                let cat = item.trabajoDiseno ? item.trabajoDiseno.toUpperCase().trim() : 'OTRO';
-                if (newCat !== 'TODAS' && cat !== newCat) return false;
-                if (!item.fecha) return false;
-                const [d, m, yStr] = item.fecha.split('/');
-                if (parseInt(yStr, 10) !== state.year) return false;
-                if (state.month !== null && parseInt(m, 10) !== state.month) return false;
-                return true;
-            });
-            
-            renderChartDetailsView();
-        }
-
-        function renderChartDetailsView() {
-            const state = window.chartDetailsState;
-            
-            const detailsCats = ['RENDIMIENTO', 'VISUAL', 'PLANO MECÁNICO', 'MUESTRA', 'PRODUCCIÓN'];
-            document.getElementById('chart-details-category-filters').innerHTML = detailsCats.map(c => {
-                 const style = CAT_STYLES[c] || { btnColor: 'bg-slate-500' };
-                 const opacity = (state.category !== 'TODAS' && state.category !== c) ? 'opacity-30' : 'opacity-100';
-                 return `<button onclick="toggleChartDetailsCategory('${c}')" class="${style.btnColor} text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full ${opacity} hover:opacity-100 shadow-sm transition-opacity text-xs md:text-sm font-bold">${toTitleCase(c)}</button>`;
-            }).join('');
-
-            let activeItems = state.baseItems;
-            if (state.level === 'PROJECT' || state.level === 'FILTERED_PROJECT') {
-                activeItems = activeItems.filter(i => (i.cliente || 'SIN CLIENTE') === state.selectedClient);
-            }
-            if (state.level === 'FILTERED_PROJECT') {
-                activeItems = activeItems.filter(i => {
-                    const key = (i.numeroProyecto && i.numeroProyecto.trim().length > 2) ? i.numeroProyecto : (i.tituloProyecto || 'SIN TITULO');
-                    return key === state.selectedProject;
-                });
-            }
-
-            renderCalendar(activeItems, 'details-calendar-container', 'details-entries-count');
-
-            const timeLabel = state.month === null ? `Año ${state.year}` : `${state.monthName} ${state.year}`;
-            const headerMainText = state.category === 'TODAS' ? `Resumen General` : `Filtro: ${state.category}`;
-
-            if (state.level === 'CLIENT') {
-                const counts = {};
-                state.baseItems.forEach(i => {
-                    const c = i.cliente || 'SIN CLIENTE';
-                    counts[c] = (counts[c] || 0) + 1;
-                });
-                
-                const sortedClients = Object.keys(counts).map(k => ({
-                    key: k, count: counts[k]
-                })).sort((a, b) => b.count - a.count);
-                
-                const labels = sortedClients.map(item => item.key);
-                const data = sortedClients.map(item => item.count);
-                
-                renderDetailsPieChart(labels, data, (clickedClient) => {
-                    state.level = 'PROJECT';
-                    state.selectedClient = clickedClient;
-                    renderChartDetailsView();
-                });
-                
-                updateDetailsHeader(`${headerMainText} (${timeLabel})`, 'Distribución por Clientes', false);
-                document.getElementById('pie-chart-title').innerText = "Clientes";
-                document.getElementById('pie-chart-desc').innerText = "Haz clic en la torta o en un cliente de la lista para ver sus proyectos.";
-
-            } else if (state.level === 'PROJECT' || state.level === 'FILTERED_PROJECT') {
-                const counts = {};
-                const titles = {};
-                const clientItems = state.baseItems.filter(i => (i.cliente || 'SIN CLIENTE') === state.selectedClient);
-                clientItems.forEach(i => {
-                    const p = (i.numeroProyecto && i.numeroProyecto.trim().length > 2) ? i.numeroProyecto : (i.tituloProyecto || 'SIN TITULO');
-                    counts[p] = (counts[p] || 0) + 1;
-                    if (!titles[p] && i.tituloProyecto) {
-                        titles[p] = i.tituloProyecto;
-                    }
-                });
-                
-                const sortedProjects = Object.keys(counts).map(k => {
-                    let display = k;
-                    if (titles[k] && k !== titles[k]) {
-                        display = `${k} - ${titles[k]}`;
-                    }
-                    return { key: k, count: counts[k], display: display };
-                }).sort((a, b) => b.count - a.count);
-                
-                const labels = sortedProjects.map(item => item.key);
-                const data = sortedProjects.map(item => item.count);
-                const displayLabels = sortedProjects.map(item => item.display);
-
-                renderDetailsPieChart(labels, data, (clickedProject) => {
-                    state.level = 'FILTERED_PROJECT';
-                    state.selectedProject = clickedProject;
-                    renderChartDetailsView();
-                }, displayLabels);
-
-                if (state.level === 'PROJECT') {
-                    updateDetailsHeader(`Cliente: ${state.selectedClient}`, 'Distribución por Proyectos', true);
-                    document.getElementById('pie-chart-title').innerText = "Proyectos";
-                    document.getElementById('pie-chart-desc').innerText = "Clic en un proyecto para filtrar calendario.";
-                } else {
-                    let fullTitle = state.selectedProject;
-                    let trelloLink = '';
-                    
-                    if (activeItems.length > 0) {
-                        const firstItem = activeItems[0];
-                        let titleParts = [];
-                        
-                        if (firstItem.numeroProyecto && firstItem.numeroProyecto.trim().length > 2) {
-                            titleParts.push(firstItem.numeroProyecto);
-                        }
-                        
-                        if (firstItem.tituloProyecto && firstItem.tituloProyecto !== firstItem.numeroProyecto) {
-                            let cleanTitle = firstItem.tituloProyecto;
-                            if (firstItem.numeroProyecto && cleanTitle.startsWith(firstItem.numeroProyecto)) {
-                                cleanTitle = cleanTitle.replace(firstItem.numeroProyecto, '').replace(/^[\s\-\.]+/, '');
-                            }
-                            if (cleanTitle) {
-                                titleParts.push(cleanTitle);
-                            }
-                        }
-                        
-                        fullTitle = titleParts.join(' - ') || state.selectedProject;
-                        
-                        const itemWithUrl = activeItems.find(i => i.trelloUrl);
-                        if (itemWithUrl) {
-                            const safeUrl = itemWithUrl.trelloUrl.replace(/"/g, '&quot;');
-                            trelloLink = `<a href="${safeUrl}" target="_blank" class="flex items-center gap-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-md transition-colors shadow-sm ml-2"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 15H7V7h5v10zm5-4h-3V7h3v6z"/></svg>Trello</a>`;
-                        }
-                    }
-
-                    updateDetailsHeader(`Proyecto: ${fullTitle}`, 'Calendario Filtrado', true, trelloLink);
-                    
-                    document.getElementById('pie-chart-title').innerText = "Entradas del Proyecto";
-                    document.getElementById('pie-chart-desc').innerText = "Listado ordenado por fecha.";
-                    
-                    const legendContainer = document.getElementById('detailsPieLegend');
-                    let listHtml = '';
-                    const sortedEntries = [...activeItems].sort((a, b) => parseDate(a.fecha) - parseDate(b.fecha));
-                    
-                    sortedEntries.forEach(item => {
-                        const cat = item.trabajoDiseno ? item.trabajoDiseno.toUpperCase() : 'OTRO';
-                        const style = CAT_STYLES[cat] || CAT_STYLES['OTRO']; 
-                        const isFalta = item.check === 'FALTA';
-                        
-                        let cardClass = style.card;
-                        if (isFalta) {
-                            cardClass = cardClass.replace(/border-\w+-\d+/g, ''); 
-                            cardClass += ' border-2 border-red-600 shadow-[0_0_10px_rgba(220,38,38,0.3)]';
-                        }
-                        
-                        const hlDesc = item.descripcion || '';
-                        
-                        listHtml += `
-                            <div class="p-3 mb-2 rounded-xl border text-sm ${cardClass} flex flex-col gap-2 relative overflow-hidden bg-white hover:bg-slate-50 transition-colors shrink-0 mx-1">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${style.badge}">${cat}</span>
-                                        <span class="text-[10px] font-bold text-slate-600 bg-white/80 px-1.5 py-0.5 rounded border border-slate-200/60 shadow-sm flex items-center gap-1"><svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>${item.fecha}</span>
-                                    </div>
-                                    ${item.drive ? `<a href="${item.drive}" target="_blank" class="text-blue-600 hover:text-blue-800 bg-slate-100 hover:bg-slate-200 rounded px-1.5 py-0.5 flex items-center shadow-sm text-[10px] font-bold transition-colors" title="Ver archivo Drive"><svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>DRIVE</a>` : ''}
-                                </div>
-                                <p class="text-slate-700 leading-relaxed text-xs font-medium border-t border-slate-100/60 pt-1.5 mt-0.5">${hlDesc}</p>
-                            </div>
-                        `;
-                    });
-                    
-                    legendContainer.innerHTML = listHtml;
-                }
-            }
-        }
-
-        function goBackChartDetails() {
-            const state = window.chartDetailsState;
-            if (state.level === 'FILTERED_PROJECT') {
-                state.level = 'PROJECT';
-                state.selectedProject = null;
-                renderChartDetailsView();
-            } else if (state.level === 'PROJECT') {
-                state.level = 'CLIENT';
-                state.selectedClient = null;
-                renderChartDetailsView();
-            }
-        }
-
-        function closeChartDetailsView() {
-            chartDetailsView.classList.add('translate-x-full');
-            yearDashboardView.classList.remove('translate-x-full');
-            closeDayPanel();
-        }
-
-        function renderCalendar(items, containerId, countBadgeId = 'entries-count-badge') {
-            const container = document.getElementById(containerId);
-            window.currentRenderedFinalItems = items; 
-
-            if (countBadgeId) document.getElementById(countBadgeId).innerText = items.length;
-
-            const eventsByDate = {};
-            let minDate = null;
-            let maxDate = null;
-
-            items.forEach(item => {
-                if(!item.fecha) return false;
-                const [dStr, mStr, yStr] = item.fecha.split('/');
-                if(!dStr || !mStr || !yStr) return false;
-                
-                const d = parseInt(dStr);
-                const m = parseInt(mStr);
-                const y = parseInt(yStr);
-
-                const totalMonths = y * 12 + m;
-                if (minDate === null || totalMonths < minDate) minDate = totalMonths;
-                if (maxDate === null || totalMonths > maxDate) maxDate = totalMonths;
-
-                const key = `${y}-${m}`;
-                if (!eventsByDate[key]) eventsByDate[key] = {};
-                if (!eventsByDate[key][d]) eventsByDate[key][d] = [];
-                eventsByDate[key][d].push(item);
-            });
-
-            if (Object.keys(eventsByDate).length === 0 || minDate === null || maxDate === null) {
-                container.innerHTML = '<div class="w-full text-center text-slate-300 mt-10">Sin fechas registradas</div>'; return;
-            }
-
-            const continuousMonths = [];
-            for (let t = minDate; t <= maxDate; t++) {
-                let year = Math.floor((t - 1) / 12);
-                let month = ((t - 1) % 12) + 1;
-                continuousMonths.push(`${year}-${month}`);
+    .notebook-page {
+      background-color: #fdfbf7;
+      color: #1e3a8a;
+      position: relative;
+      padding: 30px 40px 40px 60px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px 12px 12px 4px;
+      box-shadow: -4px 0px 0px #cbd5e1, 3px 5px 12px rgba(0,0,0,0.15);
+      background-image: repeating-linear-gradient(
+        transparent,
+        transparent 29px,
+        #94a3b8 30px
+      );
+      line-height: 30px;
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .notebook-page::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 40px;
+      width: 2px;
+      background-color: #ef4444; 
+    }
+
+    .notebook-title {
+      font-size: 1.9rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      border-bottom: 2px dashed #1e3a8a;
+      display: inline-block;
+      line-height: 1.2;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .notebook-title:hover {
+      opacity: 0.7;
+    }
+
+    .notebook-checklist {
+      margin-bottom: 20px;
+    }
+    
+    .notebook-checklist-title {
+      font-weight: 700;
+      font-size: 1.3rem;
+      margin-top: 10px;
+      margin-bottom: 5px;
+    }
+
+    .notebook-target-list {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .notebook-target-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .notebook-target-item.completed {
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+      opacity: 0.8;
+    }
+
+    .notebook-checkbox {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #1e3a8a;
+      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+      line-height: 16px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      background: white;
+    }
+
+    .notebook-entries {
+      display: none; /* Oculto por defecto */
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .notebook-entry {
+      display: block;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .cal-header {
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--pen-color);
+      border-bottom: 2px solid var(--pen-color);
+      padding-bottom: 4px;
+      border-radius: 50% 50% 50% 50% / 10% 10% 90% 90%;
+    }
+
+    .cal-day {
+      background: transparent;
+      border: 2px solid var(--pen-color);
+      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+      min-height: 70px;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.1s ease;
+      overflow: hidden;
+    }
+
+    .cal-day:hover {
+      transform: scale(1.05) rotate(2deg);
+      box-shadow: 2px 2px 0px var(--pen-color);
+      z-index: 5;
+    }
+
+    .cal-day.empty {
+      border: 2px dashed #94a3b8;
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    .cal-day.empty:hover {
+      transform: none;
+      box-shadow: none;
+      z-index: 1;
+    }
+
+    .cal-day.today {
+      border: 3px solid #f43f5e;
+      box-shadow: inset 0 0 0 2px #fef08a;
+    }
+    
+    .cal-day.active-day {
+      border-width: 3px;
+      box-shadow: 3px 3px 0px var(--pen-color);
+      transform: translateY(-2px);
+    }
+
+    .cal-day.dimmed {
+      opacity: 0.25;
+      filter: grayscale(0.8);
+    }
+
+    .cal-num {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--pen-color);
+      z-index: 2;
+    }
+
+    .cal-day[style*="background"] .cal-num {
+      color: #fff;
+      text-shadow: 1px 1px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000;
+    }
+
+    .cal-badge-count {
+      align-self: flex-end;
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: var(--card-bg);
+      border: 2px solid var(--pen-color);
+      padding: 0px 6px;
+      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+      color: var(--pen-color);
+      z-index: 2;
+    }
+
+    .log-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .log-list-container::-webkit-scrollbar {
+      width: 8px;
+    }
+    .log-list-container::-webkit-scrollbar-thumb {
+      background: var(--pen-color);
+      border-radius: 4px;
+    }
+
+    .log-group {
+      background: transparent;
+      border: 2px solid var(--pen-color);
+      border-left-width: 6px;
+      border-radius: 2% 95% 3% 97% / 93% 4% 97% 5%;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 2px 2px 0px rgba(0,0,0,0.05);
+    }
+
+    .log-group-header {
+      font-weight: 700;
+      font-size: 1.2rem;
+      border-bottom: 2px dashed #94a3b8;
+      padding-bottom: 4px;
+    }
+
+    .log-item-text {
+      font-size: 1rem;
+      color: var(--text);
+      padding-left: 14px;
+      position: relative;
+    }
+    
+    .log-item-text::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--pen-color);
+      font-size: 1.2rem;
+    }
+
+    .log-item-date {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: block;
+      margin-left: 14px;
+      font-style: italic;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      cursor: pointer;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* --- MEDIA QUERIES PARA MÓVILES --- */
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+        background-size: 15px 15px;
+      }
+      
+      .container {
+        gap: 20px;
+      }
+      
+      header h1 {
+        font-size: 2.1rem;
+      }
+      
+      header p {
+        font-size: 1rem;
+      }
+
+      .split-layout {
+        gap: 20px;
+      }
+
+      .sketchy-panel {
+        padding: 16px;
+        gap: 16px;
+      }
+      
+      .panel-header {
+        font-size: 1.4rem;
+      }
+
+      .notebook-page {
+        padding: 20px 15px 25px 35px;
+        font-size: 1.05rem;
+        line-height: 24px;
+        background-image: repeating-linear-gradient(transparent, transparent 23px, #94a3b8 24px);
+      }
+      
+      .notebook-page::before {
+        left: 20px;
+      }
+
+      .notebook-title {
+        font-size: 1.6rem;
+      }
+
+      .notebook-target-item {
+        align-items: flex-start;
+        margin-bottom: 6px;
+      }
+      
+      .notebook-checkbox {
+        flex-shrink: 0;
+        margin-top: 3px;
+      }
+
+      .calendar-grid {
+        gap: 4px;
+      }
+
+      .cal-day {
+        min-height: 55px;
+        padding: 4px;
+      }
+
+      .cal-num {
+        font-size: 0.95rem;
+      }
+      
+      .cal-badge-count {
+        font-size: 0.65rem;
+        padding: 0 4px;
+      }
+      
+      .cal-header {
+        font-size: 0.9rem;
+      }
+
+      .log-group {
+        padding: 10px 12px;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div>
+      <h1>Mis Metas</h1>
+      <p>Mi bitácora y avance de objetivos</p>
+    </div>
+  </header>
+
+  <section class="sketchy-panel" id="sectionRegistro">
+    <div class="registro-container" id="registroMetasContainer"></div>
+  </section>
+
+  <section class="split-layout" id="sectionAug">
+    <div class="sketchy-panel">
+      <div class="panel-header">Agosto 2026</div>
+      <div class="calendar-grid" id="calendarAug"></div>
+    </div>
+    <div class="sketchy-panel" id="augRightPanel">
+      <div class="panel-header" id="augRightTitle">Distribución de Agosto</div>
+      <div id="augChartsWrap" style="display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100%;">
+        <div class="canvas-container">
+          <canvas id="pieAugCanvas" width="480" height="230"></canvas>
+        </div>
+      </div>
+      <div class="log-list-container" id="listAug" style="display: none;"></div>
+    </div>
+  </section>
+
+  <section class="split-layout" id="sectionSep">
+    <div class="sketchy-panel">
+      <div class="panel-header">Septiembre 2026</div>
+      <div class="calendar-grid" id="calendarSep"></div>
+    </div>
+    <div class="sketchy-panel" id="sepRightPanel">
+      <div class="panel-header" id="sepRightTitle">Distribución de Septiembre</div>
+      <div id="sepChartsWrap" style="display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100%;">
+        <div class="canvas-container">
+          <canvas id="pieSepCanvas" width="480" height="230"></canvas>
+        </div>
+      </div>
+      <div class="log-list-container" id="listSep" style="display: none;"></div>
+    </div>
+  </section>
+
+  <section class="split-layout">
+    <div class="sketchy-panel">
+      <div class="panel-header">Distribución Global (Cantidad)</div>
+      <div class="canvas-container">
+        <canvas id="barGeneralCanvas" width="540" height="320"></canvas>
+      </div>
+    </div>
+
+    <div class="sketchy-panel">
+      <div class="panel-header">Distribución Global (Proporción)</div>
+      <div class="canvas-container">
+        <canvas id="pieChartGeneral" width="500" height="320"></canvas>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  const GOAL_CONFIG = {
+    "Practicar manejo": { color: "#f97316" },
+    "Tocar Piano": { color: "#ec4899" },
+    "Hacer ejercicio": { color: "#15803d" },
+    "Maestría de Sistemas": { color: "#3b82f6" },
+    "Aprende en Realidad": { color: "#06b6d4" },
+    "Arte en realidad": { color: "#a855f7" },
+    "Inteligencia Artificial": { color: "#8b5cf6" },
+    "Video Juegos": { color: "#eab308" },
+    "Álbum de barajitas": { color: "#f43f5e" },
+    "Yar-Yur": { color: "#14b8a6" },
+    "Ahorrar": { color: "#10b981" },
+    "Personal": { color: "#f59e0b" }
+  };
+
+  const DATA_GOALS = [
+    { title: "Practicar manejo", targets: [{ name: "Reparar la puerta del Mazda", done: true, completedDate: "2026-09-03" }, { name: "Pintar el Mazda", done: false }, { name: "Actualizar Licencias", done: false }] },
+    { title: "Tocar Piano", targets: [{ name: "Tocar una vez a la semana", done: false }] },
+    { title: "Hacer ejercicio", targets: [{ name: "Hacer ejercicio una vez a la semana", done: false }] },
+    { title: "Maestría de Sistemas", targets: [{ name: "Graduarme de la maestría", done: false }, { name: "Hacer catálogo de proyectos de Sistemas", done: false }, { name: "Inscribirme en el Colegio de Ingenieros", done: false }] },
+    { title: "Aprende en Realidad", targets: [{ name: "Actualizar la app", done: false }, { name: "Mejorar el menú de la aplicación", done: false }, { name: "Premio si se escanean todos los QR", done: false }, { name: "Activar el escaneo de los cubos", done: false }, { name: "Imprimir en 3D cubos y stickers en colores", done: false }] },
+    { title: "Arte en realidad", targets: [{ name: "Diseñar escultura de la guacamaya", done: false }, { name: "Diseñar dioramas con tarjetas NFC", done: false }, { name: "Diseñar esculturas del Nacimiento", done: false }, { name: "Primera escultura con impresión 3D", done: false }] },
+    { title: "Inteligencia Artificial", targets: [{ name: "Hacer flujo de nodos completo", done: false }, { name: "Hacer 3D personajes Ser Feliz Hoy", done: false }, { name: "Animaciones personajes Ser Feliz Hoy", done: true, completedDate: "2026-08-31" }] },
+    { title: "Video Juegos", targets: [{ name: "Jugar Hogwarts Legacy", done: false }] },
+    { title: "Álbum de barajitas", targets: [{ name: "Llenar el álbum de Toy Story 5", done: false }] },
+    { title: "Yar-Yur", targets: [{ name: "Hacer dashboard completo de Yar-Yur", done: false }, { name: "Catálogo de proyectos realizados", done: false }] },
+    { title: "Ahorrar", targets: [{ name: "Registro y control continuo de cuentas", done: false }] },
+    { title: "Personal", targets: [{ name: "Tiempo familiar, afectos y organización", done: false }] }
+  ];
+
+  const CALENDAR_LOGS = [
+    { date: "2026-08-23", meta: "Hacer ejercicio", text: "20 minutos de la rutina 'Día del cuerpo tonificado'" },
+    { date: "2026-08-24", meta: "Aprende en Realidad", text: "Publicación de nuevo short: Transformación del calor en energía mecánica" },
+    { date: "2026-08-25", meta: "Inteligencia Artificial", text: "Avance flujo de nodos: texturing por prompt adaptado a la geometría 3D" },
+    { date: "2026-08-26", meta: "Inteligencia Artificial", text: "Texturing: instalación de modelo de IA que describe imágenes en texto" },
+    { date: "2026-08-27", meta: "Yar-Yur", text: "Realización de visual para SCJ" },
+    { date: "2026-08-28", meta: "Inteligencia Artificial", text: "Pruebas de referencia visual y adaptación de textura en geometría 3D" },
+    { date: "2026-08-28", meta: "Practicar manejo", text: "Limpieza de inyectores espirales traseros Mazda" },
+    { date: "2026-08-29", meta: "Álbum de barajitas", text: "Pegado de barajitas en el álbum de Toy Story" },
+    { date: "2026-08-30", meta: "Personal", text: "Misa en la Tahona y almuerzo en casa de María Teresa" },
+    { date: "2026-08-31", meta: "Inteligencia Artificial", text: "Animación del 6to aniversario de Ser Feliz Hoy", isCompletion: true },
+    { date: "2026-08-31", meta: "Practicar manejo", text: "Pastillas Corolla Rectificación de disco Graduación y limpieza" },
+    { date: "2026-09-01", meta: "Ahorrar", text: "Pago de la segunda quincena de agosto" },
+    { date: "2026-09-02", meta: "Ahorrar", text: "Control y balance de cuentas" },
+    { date: "2026-09-03", meta: "Ahorrar", text: "Control y balance de cuentas" },
+    { date: "2026-09-03", meta: "Practicar manejo", text: "Reparar la puerta del Mazda", isCompletion: true },
+    { date: "2026-09-04", meta: "Ahorrar", text: "Control y balance de cuentas" },
+    { date: "2026-09-05", meta: "Maestría de Sistemas", text: "Programación tableta Savoy (Catálogo de proyectos de Sistemas)" },
+    { date: "2026-09-06", meta: "Álbum de barajitas", text: "Pegado de barajitas en el álbum de Toy Story" },
+    { date: "2026-09-07", meta: "Personal", text: "Aniversario de padres en Neblina (pasta trío de salsas y focaccia)" },
+    { date: "2026-09-07", meta: "Aprende en Realidad", text: "Publicación de nuevo short: Características del motor Stirling" },
+    { date: "2026-09-08", meta: "Maestría de Sistemas", text: "Presentación a Nestlé del sistema Yar-Yur Canal Moderno Savoy" },
+    { date: "2026-09-09", meta: "Personal", text: "Tarde familiar en La Cascada: Dorado y Roles de Canela" },
+    { date: "2026-09-10", meta: "Maestría de Sistemas", text: "Firma de actas de graduandos" },
+    { date: "2026-09-11", meta: "Ahorrar", text: "Pago del 50% del sistema de información Yar-Yur System Canal Moderno Savoy" },
+    { date: "2026-09-11", meta: "Practicar manejo", text: "Volver a intentar reparar el alternador del Mazda" },
+    { date: "2026-09-12", meta: "Personal", text: "Visita al circo con la familia de María Teresa" },
+    { date: "2026-09-13", meta: "Personal", text: "Organización de cajas" },
+    { date: "2026-09-13", meta: "Yar-Yur", text: "Respaldo de mis proyectos" },
+    { date: "2026-09-14", meta: "Inteligencia Artificial", text: "Instalación de lo siguiente que hace falta para el flujo de nodos completo" },
+    { date: "2026-09-14", meta: "Practicar manejo", text: "Reparación del alternador del Mazda" },
+    { date: "2026-09-15", meta: "Ahorrar", text: "Pago de la primera quincena de septiembre y balance de cuentas" },
+    { date: "2026-09-16", meta: "Inteligencia Artificial", text: "Avance en flujo de nodos: intento de instalación de lo necesario para el siguiente nodo" },
+    { date: "2026-09-16", meta: "Yar-Yur", text: "Avance en dashboard de Yar-Yur: verificación de funcionamiento en localhost" },
+    { date: "2026-09-17", meta: "Ahorrar", text: "Control y balance de cuentas" },
+    { date: "2026-09-18", meta: "Ahorrar", text: "Control y balance de cuentas" },
+    { date: "2026-09-18", meta: "Personal", text: "Pizza y cola de langosta con mis padres" },
+    { date: "2026-09-19", meta: "Yar-Yur", text: "Avance en el dashboard de Yar-Yur" },
+    { date: "2026-09-19", meta: "Tocar Piano", text: "Práctica de la canción Don’t Stop Believin en piano" },
+    { date: "2026-09-20", meta: "Maestría de Sistemas", text: "Organización de repositorios" },
+    { date: "2026-09-21", meta: "Yar-Yur", text: "Montaje de orden de muestra de color de Kaldini y orden de muestra física del exhibidor de cartón de 7mm de Navidad con Savoy de Nestlé" },
+    { date: "2026-09-21", meta: "Aprende en Realidad", text: "Publicación de nuevo short: Fuentes de energía del motor Stirling" },
+    { date: "2026-09-22", meta: "Yar-Yur", text: "Avance en dashboard de Yar-Yur: sincronización y actualización del repositorio de GitHub mediante script en Google Drive" },
+    { date: "2026-09-22", meta: "Personal", text: "Consulta en el oftalmólogo" },
+    { date: "2026-09-23", meta: "Tocar Piano", text: "Práctica de Don’t Stop Believin y estudio de acordes de Make You Feel My Love de Adele en piano" },
+    { date: "2026-09-24", meta: "Tocar Piano", text: "Práctica continua de Don’t Stop Believin y aprendizaje de acordes de Make You Feel My Love de Adele en piano" },
+    { date: "2026-09-25", meta: "Tocar Piano", text: "Práctica de la canción Make You Feel My Love de Adele en piano" },
+    { date: "2026-09-26", meta: "Personal", text: "Visita a casa de Luis para ver la película Follow Me, Boys!" },
+    { date: "2026-09-27", meta: "Yar-Yur", text: "Continuación del desarrollo del dashboard completo" },
+    { date: "2026-09-28", meta: "Personal", text: "Cena familiar: perros calientes y croissant con chocolate y café" },
+    { date: "2026-09-29", meta: "Personal", text: "Inicio de la idea de mi empresa" }
+  ];
+
+  let activeFilterMeta = null;
+  let activeFilterDate = null;
+  let hoveredMeta = null;
+  const canvasClickRegions = {};
+
+  const DAYS_ES = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const MONTHS_ES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+  const DAYS_FULL_ES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+  const MONTHS_FULL_ES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+  function formatShortDateEs(dateStr) {
+    const [y, m, d] = dateStr.split("-");
+    return `${d}/${m}/${y.substring(2)}`;
+  }
+
+  function formatDateEs(dateStr) {
+    const [y, m, d] = dateStr.split("-");
+    const dateObj = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+    const dayName = DAYS_ES[dateObj.getDay()];
+    const monthName = MONTHS_ES[dateObj.getMonth()];
+    return `${dayName} ${d} ${monthName} ${y}`;
+  }
+
+  function formatNotebookDate(dateStr) {
+    const [y, m, d] = dateStr.split("-");
+    const dateObj = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+    const dayName = DAYS_FULL_ES[dateObj.getDay()];
+    const monthName = MONTHS_FULL_ES[dateObj.getMonth()].toLowerCase(); 
+    return `${dayName} ${parseInt(d)} de ${monthName} del ${y}`;
+  }
+
+  function getActiveMetas() {
+    if (activeFilterMeta) return [activeFilterMeta];
+    if (activeFilterDate) return [...new Set(CALENDAR_LOGS.filter(l => l.date === activeFilterDate).map(l => l.meta))];
+    return [];
+  }
+
+  function setMetaFilter(meta) {
+    activeFilterMeta = activeFilterMeta === meta ? null : meta;
+    activeFilterDate = null;
+    updateView();
+  }
+
+  function setDateFilter(dateStr) {
+    activeFilterDate = activeFilterDate === dateStr ? null : dateStr;
+    activeFilterMeta = null;
+    updateView();
+  }
+
+  // Función para desplegar u ocultar la lista de entradas del cuaderno
+  function toggleEntries(element) {
+    const page = element.closest('.notebook-page');
+    if (!page) return;
+    
+    const entries = page.querySelector('.notebook-entries');
+    if (entries) {
+      if (window.getComputedStyle(entries).display === 'none') {
+        entries.style.display = 'flex';
+      } else {
+        entries.style.display = 'none';
+      }
+    }
+  }
+
+  function renderCalendars() {
+    renderMonthCalendar("calendarAug", 2026, 7);
+    renderMonthCalendar("calendarSep", 2026, 8);
+  }
+
+  function updateView() {
+    const isFiltering = activeFilterMeta !== null || activeFilterDate !== null;
+    const activeMetas = getActiveMetas();
+
+    renderRegistroMetas();
+
+    const sectionAug = document.getElementById("sectionAug");
+    const sectionSep = document.getElementById("sectionSep");
+
+    if (isFiltering) {
+      const augHasLogs = CALENDAR_LOGS.some(l => 
+        l.date.startsWith("2026-08") && 
+        (!activeFilterMeta || l.meta === activeFilterMeta) && 
+        (!activeFilterDate || l.date === activeFilterDate)
+      );
+      const isAugFilterDate = activeFilterDate && activeFilterDate.startsWith("2026-08");
+      
+      const sepHasLogs = CALENDAR_LOGS.some(l => 
+        l.date.startsWith("2026-09") && 
+        (!activeFilterMeta || l.meta === activeFilterMeta) && 
+        (!activeFilterDate || l.date === activeFilterDate)
+      );
+      const isSepFilterDate = activeFilterDate && activeFilterDate.startsWith("2026-09");
+
+      sectionAug.style.display = (augHasLogs || isAugFilterDate) ? "" : "none";
+      sectionSep.style.display = (sepHasLogs || isSepFilterDate) ? "" : "none";
+    } else {
+      sectionAug.style.display = "";
+      sectionSep.style.display = "";
+    }
+
+    renderCalendars();
+
+    const augChartsWrap = document.getElementById("augChartsWrap");
+    const listAug = document.getElementById("listAug");
+    const augTitle = document.getElementById("augRightTitle");
+
+    const sepChartsWrap = document.getElementById("sepChartsWrap");
+    const listSep = document.getElementById("listSep");
+    const sepTitle = document.getElementById("sepRightTitle");
+
+    if (isFiltering) {
+      augChartsWrap.style.display = "none";
+      listAug.style.display = "flex";
+      augTitle.textContent = activeFilterDate ? "Apuntes del Día" : "Apuntes de Agosto (Filtrado)";
+      renderGroupedLogList("listAug", "2026-08", activeFilterDate ? null : activeMetas, activeFilterDate);
+
+      sepChartsWrap.style.display = "none";
+      listSep.style.display = "flex";
+      sepTitle.textContent = activeFilterDate ? "Apuntes del Día" : "Apuntes de Septiembre (Filtrado)";
+      renderGroupedLogList("listSep", "2026-09", activeFilterDate ? null : activeMetas, activeFilterDate);
+    } else {
+      augChartsWrap.style.display = "flex";
+      listAug.style.display = "none";
+      augTitle.textContent = "Distribución de Agosto";
+
+      sepChartsWrap.style.display = "flex";
+      listSep.style.display = "none";
+      sepTitle.textContent = "Distribución de Septiembre";
+    }
+
+    redrawVisibleCharts();
+  }
+
+  function renderRegistroMetas() {
+    const container = document.getElementById("registroMetasContainer");
+    container.innerHTML = "";
+
+    const customGroups = [
+      { title: "Practicar manejo, Tocar Piano y Hacer ejercicio", metas: ["Practicar manejo", "Tocar Piano", "Hacer ejercicio"] },
+      { title: "Maestría de Sistemas", metas: ["Maestría de Sistemas"] },
+      { title: "Aprende en Realidad", metas: ["Aprende en Realidad"] },
+      { title: "Arte en realidad", metas: ["Arte en realidad"] },
+      { title: "Inteligencia Artificial, Video Juegos y Álbum de barajitas", metas: ["Inteligencia Artificial", "Video Juegos", "Álbum de barajitas"] },
+      { title: "Yar-Yur", metas: ["Yar-Yur"] },
+      { title: "Ahorrar", metas: ["Ahorrar"] },
+      { title: "Personal", metas: ["Personal"] }
+    ];
+
+    let hasVisibleContent = false;
+
+    customGroups.forEach(group => {
+      let logs = CALENDAR_LOGS.filter(l => group.metas.includes(l.meta));
+      let metasWithTargets = DATA_GOALS.filter(g => group.metas.includes(g.title) && g.targets && g.targets.length > 0);
+
+      if (activeFilterMeta) {
+        if (!group.metas.includes(activeFilterMeta)) return;
+        logs = logs.filter(l => l.meta === activeFilterMeta);
+        metasWithTargets = metasWithTargets.filter(g => g.title === activeFilterMeta);
+      }
+
+      if (activeFilterDate) {
+        logs = logs.filter(l => l.date === activeFilterDate);
+        metasWithTargets = metasWithTargets.filter(g => {
+            const hasActivityToday = logs.some(l => l.meta === g.title);
+            const completedTargetToday = g.targets.some(t => t.completedDate === activeFilterDate);
+            return hasActivityToday || completedTargetToday;
+        });
+      }
+
+      if (logs.length === 0 && metasWithTargets.length === 0) return;
+      hasVisibleContent = true;
+
+      const page = document.createElement("div");
+      page.className = "notebook-page";
+
+      const displayTitle = activeFilterMeta && group.metas.includes(activeFilterMeta) ? activeFilterMeta : group.title;
+      let html = `<div class="notebook-title" onclick="toggleEntries(this)">${displayTitle}</div>`;
+
+      if (metasWithTargets.length > 0) {
+        metasWithTargets.forEach(g => {
+          if (g.targets.length > 0) {
+            html += `<div class="notebook-checklist">`;
+            if (group.metas.length > 1 && !activeFilterMeta) {
+              html += `<div class="notebook-checklist-title">${g.title}:</div>`;
             }
             
-            container.innerHTML = continuousMonths.map(key => {
-                const [y, m] = key.split('-').map(Number); 
-                return generateCalendarHTML(m, y, eventsByDate[key] || {}, key);
-            }).join('');
-        }
-
-        function generateCalendarHTML(month, year, eventsMap, monthKey) {
-            const monthIdx = month - 1;
-            const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
-            const firstDay = new Date(year, monthIdx, 1).getDay();
-            
-            let h = `<div id="cal-month-${monthKey}" class="w-full max-w-[340px] transition-all duration-500">
-                        <div class="text-center font-bold text-slate-700 text-lg mb-3 border-b border-slate-200 pb-2">${MONTH_NAMES[monthIdx]} ${year}</div>
-                        <div class="grid grid-cols-7 text-center text-sm font-semibold text-slate-400 mb-2">
-                            <div>D</div><div>L</div><div>M</div><div>M</div><div>J</div><div>V</div><div>S</div>
-                        </div>
-                        <div class="grid grid-cols-7 gap-2 text-base">`; 
-            
-            for(let i=0; i<firstDay; i++) h+=`<div></div>`;
-            for(let d=1; d<=daysInMonth; d++) {
-                if(eventsMap[d] && eventsMap[d].length > 0) {
-                    let highestPriority = -1;
-                    let topCat = 'OTRO';
-                    
-                    eventsMap[d].forEach(item => {
-                        let cat = item.trabajoDiseno ? item.trabajoDiseno.toUpperCase() : 'OTRO';
-                        let prio = CAT_PRIORITY[cat] || 0;
-                        if (prio > highestPriority) {
-                            highestPriority = prio;
-                            topCat = cat;
-                        }
-                    });
-                    
-                    const dotColorClass = (CAT_STYLES[topCat] || { dotClass: 'bg-slate-400' }).dotClass;
-                    
-                    h += `<div class="day-dot aspect-square rounded-lg flex items-center justify-center font-bold text-white shadow-sm ${dotColorClass} transition-transform duration-200 cursor-pointer hover:scale-110 relative z-10" 
-                            onclick="openDayPanel(${d}, ${month}, ${year})">${d}</div>`;
-                } else {
-                    h += `<div class="aspect-square flex items-center justify-center text-slate-300">${d}</div>`;
-                }
-            }
-            h += `</div></div>`;
-            return h;
-        }
-
-        function limpiarNombreCarpeta(nombre) {
-            if (!nombre) return '';
-            let limpio = nombre.replace(/\n|\r/g, ' ');
-            limpio = limpio.replace(/[\\/*?:"<>|]/g, '-');
-            limpio = limpio.replace(/\s+/g, ' ');
-            return limpio.replace(/^[ .]+|[ .]+$/g, '');
-        }
-
-        function openDayPanel(d, m, y) {
-            const items = window.currentRenderedFinalItems.filter(item => {
-                if(!item.fecha) return false;
-                const parts = item.fecha.split('/');
-                return parseInt(parts[0]) === d && parseInt(parts[1]) === m && parseInt(parts[2]) === y;
+            html += `<ul class="notebook-target-list">`;
+            g.targets.forEach(t => {
+              const isTargetOfThisDay = activeFilterDate && t.completedDate === activeFilterDate;
+              const textStyle = isTargetOfThisDay ? "font-weight: bold; color: #f43f5e;" : "";
+              
+              html += `
+                <li class="notebook-target-item ${t.done ? 'completed' : ''}">
+                  <span class="notebook-checkbox">${t.done ? '✓' : ''}</span>
+                  <span style="${textStyle}">${t.name}${t.done && t.completedDate ? ` (${formatShortDateEs(t.completedDate)})` : ''}</span>
+                </li>
+              `;
             });
+            html += `</ul></div>`;
+          }
+        });
+      }
 
-            const titleEl = document.getElementById('day-panel-title');
-            titleEl.innerHTML = `
-                <span class="hover:underline cursor-pointer text-blue-600 transition-colors flex items-center gap-2" onclick="handleTitleClick(${d}, ${m}, ${y}, this)" title="Abrir enlace del día en Google Docs">
-                    ${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}
-                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                    <div class="spinner hidden border-2 border-t-blue-500 border-blue-200 rounded-full w-3 h-3 animate-spin ml-1"></div>
-                </span>
-            `;
-            
-            document.getElementById('day-panel-subtitle').innerText = `${items.length} entrada(s)`;
+      if (logs.length > 0) {
+        html += `<div class="notebook-entries">`;
+        logs.sort((a, b) => a.date.localeCompare(b.date)).forEach(log => {
+          const dateStr = formatNotebookDate(log.date);
+          const logText = log.isCompletion ? `<strong>${log.text}</strong>` : log.text;
+          
+          html += `
+            <div class="notebook-entry">
+              <strong>${dateStr}:</strong> ${logText}
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
 
-            let html = '';
-            if (items.length === 0) {
-                html = '<div class="text-center text-slate-400 text-sm mt-10">No hay entradas para este día.</div>';
-            } else {
-                items.sort((a, b) => parseDate(a.fecha) - parseDate(b.fecha));
-                items.forEach((item) => {
-                    const cat = item.trabajoDiseno ? item.trabajoDiseno.toUpperCase().trim() : 'OTRO';
-                    const style = CAT_STYLES[cat] || CAT_STYLES['OTRO']; 
-                    const isFalta = item.check === 'FALTA';
-                    
-                    let cardClass = style.card;
-                    if (isFalta) {
-                        cardClass = cardClass.replace(/border-\w+-\d+/g, ''); 
-                        cardClass += ' border-2 border-red-600 shadow-[0_0_10px_rgba(220,38,38,0.3)]';
-                    }
-                    
-                    const showHighlight = (viewMode === 'CLIENT' && isFinalViewFiltered);
-                    const hlDesc = showHighlight ? highlightMatch(item.descripcion, activeSearchQuery) : (item.descripcion || '');
-                    
-                    const itemClient = item.cliente || 'SIN CLIENTE';
-                    const itemNumber = item.numeroProyecto ? `${item.numeroProyecto} - ` : '';
-                    const itemProjectTitle = item.tituloProyecto || 'SIN PROYECTO';
-                    const fullItemProject = `${itemNumber}${itemProjectTitle}`;
+      page.innerHTML = html;
+      container.appendChild(page);
+    });
 
-                    // Mapeo de subcarpetas según categoría de diseño
-                    const subfolderMap = {
-                        'VISUAL': '03 - Visual',
-                        'RENDIMIENTO': '04 - Rendimiento',
-                        'PLANO MECÁNICO': '05 - Plano mecánico',
-                        'PLANO MECANICO': '05 - Plano mecánico',
-                        'MUESTRA': '06 - Muestra',
-                        'PRODUCCIÓN': '08 - Orden de Producción',
-                        'PRODUCCION': '08 - Orden de Producción'
-                    };
+    if (!hasVisibleContent) {
+      container.innerHTML = `<div class="notebook-page"><div class="notebook-title">Página en blanco</div><p>No hay apuntes para esta selección.</p></div>`;
+    }
+  }
 
-                    // Generación dinámica de la ruta
-                    let winPath = "";
-                    let numMatch = (item.numeroProyecto || '').match(/(?:TENTATIVO\s+)?(\d{1,4})(?:_\d+)?\/(\d{2})/i);
-                    if (numMatch) {
-                        let num = numMatch[1].padStart(4, '0');
-                        let year = "20" + numMatch[2];
-                        winPath = `K:\\${year}\\PROYECTOS\\${num}`;
-                    } else {
-                        const clientFolder = limpiarNombreCarpeta(item.cliente || 'OTROS');
-                        const numClean = (item.numeroProyecto || '').replace(/\//g, '-');
-                        const projectFolderRaw = `${numClean} - ${item.tituloProyecto || ''}`.replace(/^- | -$/g, '').trim();
-                        const projectFolder = limpiarNombreCarpeta(projectFolderRaw);
-                        winPath = `K:\\${clientFolder}\\${projectFolder}`;
-                    }
+  function renderMonthCalendar(containerId, year, month) {
+    const grid = document.getElementById(containerId);
+    if (!grid) return;
+    grid.innerHTML = "";
 
-                    if (subfolderMap[cat]) {
-                        winPath += `\\${subfolderMap[cat]}`;
-                    }
+    const daysOfWeek = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+    daysOfWeek.forEach(d => {
+      const header = document.createElement("div");
+      header.className = "cal-header";
+      header.textContent = d;
+      grid.appendChild(header);
+    });
 
-                    const safeWinPath = winPath.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayStr = "2026-09-13";
+    const currentMeta = hoveredMeta || activeFilterMeta;
 
-                    html += `
-                        <div class="p-4 rounded-xl border text-sm ${cardClass} flex flex-col gap-2 relative overflow-hidden bg-white hover:bg-slate-50 transition-colors">
-                            <div class="flex justify-between items-start gap-2">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${style.badge} self-start shrink-0">${cat}</span>
-                                
-                                <div class="flex flex-wrap justify-end gap-1.5">
-                                    ${item.drive ? `<a href="${item.drive}" target="_blank" class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded px-1.5 py-0.5 flex items-center shadow-sm text-[10px] font-bold transition-colors" title="Ver archivo Drive"><svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg> DRIVE</a>` : ''}
-                                    
-                                    ${item.trelloUrl ? `<a href="${item.trelloUrl}" target="_blank" class="text-sky-600 hover:text-sky-800 bg-sky-50 hover:bg-sky-100 rounded px-1.5 py-0.5 flex items-center shadow-sm text-[10px] font-bold transition-colors" title="Abrir en Trello"><svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M19 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 15H7V7h5v10zm5-4h-3V7h3v6z"/></svg> TRELLO</a>` : ''}
-                                    
-                                    <button onclick="copyLocalPath('${safeWinPath}', this)" class="text-amber-600 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 rounded px-1.5 py-0.5 flex items-center shadow-sm text-[10px] font-bold transition-colors" title="Copiar ruta local al portapapeles"><svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg> LOCAL</button>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="text-xs font-black text-slate-800 uppercase leading-tight">${itemClient}</div>
-                                <div class="text-[11px] font-bold text-slate-500 leading-tight mt-0.5">${fullItemProject}</div>
-                            </div>
-                            <p class="text-slate-700 leading-relaxed text-xs font-medium border-t border-slate-100/60 pt-2 mt-1">${hlDesc}</p>
-                        </div>
-                    `;
-                });
-            }
+    for (let i = 0; i < firstDayIndex; i++) {
+      const emptyCell = document.createElement("div");
+      emptyCell.className = "cal-day empty";
+      grid.appendChild(emptyCell);
+    }
 
-            document.getElementById('day-panel-content').innerHTML = html;
-            document.getElementById('day-details-panel').classList.remove('translate-x-full');
-            document.getElementById('day-panel-backdrop').classList.remove('opacity-0', 'pointer-events-none');
+    for (let day = 1; day <= daysInMonth; day++) {
+      const monthStr = String(month + 1).padStart(2, "0");
+      const dayStr = String(day).padStart(2, "0");
+      const dateStr = `${year}-${monthStr}-${dayStr}`;
+
+      const cell = document.createElement("div");
+      cell.className = "cal-day";
+      if (dateStr === todayStr) cell.classList.add("today");
+      if (dateStr === activeFilterDate) cell.classList.add("active-day");
+
+      const dayEvents = CALENDAR_LOGS.filter(e => e.date === dateStr);
+      let isDimmed = false;
+
+      if (dayEvents.length > 0) {
+        if (currentMeta) {
+          const matchingEvents = dayEvents.filter(e => e.meta === currentMeta);
+          if (matchingEvents.length > 0) {
+            cell.style.background = GOAL_CONFIG[matchingEvents[0].meta].color;
+          } else {
+            isDimmed = true;
+          }
+        } else {
+          if (dayEvents.length === 1) {
+            cell.style.background = (GOAL_CONFIG[dayEvents[0].meta] || { color: "#334155" }).color;
+          } else {
+            const cols = dayEvents.map(e => (GOAL_CONFIG[e.meta] || { color: "#334155" }).color);
+            cell.style.background = `repeating-linear-gradient(45deg, ${cols[0]}, ${cols[0]} 10px, ${cols[1] || cols[0]} 10px, ${cols[1] || cols[0]} 20px)`;
+          }
         }
+      } else {
+        if (currentMeta) isDimmed = true;
+      }
 
-        function closeDayPanel() {
-            document.getElementById('day-details-panel').classList.add('translate-x-full');
-            document.getElementById('day-panel-backdrop').classList.add('opacity-0', 'pointer-events-none');
+      if (activeFilterDate && dateStr !== activeFilterDate) {
+          isDimmed = true;
+      }
+
+      if (isDimmed) cell.classList.add("dimmed");
+
+      cell.innerHTML = `
+        <div class="cal-num">${day}</div>
+        ${dayEvents.length > 0 ? `<div class="cal-badge-count">${dayEvents.length} act.</div>` : ''}
+      `;
+
+      cell.onclick = () => setDateFilter(dateStr);
+      grid.appendChild(cell);
+    }
+  }
+
+  function renderGroupedLogList(containerId, filterYearMonth, filterMetas, filterDate) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+
+    const logs = CALENDAR_LOGS.filter(l => {
+      const matchMonth = filterYearMonth ? l.date.startsWith(filterYearMonth) : true;
+      let matchMeta = true;
+      if (filterMetas !== null && filterMetas !== undefined) {
+        if (filterMetas.length === 0) matchMeta = false;
+        else matchMeta = filterMetas.includes(l.meta);
+      }
+      const matchDate = filterDate ? l.date === filterDate : true;
+      return matchMonth && matchMeta && matchDate;
+    });
+
+    if (logs.length === 0) {
+      container.innerHTML = `<div style="font-style: italic; color: var(--text-muted);">Sin trazos en esta hoja.</div>`;
+      return;
+    }
+
+    const grouped = {};
+    logs.forEach(log => {
+      if (!grouped[log.meta]) grouped[log.meta] = [];
+      grouped[log.meta].push(log);
+    });
+
+    for (const meta in grouped) {
+      const groupLogs = grouped[meta];
+      const conf = GOAL_CONFIG[meta] || { color: "#1e293b" };
+
+      const groupDiv = document.createElement("div");
+      groupDiv.className = "log-group";
+      groupDiv.style.borderLeftColor = conf.color;
+
+      let html = `<div class="log-group-header" style="color: ${conf.color}">${meta}</div>`;
+
+      groupLogs.forEach(log => {
+        const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(log.date)}</span>` : '';
+        const textSpan = log.isCompletion ? `<strong>${log.text}</strong>` : log.text;
+
+        html += `
+          <div class="log-item-text" style="--pen-color: ${conf.color}">
+            <span>${textSpan}</span>
+            ${dateSpan}
+          </div>
+        `;
+      });
+
+      groupDiv.innerHTML = html;
+      container.appendChild(groupDiv);
+    }
+  }
+
+  function drawMonthlyPieChart(canvasId, filterYearMonth) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    canvasClickRegions[canvasId] = [];
+
+    const activeMetas = getActiveMetas();
+    const counts = {};
+    const filteredLogs = filterYearMonth 
+      ? CALENDAR_LOGS.filter(l => l.date.startsWith(filterYearMonth))
+      : CALENDAR_LOGS;
+
+    filteredLogs.forEach(log => {
+      counts[log.meta] = (counts[log.meta] || 0) + 1;
+    });
+
+    const entries = Object.keys(counts)
+      .map(meta => ({
+        meta,
+        count: counts[meta],
+        color: (GOAL_CONFIG[meta] || { color: "#64748b" }).color
+      }))
+      .sort((a, b) => b.count - a.count || a.meta.localeCompare(b.meta));
+
+    const total = entries.reduce((sum, item) => sum + item.count, 0);
+    if (total === 0) {
+      ctx.fillStyle = "#475569";
+      ctx.font = "italic 16px 'Kalam', cursive";
+      ctx.textAlign = "center";
+      ctx.fillText("Sin actividades", canvas.width / 2, canvas.height / 2);
+      return;
+    }
+
+    const centerX = 130;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(95, canvas.height / 2 - 20);
+    let startAngle = -Math.PI / 2;
+
+    entries.forEach(item => {
+      const sliceAngle = (item.count / total) * 2 * Math.PI;
+      const endAngle = startAngle + sliceAngle;
+
+      let isSelected = false;
+      let isDimmed = false;
+
+      if (hoveredMeta) {
+        isSelected = item.meta === hoveredMeta;
+        isDimmed = item.meta !== hoveredMeta;
+      } else {
+        isSelected = activeMetas.includes(item.meta);
+        isDimmed = activeMetas.length > 0 && !isSelected;
+      }
+
+      const activeRadius = isSelected ? radius + 8 : radius;
+
+      ctx.save();
+      if (isDimmed) ctx.globalAlpha = 0.25;
+
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, activeRadius, startAngle, endAngle);
+      ctx.closePath();
+      
+      ctx.fillStyle = item.color;
+      ctx.fill();
+
+      ctx.lineWidth = isSelected ? 4 : 2;
+      ctx.strokeStyle = "#1e293b";
+      ctx.stroke();
+      ctx.restore();
+
+      canvasClickRegions[canvasId].push({
+        type: 'pie',
+        meta: item.meta,
+        startAngle,
+        endAngle,
+        centerX,
+        centerY,
+        radius: activeRadius
+      });
+
+      startAngle = endAngle;
+    });
+
+    const legendX = 260;
+    let legendY = Math.max(30, centerY - (entries.length * 12));
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+
+    entries.forEach(item => {
+      let isSelected = false;
+      let isDimmed = false;
+
+      if (hoveredMeta) {
+        isSelected = item.meta === hoveredMeta;
+        isDimmed = item.meta !== hoveredMeta;
+      } else {
+        isSelected = activeMetas.includes(item.meta);
+        isDimmed = activeMetas.length > 0 && !isSelected;
+      }
+
+      ctx.save();
+      if (isDimmed) ctx.globalAlpha = 0.3;
+
+      ctx.beginPath();
+      ctx.rect(legendX, legendY - 8, 16, 16);
+      ctx.fillStyle = item.color;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#1e293b";
+      ctx.stroke();
+
+      ctx.fillStyle = "#0f172a"; 
+      ctx.font = isSelected ? "bold 15px 'Kalam', cursive" : "15px 'Kalam', cursive";
+      ctx.fillText(`${item.meta} (${item.count})`, legendX + 26, legendY);
+      ctx.restore();
+
+      canvasClickRegions[canvasId].push({
+        type: 'bar',
+        meta: item.meta,
+        x: legendX,
+        y: legendY - 10,
+        w: 180,
+        h: 20
+      });
+
+      legendY += 24;
+    });
+  }
+
+  function drawBarChartOrdered(canvasId, filterYearMonth) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!canvasClickRegions[canvasId]) canvasClickRegions[canvasId] = [];
+
+    const activeMetas = getActiveMetas();
+
+    const counts = {};
+    DATA_GOALS.forEach(g => { counts[g.title] = 0; });
+
+    const filteredLogs = filterYearMonth 
+      ? CALENDAR_LOGS.filter(l => l.date.startsWith(filterYearMonth))
+      : CALENDAR_LOGS;
+
+    filteredLogs.forEach(log => {
+      counts[log.meta] = (counts[log.meta] || 0) + 1;
+    });
+
+    const sortedGoals = [...DATA_GOALS].sort((a, b) => counts[b.title] - counts[a.title] || a.title.localeCompare(b.title));
+
+    const labels = sortedGoals.map(g => g.title);
+    const values = labels.map(k => counts[k]);
+    const maxVal = Math.max(5, ...values);
+
+    const padLeft = 40;
+    const padBottom = 100;
+    const padTop = 30;
+    const padRight = 20;
+    const chartW = canvas.width - padLeft - padRight;
+    const chartH = canvas.height - padTop - padBottom;
+
+    ctx.strokeStyle = "#1e293b";
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(padLeft, padTop - 10);
+    ctx.lineTo(padLeft, padTop + chartH);
+    ctx.lineTo(padLeft + chartW + 10, padTop + chartH);
+    ctx.stroke();
+
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "14px 'Kalam', cursive";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    const steps = 4;
+    for (let i = 0; i <= steps; i++) {
+      const val = Math.round((maxVal / steps) * i);
+      const y = padTop + chartH - (i / steps) * chartH;
+      ctx.fillText(val, padLeft - 10, y);
+
+      if (i > 0) {
+        ctx.beginPath();
+        ctx.strokeStyle = "#94a3b8";
+        ctx.setLineDash([4, 4]);
+        ctx.moveTo(padLeft, y);
+        ctx.lineTo(padLeft + chartW, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
+    const slotW = chartW / labels.length;
+    const barW = Math.min(24, slotW * 0.7);
+
+    labels.forEach((meta, idx) => {
+      const val = counts[meta];
+      const barH = (val / maxVal) * chartH;
+      const x = padLeft + idx * slotW + (slotW - barW) / 2;
+      const y = padTop + chartH - barH;
+      const color = (GOAL_CONFIG[meta] || { color: "#38bdf8" }).color;
+
+      let isSelected = false;
+      let isDimmed = false;
+
+      if (hoveredMeta) {
+        isSelected = meta === hoveredMeta;
+        isDimmed = meta !== hoveredMeta;
+      } else {
+        isSelected = activeMetas.includes(meta);
+        isDimmed = activeMetas.length > 0 && !isSelected;
+      }
+
+      ctx.save();
+      if (isDimmed) ctx.globalAlpha = 0.25;
+
+      ctx.beginPath();
+      if (val === 0) {
+        ctx.rect(x, padTop + chartH - 2, barW, 2);
+      } else {
+        ctx.rect(x, y, barW, barH);
+      }
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.lineWidth = isSelected ? 3 : 2;
+      ctx.strokeStyle = "#1e293b";
+      ctx.stroke();
+
+      ctx.fillStyle = "#0f172a";
+      ctx.textAlign = "center";
+      ctx.font = isSelected ? "bold 15px 'Kalam', cursive" : "15px 'Kalam', cursive";
+      ctx.fillText(val, x + barW / 2, val === 0 ? padTop + chartH - 12 : y - 10);
+
+      ctx.save();
+      ctx.translate(x + barW / 2 + 5, padTop + chartH + 15);
+      ctx.rotate(-Math.PI / 4);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#0f172a";
+      ctx.font = isSelected ? "bold 14px 'Kalam', cursive" : "14px 'Kalam', cursive";
+      ctx.fillText(meta.length > 15 ? meta.substring(0, 14) + '…' : meta, 0, 0);
+      ctx.restore();
+
+      ctx.restore();
+
+      canvasClickRegions[canvasId].push({
+        type: 'bar',
+        meta,
+        x: x - 4,
+        y: padTop,
+        w: barW + 8,
+        h: chartH + padBottom
+      });
+    });
+  }
+
+  function redrawVisibleCharts() {
+    drawMonthlyPieChart("pieChartGeneral", null);
+    drawBarChartOrdered("barGeneralCanvas", null);
+
+    const isFiltering = activeFilterMeta !== null || activeFilterDate !== null;
+    if (!isFiltering) {
+      drawMonthlyPieChart("pieAugCanvas", "2026-08");
+      drawMonthlyPieChart("pieSepCanvas", "2026-09");
+    }
+  }
+
+  function handleCanvasClick(e, canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    
+    const regions = canvasClickRegions[canvasId] || [];
+    const rect = canvas.getBoundingClientRect();
+    
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    for (const reg of regions) {
+      if (reg.type === 'pie') {
+        const dx = x - reg.centerX;
+        const dy = y - reg.centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist <= reg.radius) {
+          let angle = Math.atan2(dy, dx);
+          if (angle < -Math.PI / 2) angle += 2 * Math.PI;
+
+          if (angle >= reg.startAngle && angle <= reg.endAngle) {
+            setMetaFilter(reg.meta);
+            return;
+          }
         }
-
-        function itemMatchesQuery(item, query) {
-            if (!query) return true;
-            const q = query.toLowerCase();
-            if (q === 'falta') return item.check && String(item.check).toUpperCase() === 'FALTA';
-            const normQuery = normalizeStr(query);
-            const normText = normalizeStr(item.searchIndex || '');
-            const tokens = normQuery.split(/\s+/).filter(t => t.length > 0);
-            return tokens.every(token => normText.includes(token));
+      } else if (reg.type === 'bar') {
+        if (x >= reg.x && x <= reg.x + reg.w && y >= reg.y && y <= reg.y + reg.h) {
+          setMetaFilter(reg.meta);
+          return;
         }
+      }
+    }
+  }
 
-        function highlightMatch(text, query) {
-            if (!text || !query) return text;
-            if (query.toLowerCase() === 'falta' || query.match(/^202[0-9]$/)) return text;
-            const normText = normalizeStr(text);
-            const tokens = normalizeStr(query).split(/\s+/).filter(t => t.length > 0);
-            if (tokens.length === 0) return text;
-            const shouldHighlight = new Array(text.length).fill(false);
-            tokens.forEach(token => {
-                let startIndex = 0;
-                while (true) {
-                    const idx = normText.indexOf(token, startIndex);
-                    if (idx === -1) break;
-                    for (let i = 0; i < token.length; i++) { if (idx + i < text.length) shouldHighlight[idx + i] = true; }
-                    startIndex = idx + 1;
-                }
-            });
-            let result = ''; let isHighlighting = false;
-            for (let i = 0; i < text.length; i++) {
-                if (shouldHighlight[i] && !isHighlighting) { result += '<span class="highlight-text">'; isHighlighting = true; } 
-                else if (!shouldHighlight[i] && isHighlighting) { result += '</span>'; isHighlighting = false; }
-                result += text[i];
-            }
-            if (isHighlighting) result += '</span>';
-            return result;
+  function handleCanvasMouseMove(e, canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    const regions = canvasClickRegions[canvasId] || [];
+    const rect = canvas.getBoundingClientRect();
+    
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    
+    let foundMeta = null;
+
+    for (const reg of regions) {
+      if (reg.type === 'pie') {
+        const dx = x - reg.centerX;
+        const dy = y - reg.centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist <= reg.radius) {
+          let angle = Math.atan2(dy, dx);
+          if (angle < -Math.PI / 2) angle += 2 * Math.PI;
+
+          if (angle >= reg.startAngle && angle <= reg.endAngle) {
+            foundMeta = reg.meta;
+            break;
+          }
         }
-
-        function renderFilterButton(containerId, query, onClickFn) {
-            const container = document.getElementById(containerId);
-            const mobileContainer = document.getElementById(containerId + '-mobile');
-            let html = '';
-            
-            if (query && query !== 'falta' && query !== 'clientes' && !query.match(/^202[0-9]$/)) {
-                html = `<button onclick="${onClickFn}" class="group flex items-center gap-2 bg-yellow-100 text-yellow-800 hover:bg-red-100 hover:text-red-700 border border-yellow-200 hover:border-red-200 px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm animate-pulse"><span>"${query}"</span><svg class="w-3 h-3 opacity-60 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>`;
-            }
-            if (container) container.innerHTML = html;
-            if (mobileContainer) mobileContainer.innerHTML = html;
+      } else if (reg.type === 'bar') {
+        if (x >= reg.x && x <= reg.x + reg.w && y >= reg.y && y <= reg.y + reg.h) {
+          foundMeta = reg.meta;
+          break;
         }
+      }
+    }
 
-        function getProjectSortValue(p) {
-            if (!p.number) return 999999;
-            const match = p.number.match(/(\d+(?:_\d+)?)\/(\d+)/);
-            if (!match) return 999999;
-            const num = parseInt(match[1], 10);
-            const year = parseInt(match[2], 10);
-            return (year * 10000) + num;
-        }
+    if (hoveredMeta !== foundMeta) {
+      hoveredMeta = foundMeta;
+      e.target.style.cursor = foundMeta ? 'pointer' : 'default';
+      redrawVisibleCharts();
+      renderCalendars();
+    }
+  }
 
-        function renderClientSelectionList() {
-            const query = isClientListFiltered ? activeSearchQuery : '';
-            renderFilterButton('client-filter-container', query, 'unfilterClients()');
+  function handleCanvasMouseLeave(e, canvasId) {
+    if (hoveredMeta !== null) {
+      hoveredMeta = null;
+      redrawVisibleCharts();
+      renderCalendars();
+    }
+  }
 
-            const clientGroups = {};
-            mergedData.forEach(item => {
-                if (!isClientListFiltered || itemMatchesQuery(item, activeSearchQuery)) {
-                    if (!clientGroups[item.cliente]) clientGroups[item.cliente] = [];
-                    clientGroups[item.cliente].push(item);
-                }
-            });
+  function init() {
+    updateView();
 
-            const sortedClients = Object.keys(clientGroups)
-                .map(clientName => {
-                    const items = clientGroups[clientName];
-                    const uniqueIds = new Set(items.map(i => i.numeroProyecto || i.tituloProyecto));
-                    return { name: clientName, items, count: uniqueIds.size };
-                })
-                .filter(c => c.name !== 'SIN CLIENTE')
-                .sort((a, b) => {
-                    if (a.name === '2022') return 1; 
-                    if (b.name === '2022') return -1; 
-                    return b.count - a.count; 
-                });
+    const canvasIds = [
+      "pieChartGeneral", "barGeneralCanvas",
+      "pieAugCanvas", "pieSepCanvas"
+    ];
 
-            document.getElementById('results-title').innerText = activeSearchQuery ? `Búsqueda: "${activeSearchQuery}"` : "Todos los Clientes";
-            document.getElementById('results-subtitle').innerText = `${sortedClients.length} clientes encontrados`;
+    canvasIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("click", (e) => handleCanvasClick(e, id));
+        el.addEventListener("mousemove", (e) => handleCanvasMouseMove(e, id));
+        el.addEventListener("mouseleave", (e) => handleCanvasMouseLeave(e, id));
+      }
+    });
+  }
 
-            if (sortedClients.length === 0) {
-                resultsContainer.innerHTML = `<div class="text-center py-20 text-slate-400">No hay resultados.</div>`;
-                return;
-            }
+  window.onload = init;
+</script>
 
-            const maxCount = sortedClients.length > 0 ? sortedClients[0].count : 1;
-            let html = '<div class="flex flex-col gap-3">';
-            sortedClients.forEach((c, idx) => {
-                const percentage = Math.round((c.count / maxCount) * 100);
-                const bgStyle = `background: linear-gradient(90deg, #fcd34d ${percentage}%, white ${percentage}%);`;
-                
-                const hlName = highlightMatch(c.name, activeSearchQuery);
-                const safeClientName = c.name.replace(/"/g, '&quot;');
-                
-                html += `<div onclick="openProjectListView(this.dataset.client)" data-client="${safeClientName}" style="${bgStyle}" class="p-5 rounded-xl border border-slate-200 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden"><div class="flex items-center relative z-10 gap-4"><span class="text-2xl font-black text-slate-600 font-mono w-8 text-right shrink-0">${idx + 1}</span><div class="flex-1"><h3 class="font-bold text-lg text-slate-800 group-hover:text-amber-600 transition-colors">${hlName}</h3><p class="text-sm text-slate-500 font-medium">${c.count} proyectos</p></div><div class="h-10 w-10 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center text-slate-400 group-hover:text-amber-600 shadow-sm"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div></div></div>`;
-            });
-            html += '</div>';
-            resultsContainer.innerHTML = html;
-        }
-
-        function unfilterClients() { isClientListFiltered = false; renderClientSelectionList(); }
-
-        function renderProjectListContent() {
-            let filteredItems = [];
-            const query = isProjectListFiltered ? activeSearchQuery : '';
-            renderFilterButton('project-filter-container', query, 'unfilterProjects()');
-            
-            document.getElementById('project-list-title').innerText = currentClientName;
-            filteredItems = mergedData.filter(i => i.cliente === currentClientName && itemMatchesQuery(i, query));
-
-            projectGroupsCache = {};
-            const grouped = {};
-            
-            filteredItems.forEach(item => {
-                const key = (item.numeroProyecto && item.numeroProyecto.trim().length > 2) ? item.numeroProyecto : item.tituloProyecto;
-                if (!grouped[key]) {
-                    grouped[key] = { 
-                        key: key, number: item.numeroProyecto, title: item.tituloProyecto, 
-                        items: [], isExternal: !!item.isExternal, trelloTags: item.trelloTags || [], 
-                        clientName: item.cliente, sourceYear: item.sourceYear,
-                        latestDate: 0, latestDateStr: '' 
-                    };
-                }
-                grouped[key].items.push(item);
-                if(!item.isExternal) grouped[key].isExternal = false; 
-
-                if(item.trelloTags) {
-                     const existing = new Set((grouped[key].trelloTags || []).map(t => t.name));
-                     if(!grouped[key].trelloTags) grouped[key].trelloTags = [];
-                     item.trelloTags.forEach(t => { if(!existing.has(t.name)) grouped[key].trelloTags.push(t); });
-                }
-
-                if (item.fecha) {
-                    let itemTimestamp = parseDate(item.fecha);
-                    if (itemTimestamp > grouped[key].latestDate) {
-                        grouped[key].latestDate = itemTimestamp;
-                        grouped[key].latestDateStr = item.fecha;
-                    }
-                }
-            });
-
-            let projectsArray = Object.values(grouped);
-            
-            projectsArray.sort((a, b) => {
-                const isTentativeA = (a.number + a.title).toUpperCase().includes('TENTATIVO');
-                const isTentativeB = (b.number + b.title).toUpperCase().includes('TENTATIVO');
-                
-                if (isTentativeA !== isTentativeB) return isTentativeA ? 1 : -1;
-                if (a.isExternal !== b.isExternal) return a.isExternal ? 1 : -1;
-                
-                if (!a.isExternal) {
-                    const dateA = a.latestDate || 0;
-                    const dateB = b.latestDate || 0;
-                    if (dateA !== dateB) return dateB - dateA;
-                    return getProjectSortValue(b) - getProjectSortValue(a);
-                }
-                return getProjectSortValue(b) - getProjectSortValue(a);
-            });
-
-            if (projectsArray.length === 0) {
-                projectListContainer.innerHTML = `<div class="text-center py-20 text-slate-400">No se encontraron proyectos.</div>`;
-                return;
-            }
-
-            let html = '';
-            projectsArray.forEach((p, idx) => {
-                const groupId = `group_${idx}`;
-                projectGroupsCache[groupId] = p;
-
-                const count = p.items.length;
-                let topRightContent = '';
-                const trelloUrl = p.items[0]?.trelloUrl;
-                let onClickAttr = `onclick="openFinalView(this.dataset.group)" data-group="${groupId}"`;
-                let cursorClass = 'cursor-pointer hover:shadow-md hover:ring-1 hover:ring-green-200';
-                let titleHoverClass = 'group-hover:text-green-700';
-                let iconSvg = `<svg class="w-5 h-5 text-slate-300 group-hover:text-green-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>`;
-
-                if (p.isExternal) {
-                    onClickAttr = ''; cursorClass = 'cursor-default opacity-80'; titleHoverClass = 'text-slate-700'; iconSvg = ''; 
-                    const yearLabel = p.sourceYear ? `<span class="text-xs font-black text-slate-400 mt-1">${p.sourceYear}</span>` : '';
-                    if (trelloUrl) {
-                        const safeUrl = trelloUrl.replace(/"/g, '&quot;');
-                        topRightContent = `<div class="flex flex-col items-center justify-center"><a href="${safeUrl}" target="_blank" class="flex items-center gap-1 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white px-2 py-1 rounded transition-all border border-blue-200 hover:border-blue-600 z-20 relative shadow-sm"><span>Trello</span><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>${yearLabel}</div>`;
-                    } else { topRightContent = `<div class="flex flex-col items-center justify-center"><span class="text-xs text-slate-400 font-medium">Trello (Sin Link)</span>${yearLabel}</div>`; }
-                } else { 
-                    let dateHtml = p.latestDateStr ? `<div class="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1"><svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>${p.latestDateStr}</div>` : '';
-                    topRightContent = `<div class="flex flex-col items-end justify-center gap-1">${dateHtml}<span class="text-[10px] text-slate-400 font-medium">${count} entrada(s)</span></div>`; 
-                }
-
-                let tagsHtml = '';
-                if(p.trelloTags && p.trelloTags.length > 0) {
-                    tagsHtml = `<div class="flex flex-wrap gap-1 mt-1">` + p.trelloTags.map(t => `<span class="text-[9px] px-1.5 py-0.5 rounded border ${TRELLO_COLORS[t.color] || TRELLO_COLORS['default']} font-bold uppercase opacity-80">${t.name}</span>`).join('') + `</div>`;
-                }
-
-                const hlTitle = highlightMatch(p.title, activeSearchQuery);
-                const hlNum = highlightMatch(p.number || '', activeSearchQuery);
-                
-                html += `<div ${onClickAttr} class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all ${cursorClass} group relative"><div class="flex items-start gap-3 relative z-10"><span class="text-lg font-black text-slate-400 font-mono w-6 text-right pt-1">${idx + 1}</span><div class="flex-1"><div class="flex justify-between items-start"><div class="flex items-center gap-2 mb-1">${p.number ? `<span class="text-xs font-mono font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">${hlNum}</span>` : ''}</div>${topRightContent}</div><h3 class="font-bold text-base leading-tight text-slate-800 ${titleHoverClass} transition-colors">${hlTitle}</h3>${tagsHtml}</div><div class="self-center">${iconSvg}</div></div></div>`;
-            });
-            projectListContainer.innerHTML = html;
-        }
-
-        function unfilterProjects() { isProjectListFiltered = false; renderProjectListContent(); }
-
-        function openFinalView(groupId) {
-            const groupData = projectGroupsCache[groupId];
-            if (!groupData) return;
-
-            const fullProjectItems = mergedData.filter(item => {
-                const key = (item.numeroProyecto && item.numeroProyecto.trim().length > 2) ? item.numeroProyecto : item.tituloProyecto;
-                return key === groupData.key && item.cliente === currentClientName; 
-            });
-            
-            window.currentViewItems = fullProjectItems; 
-            
-            document.getElementById('final-view-title').innerText = `${groupData.number || ''} ${groupData.title}`;
-            
-            const itemWithUrl = fullProjectItems.find(i => i.trelloUrl) || mergedData.find(i => (i.numeroProyecto === groupData.number || i.tituloProyecto === groupData.title) && i.trelloUrl);
-            document.getElementById('final-view-links').innerHTML = (itemWithUrl && itemWithUrl.trelloUrl) ? `<a href="${itemWithUrl.trelloUrl}" target="_blank" class="flex items-center gap-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded transition-colors shadow-sm"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 15H7V7h5v10zm5-4h-3V7h3v6z"/></svg>Trello</a>` : '';
-
-            activeCategoryFilter = null;
-            isFinalViewFiltered = true; 
-            
-            closeDayPanel();
-
-            updateFinalViewContent();
-            resetScroll('final-view'); 
-            finalView.classList.remove('translate-x-full');
-        }
-
-        function updateFinalViewContent() {
-            const query = isFinalViewFiltered ? activeSearchQuery : '';
-            renderFilterButton('active-search-filter-container', query, 'unfilterFinalView()');
-
-            let itemsToShow = window.currentViewItems;
-            
-            if (isFinalViewFiltered && activeSearchQuery) {
-                itemsToShow = itemsToShow.filter(item => itemMatchesQuery(item, activeSearchQuery));
-            }
-            if (activeCategoryFilter) itemsToShow = itemsToShow.filter(item => item.trabajoDiseno && item.trabajoDiseno.toUpperCase() === activeCategoryFilter);
-
-            const cats = [...new Set(window.currentViewItems.map(i => i.trabajoDiseno ? i.trabajoDiseno.toUpperCase() : 'PRODUCCIÓN'))];
-            document.getElementById('category-filters').innerHTML = cats.map(c => {
-                 const style = CAT_STYLES[c] || { btnColor: 'bg-slate-500' };
-                 const opacity = (activeCategoryFilter && activeCategoryFilter !== c) ? 'opacity-30' : 'opacity-100';
-                 return `<button onclick="toggleCategory('${c}')" class="${style.btnColor} text-white px-4 py-2 rounded-full ${opacity} hover:opacity-100 shadow-sm transition-opacity">${toTitleCase(c)}</button>`;
-            }).join('');
-            
-            renderCalendar(itemsToShow, 'final-calendar-container', 'entries-count-badge');
-        }
-
-        function toggleCategory(c) { activeCategoryFilter = activeCategoryFilter === c ? null : c; updateFinalViewContent(); }
-        function unfilterFinalView() { isFinalViewFiltered = false; updateFinalViewContent(); }
-
-        function parseDate(dStr) { 
-            if(!dStr) return 0; const parts = dStr.split('/');
-            if(parts.length !== 3) return 0; return new Date(parts[2], parts[1]-1, parts[0]).getTime(); 
-        }
-
-        function toTitleCase(s) { return s.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()); }
-        
-        function resetScroll(containerId) {
-            const view = document.getElementById(containerId);
-            if (view) { const main = view.querySelector('main'); if (main) main.scrollTop = 0; }
-            if (containerId === 'final-view') {
-                if (document.getElementById('final-calendar-container')) document.getElementById('final-calendar-container').scrollTop = 0;
-            }
-        }
-
-        function openResultsView() { 
-            resetScroll('results-view'); 
-            searchView.classList.add('-translate-y-full', 'opacity-0'); 
-            resultsView.classList.remove('translate-y-full'); 
-        }
-
-        function openProjectListView(clientName) {
-            if(!clientName) return;
-            currentClientName = clientName;
-            isProjectListFiltered = true;
-            renderProjectListContent();
-            resetScroll('project-list-view'); 
-            projectListView.classList.remove('translate-x-full');
-        }
-        
-        function closeResults() { 
-            activeSearchQuery=''; 
-            viewMode = 'CLIENT'; 
-            mainInput.value=''; 
-            headerInput.value=''; 
-            resultsView.classList.add('translate-y-full'); 
-            searchView.classList.remove('-translate-y-full', 'opacity-0'); 
-            projectListView.classList.add('translate-x-full'); 
-            finalView.classList.add('translate-x-full'); 
-            if (typeof chartDetailsView !== 'undefined') chartDetailsView.classList.add('translate-x-full');
-            if (typeof yearDashboardView !== 'undefined') yearDashboardView.classList.add('translate-x-full');
-            if (typeof enlacesView !== 'undefined') enlacesView.classList.add('translate-y-full');
-            
-            closeDayPanel();
-            setTimeout(()=>mainInput.focus(),500); 
-        }
-        
-        function closeProjectListView() { 
-            resetScroll('results-view'); 
-            projectListView.classList.add('translate-x-full'); 
-        }
-        
-        function closeFinalView() { 
-            resetScroll('project-list-view'); 
-            finalView.classList.add('translate-x-full'); 
-            closeDayPanel();
-        }
-
-        let enlacesFechasCache = {};
-
-        window.handleTitleClick = async function(d, m, y, el) {
-            const spinner = el.querySelector('.spinner');
-            if (spinner) spinner.classList.remove('hidden');
-            
-            const link = await getDocLink(d, m, y);
-            
-            if (spinner) spinner.classList.add('hidden');
-            
-            if (link) {
-                window.open(link, '_blank');
-            } else {
-                alert(`No se encontró el enlace para el día ${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y} en el documento.`);
-            }
-        };
-
-        async function getDocLink(d, m, y) {
-            const dPad = String(d).padStart(2, '0');
-            const mPad = String(m).padStart(2, '0');
-            const fechaClave = `${dPad}/${mPad}/${y}`;
-            const jsonFile = `enlaces_fechas_${y}.json`;
-
-            if (!enlacesFechasCache[y]) {
-                try {
-                    const response = await fetch(jsonFile);
-                    if (response.ok) {
-                        enlacesFechasCache[y] = await response.json();
-                    } else {
-                        console.warn(`No se pudo cargar ${jsonFile}: HTTP ${response.status}`);
-                        enlacesFechasCache[y] = {};
-                    }
-                } catch (error) {
-                    console.error(`Error cargando ${jsonFile}:`, error);
-                    enlacesFechasCache[y] = {};
-                }
-            }
-
-            return enlacesFechasCache[y] ? (enlacesFechasCache[y][fechaClave] || null) : null;
-        }
-    </script>
 </body>
 </html>
