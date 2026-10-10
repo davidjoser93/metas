@@ -705,6 +705,19 @@
     { date: "2026-10-09", meta: "Personal", text: "Realicé mi tarjeta de presentación personal" }
   ];
 
+  const customGroups = [
+    { title: "Practicar manejo, Tocar Piano y Hacer ejercicio", metas: ["Practicar manejo", "Tocar Piano", "Hacer ejercicio"] },
+    { title: "Maestría de Sistemas", metas: ["Maestría de Sistemas"] },
+    { title: "Aprende en Realidad", metas: ["Aprende en Realidad"] },
+    { title: "Arte en realidad", metas: ["Arte en realidad", "Arte en Realidad"] },
+    { title: "Inteligencia Artificial, Video Juegos y Álbum de barajitas", metas: ["Inteligencia Artificial", "Video Juegos", "Álbum de barajitas"] },
+    { title: "Yar-Yur", metas: ["Yar-Yur"] },
+    { title: "Ahorrar", metas: ["Ahorrar"] },
+    { title: "Mi empresa", metas: ["Mi empresa", "Mi Empresa"] },
+    { title: "Personal", metas: ["Personal"] }
+  ];
+
+  let activeFilterGroupTitle = null;
   let activeFilterMeta = null;
   let activeFilterDate = null;
   let hoveredMeta = null;
@@ -737,24 +750,52 @@
   }
 
   function getActiveMetas() {
-    if (activeFilterMeta) return [activeFilterMeta];
-    if (activeFilterDate) return [...new Set(CALENDAR_LOGS.filter(l => l.date === activeFilterDate).map(l => l.meta))];
+    if (activeFilterGroupTitle) {
+      const grp = customGroups.find(g => g.title === activeFilterGroupTitle);
+      if (grp) return grp.metas;
+    }
+    if (activeFilterMeta) {
+      return Array.isArray(activeFilterMeta) ? activeFilterMeta : [activeFilterMeta];
+    }
+    if (activeFilterDate) {
+      return [...new Set(CALENDAR_LOGS.filter(l => l.date === activeFilterDate).map(l => l.meta))];
+    }
     return [];
   }
 
+  function toggleTitleFilter(groupTitle) {
+    if (activeFilterGroupTitle === groupTitle) {
+      activeFilterGroupTitle = null;
+      activeFilterMeta = null;
+    } else {
+      activeFilterGroupTitle = groupTitle;
+      activeFilterDate = null;
+      const grp = customGroups.find(g => g.title === groupTitle);
+      activeFilterMeta = grp ? (grp.metas.length === 1 ? grp.metas[0] : grp.metas) : null;
+    }
+    updateView();
+  }
+
   function setMetaFilter(meta) {
-    activeFilterMeta = activeFilterMeta === meta ? null : meta;
-    activeFilterDate = null;
+    if (activeFilterMeta === meta && !activeFilterGroupTitle) {
+      activeFilterMeta = null;
+      activeFilterGroupTitle = null;
+    } else {
+      activeFilterMeta = meta;
+      activeFilterDate = null;
+      const grp = customGroups.find(g => g.metas.includes(meta));
+      activeFilterGroupTitle = grp ? grp.title : null;
+    }
     updateView();
   }
 
   function setDateFilter(dateStr) {
     activeFilterDate = activeFilterDate === dateStr ? null : dateStr;
     activeFilterMeta = null;
+    activeFilterGroupTitle = null;
     updateView();
   }
 
-  // Función para desplegar u ocultar la lista de entradas del cuaderno
   function toggleNotebook(element) {
     const page = element.closest('.notebook-page');
     if (!page) return;
@@ -797,7 +838,7 @@
   }
 
   function updateView() {
-    const isFiltering = activeFilterMeta !== null || activeFilterDate !== null;
+    const isFiltering = activeFilterGroupTitle !== null || activeFilterMeta !== null || activeFilterDate !== null;
     const activeMetas = getActiveMetas();
 
     renderRegistroMetas();
@@ -809,21 +850,21 @@
     if (isFiltering) {
       const augHasLogs = CALENDAR_LOGS.some(l => 
         l.date.startsWith("2026-08") && 
-        (!activeFilterMeta || l.meta === activeFilterMeta) && 
+        (activeMetas.length === 0 || activeMetas.includes(l.meta)) && 
         (!activeFilterDate || l.date === activeFilterDate)
       );
       const isAugFilterDate = activeFilterDate && activeFilterDate.startsWith("2026-08");
       
       const sepHasLogs = CALENDAR_LOGS.some(l => 
         l.date.startsWith("2026-09") && 
-        (!activeFilterMeta || l.meta === activeFilterMeta) && 
+        (activeMetas.length === 0 || activeMetas.includes(l.meta)) && 
         (!activeFilterDate || l.date === activeFilterDate)
       );
       const isSepFilterDate = activeFilterDate && activeFilterDate.startsWith("2026-09");
 
       const octHasLogs = CALENDAR_LOGS.some(l => 
         l.date.startsWith("2026-10") && 
-        (!activeFilterMeta || l.meta === activeFilterMeta) && 
+        (activeMetas.length === 0 || activeMetas.includes(l.meta)) && 
         (!activeFilterDate || l.date === activeFilterDate)
       );
       const isOctFilterDate = activeFilterDate && activeFilterDate.startsWith("2026-10");
@@ -887,27 +928,23 @@
     const container = document.getElementById("registroMetasContainer");
     container.innerHTML = "";
 
-    const customGroups = [
-      { title: "Practicar manejo, Tocar Piano y Hacer ejercicio", metas: ["Practicar manejo", "Tocar Piano", "Hacer ejercicio"] },
-      { title: "Maestría de Sistemas", metas: ["Maestría de Sistemas"] },
-      { title: "Aprende en Realidad", metas: ["Aprende en Realidad"] },
-      { title: "Arte en realidad", metas: ["Arte en realidad", "Arte en Realidad"] },
-      { title: "Inteligencia Artificial, Video Juegos y Álbum de barajitas", metas: ["Inteligencia Artificial", "Video Juegos", "Álbum de barajitas"] },
-      { title: "Yar-Yur", metas: ["Yar-Yur"] },
-      { title: "Ahorrar", metas: ["Ahorrar"] },
-      { title: "Mi empresa", metas: ["Mi empresa", "Mi Empresa"] },
-      { title: "Personal", metas: ["Personal"] }
-    ];
-
     let hasVisibleContent = false;
-    const isFiltered = activeFilterMeta !== null || activeFilterDate !== null;
+    const activeMetas = getActiveMetas();
 
     customGroups.forEach(group => {
+      // Si hay un título activo filtrado, ocultar todos los demás títulos
+      if (activeFilterGroupTitle && group.title !== activeFilterGroupTitle) {
+        return;
+      }
+      if (activeFilterMeta && !activeFilterGroupTitle) {
+        const matchesMeta = group.metas.some(m => activeMetas.includes(m));
+        if (!matchesMeta) return;
+      }
+
       let logs = CALENDAR_LOGS.filter(l => group.metas.includes(l.meta));
       let metasWithTargets = DATA_GOALS.filter(g => group.metas.includes(g.title) && g.targets && g.targets.length > 0);
 
-      if (activeFilterMeta) {
-        if (!group.metas.includes(activeFilterMeta)) return;
+      if (activeFilterMeta && !Array.isArray(activeFilterMeta)) {
         logs = logs.filter(l => l.meta === activeFilterMeta);
         metasWithTargets = metasWithTargets.filter(g => g.title === activeFilterMeta);
       }
@@ -927,13 +964,15 @@
       const page = document.createElement("div");
       page.className = "notebook-page";
 
-      const displayTitle = activeFilterMeta && group.metas.includes(activeFilterMeta) ? activeFilterMeta : group.title;
-      const bodyDisplay = isFiltered ? "block" : "none";
-      const arrowIcon = isFiltered ? "▾" : "▸";
+      const isThisActive = activeFilterGroupTitle === group.title || (activeFilterMeta && group.metas.includes(activeFilterMeta)) || (activeFilterDate !== null);
+      const displayTitle = activeFilterMeta && !Array.isArray(activeFilterMeta) && group.metas.includes(activeFilterMeta) ? activeFilterMeta : group.title;
+      const bodyDisplay = isThisActive ? "block" : "none";
+      const arrowIcon = isThisActive ? "▾" : "▸";
       const entriesDisplay = activeFilterDate ? "flex" : "none";
       const plusIcon = activeFilterDate ? "−" : "+";
 
-      let html = `<div class="notebook-title" onclick="toggleNotebook(this)">${displayTitle} <span class="notebook-arrow">${arrowIcon}</span></div>`;
+      let safeTitle = group.title.replace(/'/g, "\\'");
+      let html = `<div class="notebook-title" onclick="toggleTitleFilter('${safeTitle}')">${displayTitle} <span class="notebook-arrow">${arrowIcon}</span></div>`;
       html += `<div class="notebook-body" style="display: ${bodyDisplay};">`;
 
       if (metasWithTargets.length > 0) {
@@ -988,7 +1027,7 @@
     });
 
     if (!hasVisibleContent) {
-      container.innerHTML = `<div class="notebook-page"><div class="notebook-title">Página en blanco</div><p style="margin-top: 10px;">No hay apuntes para esta selección.</p></div>`;
+      container.innerHTML = `<div class="notebook-page"><div class="notebook-title" onclick="toggleTitleFilter(null)" style="cursor: pointer;">Página en blanco</div><p style="margin-top: 10px;">No hay apuntes para esta selección.</p></div>`;
     }
   }
 
@@ -1009,7 +1048,9 @@
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-    const currentMeta = hoveredMeta || activeFilterMeta;
+    const activeMetas = getActiveMetas();
+    const isFilteredByMeta = (activeFilterGroupTitle !== null || activeFilterMeta !== null || hoveredMeta !== null);
+    const filterMetasList = hoveredMeta ? [hoveredMeta] : activeMetas;
 
     for (let i = 0; i < firstDayIndex; i++) {
       const emptyCell = document.createElement("div");
@@ -1031,10 +1072,21 @@
       let isDimmed = false;
 
       if (dayEvents.length > 0) {
-        if (currentMeta) {
-          const matchingEvents = dayEvents.filter(e => e.meta === currentMeta);
+        if (isFilteredByMeta && filterMetasList.length > 0) {
+          const matchingEvents = dayEvents.filter(e => filterMetasList.includes(e.meta));
           if (matchingEvents.length > 0) {
-            cell.style.background = GOAL_CONFIG[matchingEvents[0].meta].color;
+            const uniqueMetas = [...new Set(matchingEvents.map(e => e.meta))];
+            const cols = uniqueMetas.map(m => (GOAL_CONFIG[m] || { color: "#334155" }).color);
+
+            if (cols.length === 1) {
+              cell.style.background = cols[0];
+            } else if (cols.length === 2) {
+              cell.style.background = `repeating-linear-gradient(45deg, ${cols[0]}, ${cols[0]} 10px, ${cols[1]} 10px, ${cols[1]} 20px)`;
+            } else {
+              const stripeWidth = 10;
+              const parts = cols.map((c, i) => `${c} ${i * stripeWidth}px, ${c} ${(i + 1) * stripeWidth}px`);
+              cell.style.background = `repeating-linear-gradient(45deg, ${parts.join(", ")})`;
+            }
           } else {
             isDimmed = true;
           }
@@ -1053,7 +1105,7 @@
           }
         }
       } else {
-        if (currentMeta) isDimmed = true;
+        if (isFilteredByMeta && filterMetasList.length > 0) isDimmed = true;
       }
 
       if (activeFilterDate && dateStr !== activeFilterDate) {
