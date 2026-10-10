@@ -184,6 +184,19 @@
       border-top: 1px dotted rgba(30, 58, 138, 0.2);
     }
 
+    .notebook-subtitle {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 12px;
+      padding: 4px 10px;
+      background: rgba(254, 240, 138, 0.55);
+      border-left: 3px solid #f59e0b;
+      border-radius: 3px 8px 8px 3px;
+      display: inline-block;
+      line-height: 1.35;
+    }
+
     .notebook-checklist {
       margin-bottom: 15px;
     }
@@ -479,6 +492,11 @@
         font-size: 1.15rem;
       }
 
+      .notebook-subtitle {
+        font-size: 1.05rem;
+        padding: 3px 8px;
+      }
+
       .notebook-target-item {
         align-items: flex-start;
         margin-bottom: 6px;
@@ -524,7 +542,6 @@
   <header>
     <div>
       <h1>Mis Metas</h1>
-      <p>Mi bitácora y avance de objetivos</p>
     </div>
   </header>
 
@@ -706,15 +723,51 @@
   ];
 
   const customGroups = [
-    { title: "Practicar manejo, Tocar Piano y Hacer ejercicio", metas: ["Practicar manejo", "Tocar Piano", "Hacer ejercicio"] },
-    { title: "Maestría de Sistemas", metas: ["Maestría de Sistemas"] },
-    { title: "Aprende en Realidad", metas: ["Aprende en Realidad"] },
-    { title: "Arte en realidad", metas: ["Arte en realidad", "Arte en Realidad"] },
-    { title: "Inteligencia Artificial, Video Juegos y Álbum de barajitas", metas: ["Inteligencia Artificial", "Video Juegos", "Álbum de barajitas"] },
-    { title: "Yar-Yur", metas: ["Yar-Yur"] },
-    { title: "Ahorrar", metas: ["Ahorrar"] },
-    { title: "Mi empresa", metas: ["Mi empresa", "Mi Empresa"] },
-    { title: "Personal", metas: ["Personal"] }
+    { 
+      title: "Practicar manejo, Tocar Piano y Hacer ejercicio", 
+      subtitle: "Practicar las canciones Don't Stop Believing, Make You Feel My Love, y las demás",
+      metas: ["Practicar manejo", "Tocar Piano", "Hacer ejercicio"] 
+    },
+    { 
+      title: "Maestría de Sistemas", 
+      subtitle: "Yar-Yur System Canal Moderno Nestlé",
+      metas: ["Maestría de Sistemas"] 
+    },
+    { 
+      title: "Aprende en Realidad", 
+      subtitle: "Actualizar aplicación en Google Play",
+      metas: ["Aprende en Realidad"] 
+    },
+    { 
+      title: "Arte en realidad", 
+      subtitle: "Diseñar escultura de flor con luz y NFC",
+      metas: ["Arte en realidad", "Arte en Realidad"] 
+    },
+    { 
+      title: "Inteligencia Artificial, Video Juegos y Álbum de barajitas", 
+      subtitle: "Dashboard de auditoría de respaldos",
+      metas: ["Inteligencia Artificial", "Video Juegos", "Álbum de barajitas"] 
+    },
+    { 
+      title: "Yar-Yur", 
+      subtitle: "Hacer Dashboard de Yar-Yur",
+      metas: ["Yar-Yur"] 
+    },
+    { 
+      title: "Ahorrar", 
+      subtitle: "Hacer cuentas",
+      metas: ["Ahorrar"] 
+    },
+    { 
+      title: "Mi empresa", 
+      subtitle: "Registrarme en 100 empresas",
+      metas: ["Mi empresa", "Mi Empresa"] 
+    },
+    { 
+      title: "Personal", 
+      subtitle: "Hacer mi tarjeta de presentación",
+      metas: ["Personal"] 
+    }
   ];
 
   let activeFilterGroupTitle = null;
@@ -974,6 +1027,10 @@
       let safeTitle = group.title.replace(/'/g, "\\'");
       let html = `<div class="notebook-title" onclick="toggleTitleFilter('${safeTitle}')">${displayTitle} <span class="notebook-arrow">${arrowIcon}</span></div>`;
       html += `<div class="notebook-body" style="display: ${bodyDisplay};">`;
+
+      if (group.subtitle) {
+        html += `<div class="notebook-subtitle">${group.subtitle}</div>`;
+      }
 
       if (metasWithTargets.length > 0) {
         metasWithTargets.forEach(g => {
