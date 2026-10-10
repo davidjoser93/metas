@@ -104,6 +104,52 @@
       margin-bottom: 10px;
     }
 
+    .nav-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .cal-nav-btn {
+      background: #ffffff;
+      border: 2px solid var(--pen-color);
+      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+      color: var(--pen-color);
+      font-size: 1.15rem;
+      font-family: 'Kalam', cursive;
+      font-weight: 700;
+      width: 40px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .cal-nav-btn:hover:not(:disabled) {
+      background: #fef08a;
+      transform: scale(1.08);
+      box-shadow: 2px 3px 0px var(--pen-color);
+    }
+
+    .cal-nav-btn:disabled {
+      opacity: 0.25;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .cal-nav-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--pen-color);
+      text-align: center;
+      flex: 1;
+    }
+
     .registro-container {
       display: flex;
       flex-direction: column;
@@ -587,57 +633,33 @@
     <div class="registro-container" id="registroMetasContainer"></div>
   </section>
 
-  <section class="split-layout" id="sectionAug">
+  <section class="split-layout" id="sectionMonth">
     <div class="sketchy-panel">
-      <div class="panel-header">Agosto 2026</div>
-      <div class="calendar-grid" id="calendarAug"></div>
+      <div class="panel-header nav-header">
+        <button class="cal-nav-btn prev-btn" id="calNavPrev" onclick="navigateCalView(-1)" title="Mes anterior">◀</button>
+        <span id="calNavTitle" class="cal-nav-title">Octubre 2026</span>
+        <button class="cal-nav-btn next-btn" id="calNavNext" onclick="navigateCalView(1)" title="Mes siguiente">▶</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
     </div>
-    <div class="sketchy-panel" id="augRightPanel">
-      <div class="panel-header" id="augRightTitle">Distribución de Agosto</div>
-      <div id="augChartsWrap" style="display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100%;">
+    <div class="sketchy-panel" id="monthRightPanel">
+      <div class="panel-header" id="monthRightTitle">Distribución de Octubre</div>
+      <div id="monthChartsWrap" style="display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100%;">
         <div class="canvas-container">
-          <canvas id="pieAugCanvas" width="480" height="230"></canvas>
+          <canvas id="pieMonthCanvas" width="480" height="230"></canvas>
         </div>
       </div>
-      <div class="log-list-container" id="listAug" style="display: none;"></div>
+      <div class="log-list-container" id="listMonth" style="display: none;"></div>
     </div>
   </section>
 
-  <section class="split-layout" id="sectionSep">
+  <section class="split-layout" id="sectionGlobal" style="display: none;">
     <div class="sketchy-panel">
-      <div class="panel-header">Septiembre 2026</div>
-      <div class="calendar-grid" id="calendarSep"></div>
-    </div>
-    <div class="sketchy-panel" id="sepRightPanel">
-      <div class="panel-header" id="sepRightTitle">Distribución de Septiembre</div>
-      <div id="sepChartsWrap" style="display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100%;">
-        <div class="canvas-container">
-          <canvas id="pieSepCanvas" width="480" height="230"></canvas>
-        </div>
+      <div class="panel-header nav-header">
+        <button class="cal-nav-btn prev-btn" onclick="navigateCalView(-1)" title="Volver al calendario">◀</button>
+        <span class="cal-nav-title">Distribución Global (Cantidad)</span>
+        <span style="width: 40px;"></span>
       </div>
-      <div class="log-list-container" id="listSep" style="display: none;"></div>
-    </div>
-  </section>
-
-  <section class="split-layout" id="sectionOct">
-    <div class="sketchy-panel">
-      <div class="panel-header">Octubre 2026</div>
-      <div class="calendar-grid" id="calendarOct"></div>
-    </div>
-    <div class="sketchy-panel" id="octRightPanel">
-      <div class="panel-header" id="octRightTitle">Distribución de Octubre</div>
-      <div id="octChartsWrap" style="display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100%;">
-        <div class="canvas-container">
-          <canvas id="pieOctCanvas" width="480" height="230"></canvas>
-        </div>
-      </div>
-      <div class="log-list-container" id="listOct" style="display: none;"></div>
-    </div>
-  </section>
-
-  <section class="split-layout">
-    <div class="sketchy-panel">
-      <div class="panel-header">Distribución Global (Cantidad)</div>
       <div class="canvas-container">
         <canvas id="barGeneralCanvas" width="540" height="320"></canvas>
       </div>
@@ -820,6 +842,23 @@
     { date: "2026-10-18", meta: "Yar-Yur", word: "Dashboard" }
   ];
 
+  function getAvailableViews() {
+    const ymSet = new Set();
+    CALENDAR_LOGS.forEach(l => {
+      if (l.date && l.date.length >= 7) ymSet.add(l.date.substring(0, 7));
+    });
+    FUTURE_PROJECTIONS.forEach(p => {
+      if (p.date && p.date.length >= 7) ymSet.add(p.date.substring(0, 7));
+    });
+    const sortedYm = Array.from(ymSet).sort();
+    return [...sortedYm, "global"];
+  }
+
+  const initialToday = new Date();
+  const initialYm = `${initialToday.getFullYear()}-${String(initialToday.getMonth() + 1).padStart(2, "0")}`;
+  const initViews = getAvailableViews();
+  let currentViewIndex = initViews.indexOf(initialYm) !== -1 ? initViews.indexOf(initialYm) : Math.max(0, initViews.length - 2);
+
   let activeFilterGroupTitle = null;
   let activeFilterMeta = null;
   let activeFilterDate = null;
@@ -936,97 +975,76 @@
     }
   }
 
-  function renderCalendars() {
-    renderMonthCalendar("calendarAug", 2026, 7);
-    renderMonthCalendar("calendarSep", 2026, 8);
-    renderMonthCalendar("calendarOct", 2026, 9);
+  function navigateCalView(direction) {
+    const views = getAvailableViews();
+    const newIndex = currentViewIndex + direction;
+    if (newIndex >= 0 && newIndex < views.length) {
+      currentViewIndex = newIndex;
+      if (activeFilterDate && views[currentViewIndex] !== "global" && !activeFilterDate.startsWith(views[currentViewIndex])) {
+        activeFilterDate = null;
+      }
+      updateView();
+    }
   }
 
   function updateView() {
-    const isFiltering = activeFilterGroupTitle !== null || activeFilterMeta !== null || activeFilterDate !== null;
+    const views = getAvailableViews();
+    if (currentViewIndex < 0 || currentViewIndex >= views.length) {
+      currentViewIndex = Math.max(0, views.indexOf(initialYm) !== -1 ? views.indexOf(initialYm) : views.length - 2);
+    }
+
+    const currentView = views[currentViewIndex];
+    const isGlobalView = currentView === "global";
     const activeMetas = getActiveMetas();
+    const isFiltering = activeFilterGroupTitle !== null || activeFilterMeta !== null || activeFilterDate !== null;
 
     renderRegistroMetas();
 
-    const sectionAug = document.getElementById("sectionAug");
-    const sectionSep = document.getElementById("sectionSep");
-    const sectionOct = document.getElementById("sectionOct");
+    const sectionMonth = document.getElementById("sectionMonth");
+    const sectionGlobal = document.getElementById("sectionGlobal");
 
-    if (isFiltering) {
-      const augHasLogs = CALENDAR_LOGS.some(l => 
-        l.date.startsWith("2026-08") && 
-        (activeMetas.length === 0 || activeMetas.includes(l.meta)) && 
-        (!activeFilterDate || l.date === activeFilterDate)
-      );
-      const isAugFilterDate = activeFilterDate && activeFilterDate.startsWith("2026-08");
-      
-      const sepHasLogs = CALENDAR_LOGS.some(l => 
-        l.date.startsWith("2026-09") && 
-        (activeMetas.length === 0 || activeMetas.includes(l.meta)) && 
-        (!activeFilterDate || l.date === activeFilterDate)
-      );
-      const isSepFilterDate = activeFilterDate && activeFilterDate.startsWith("2026-09");
-
-      const octHasLogs = CALENDAR_LOGS.some(l => 
-        l.date.startsWith("2026-10") && 
-        (activeMetas.length === 0 || activeMetas.includes(l.meta)) && 
-        (!activeFilterDate || l.date === activeFilterDate)
-      );
-      const isOctFilterDate = activeFilterDate && activeFilterDate.startsWith("2026-10");
-
-      sectionAug.style.display = (augHasLogs || isAugFilterDate) ? "" : "none";
-      sectionSep.style.display = (sepHasLogs || isSepFilterDate) ? "" : "none";
-      sectionOct.style.display = (octHasLogs || isOctFilterDate) ? "" : "none";
+    if (isGlobalView) {
+      sectionMonth.style.display = "none";
+      sectionGlobal.style.display = "grid";
+      drawMonthlyPieChart("pieChartGeneral", null);
+      drawBarChartOrdered("barGeneralCanvas", null);
     } else {
-      sectionAug.style.display = "";
-      sectionSep.style.display = "";
-      sectionOct.style.display = "";
+      sectionMonth.style.display = "grid";
+      sectionGlobal.style.display = "none";
+
+      const [yStr, mStr] = currentView.split("-");
+      const year = parseInt(yStr, 10);
+      const monthZero = parseInt(mStr, 10) - 1;
+      const monthName = MONTHS_FULL_ES[monthZero];
+
+      const calNavTitle = document.getElementById("calNavTitle");
+      if (calNavTitle) {
+        calNavTitle.textContent = `${monthName} ${year}`;
+      }
+
+      const prevBtn = document.getElementById("calNavPrev");
+      const nextBtn = document.getElementById("calNavNext");
+      if (prevBtn) prevBtn.disabled = (currentViewIndex === 0);
+      if (nextBtn) nextBtn.disabled = (currentViewIndex === views.length - 1);
+
+      renderMonthCalendar("calendarGrid", year, monthZero);
+
+      const monthChartsWrap = document.getElementById("monthChartsWrap");
+      const listMonth = document.getElementById("listMonth");
+      const monthRightTitle = document.getElementById("monthRightTitle");
+
+      if (isFiltering) {
+        monthChartsWrap.style.display = "none";
+        listMonth.style.display = "flex";
+        monthRightTitle.textContent = activeFilterDate ? "Apuntes del Día" : `Apuntes de ${monthName} (Filtrado)`;
+        renderGroupedLogList("listMonth", currentView, activeFilterDate ? null : activeMetas, activeFilterDate);
+      } else {
+        monthChartsWrap.style.display = "flex";
+        listMonth.style.display = "none";
+        monthRightTitle.textContent = `Distribución de ${monthName}`;
+        drawMonthlyPieChart("pieMonthCanvas", currentView);
+      }
     }
-
-    renderCalendars();
-
-    const augChartsWrap = document.getElementById("augChartsWrap");
-    const listAug = document.getElementById("listAug");
-    const augTitle = document.getElementById("augRightTitle");
-
-    const sepChartsWrap = document.getElementById("sepChartsWrap");
-    const listSep = document.getElementById("listSep");
-    const sepTitle = document.getElementById("sepRightTitle");
-
-    const octChartsWrap = document.getElementById("octChartsWrap");
-    const listOct = document.getElementById("listOct");
-    const octTitle = document.getElementById("octRightTitle");
-
-    if (isFiltering) {
-      augChartsWrap.style.display = "none";
-      listAug.style.display = "flex";
-      augTitle.textContent = activeFilterDate ? "Apuntes del Día" : "Apuntes de Agosto (Filtrado)";
-      renderGroupedLogList("listAug", "2026-08", activeFilterDate ? null : activeMetas, activeFilterDate);
-
-      sepChartsWrap.style.display = "none";
-      listSep.style.display = "flex";
-      sepTitle.textContent = activeFilterDate ? "Apuntes del Día" : "Apuntes de Septiembre (Filtrado)";
-      renderGroupedLogList("listSep", "2026-09", activeFilterDate ? null : activeMetas, activeFilterDate);
-
-      octChartsWrap.style.display = "none";
-      listOct.style.display = "flex";
-      octTitle.textContent = activeFilterDate ? "Apuntes del Día" : "Apuntes de Octubre (Filtrado)";
-      renderGroupedLogList("listOct", "2026-10", activeFilterDate ? null : activeMetas, activeFilterDate);
-    } else {
-      augChartsWrap.style.display = "flex";
-      listAug.style.display = "none";
-      augTitle.textContent = "Distribución de Agosto";
-
-      sepChartsWrap.style.display = "flex";
-      listSep.style.display = "none";
-      sepTitle.textContent = "Distribución de Septiembre";
-
-      octChartsWrap.style.display = "flex";
-      listOct.style.display = "none";
-      octTitle.textContent = "Distribución de Octubre";
-    }
-
-    redrawVisibleCharts();
   }
 
   function renderRegistroMetas() {
@@ -1598,14 +1616,16 @@
   }
 
   function redrawVisibleCharts() {
-    drawMonthlyPieChart("pieChartGeneral", null);
-    drawBarChartOrdered("barGeneralCanvas", null);
-
-    const isFiltering = activeFilterMeta !== null || activeFilterDate !== null;
-    if (!isFiltering) {
-      drawMonthlyPieChart("pieAugCanvas", "2026-08");
-      drawMonthlyPieChart("pieSepCanvas", "2026-09");
-      drawMonthlyPieChart("pieOctCanvas", "2026-10");
+    const views = getAvailableViews();
+    const currentView = views[currentViewIndex];
+    if (currentView === "global") {
+      drawMonthlyPieChart("pieChartGeneral", null);
+      drawBarChartOrdered("barGeneralCanvas", null);
+    } else {
+      const isFiltering = activeFilterGroupTitle !== null || activeFilterMeta !== null || activeFilterDate !== null;
+      if (!isFiltering) {
+        drawMonthlyPieChart("pieMonthCanvas", currentView);
+      }
     }
   }
 
@@ -1704,8 +1724,7 @@
     updateView();
 
     const canvasIds = [
-      "pieChartGeneral", "barGeneralCanvas",
-      "pieAugCanvas", "pieSepCanvas", "pieOctCanvas"
+      "pieChartGeneral", "barGeneralCanvas", "pieMonthCanvas"
     ];
 
     canvasIds.forEach(id => {
