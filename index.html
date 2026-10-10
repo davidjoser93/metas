@@ -938,11 +938,17 @@
             isDimmed = true;
           }
         } else {
-          if (dayEvents.length === 1) {
-            cell.style.background = (GOAL_CONFIG[dayEvents[0].meta] || { color: "#334155" }).color;
+          const uniqueMetas = [...new Set(dayEvents.map(e => e.meta))];
+          const cols = uniqueMetas.map(m => (GOAL_CONFIG[m] || { color: "#334155" }).color);
+
+          if (cols.length === 1) {
+            cell.style.background = cols[0];
+          } else if (cols.length === 2) {
+            cell.style.background = `repeating-linear-gradient(45deg, ${cols[0]}, ${cols[0]} 10px, ${cols[1]} 10px, ${cols[1]} 20px)`;
           } else {
-            const cols = dayEvents.map(e => (GOAL_CONFIG[e.meta] || { color: "#334155" }).color);
-            cell.style.background = `repeating-linear-gradient(45deg, ${cols[0]}, ${cols[0]} 10px, ${cols[1] || cols[0]} 10px, ${cols[1] || cols[0]} 20px)`;
+            const stripeWidth = 10;
+            const parts = cols.map((c, i) => `${c} ${i * stripeWidth}px, ${c} ${(i + 1) * stripeWidth}px`);
+            cell.style.background = `repeating-linear-gradient(45deg, ${parts.join(", ")})`;
           }
         }
       } else {
