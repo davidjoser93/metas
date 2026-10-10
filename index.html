@@ -225,42 +225,38 @@
       background: white;
     }
 
-    .notebook-more-line {
-      display: inline-flex;
+    .notebook-more-wrap {
+      display: flex;
+      justify-content: center;
       align-items: center;
-      gap: 10px;
-      margin-top: 14px;
-      margin-bottom: 12px;
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #1e3a8a;
-      cursor: pointer;
-      padding: 6px 14px;
-      border: 2px dashed #1e3a8a;
-      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-      background: rgba(255, 255, 255, 0.85);
-      transition: all 0.15s ease;
-      user-select: none;
+      margin: 10px 0 8px 0;
     }
 
-    .notebook-more-line:hover {
-      background: #ffffff;
-      transform: scale(1.02);
-      box-shadow: 2px 2px 0px #1e3a8a;
-    }
-
-    .notebook-more-line .more-plus {
+    .notebook-circle-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 22px;
-      height: 22px;
+      width: 28px;
+      height: 28px;
       border: 2px solid #1e3a8a;
       border-radius: 50%;
-      font-size: 1.2rem;
-      font-weight: bold;
+      font-size: 1.3rem;
+      font-weight: 700;
       line-height: 1;
+      color: #1e3a8a;
+      background: #ffffff;
+      cursor: pointer;
+      box-shadow: 1px 2px 0px rgba(30, 58, 138, 0.2);
+      transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+      user-select: none;
+      font-family: 'Kalam', cursive;
+      padding: 0;
+    }
+
+    .notebook-circle-btn:hover {
       background: #fdfbf7;
+      transform: scale(1.12);
+      box-shadow: 2px 2px 0px #1e3a8a;
     }
 
     .notebook-entries {
@@ -783,18 +779,14 @@
     const entries = page.querySelector('.notebook-entries');
     if (!entries) return;
 
-    const icon = element.querySelector('.more-plus');
-    const textSpan = element.querySelector('.more-text');
     const isHidden = window.getComputedStyle(entries).display === 'none';
 
     if (isHidden) {
       entries.style.display = 'flex';
-      if (icon) icon.textContent = '−';
-      if (textSpan) textSpan.textContent = 'Ocultar lista de días';
+      element.textContent = '−';
     } else {
       entries.style.display = 'none';
-      if (icon) icon.textContent = '+';
-      if (textSpan) textSpan.textContent = 'Ver lista de días con sus avances';
+      element.textContent = '+';
     }
   }
 
@@ -940,7 +932,6 @@
       const arrowIcon = isFiltered ? "▾" : "▸";
       const entriesDisplay = activeFilterDate ? "flex" : "none";
       const plusIcon = activeFilterDate ? "−" : "+";
-      const plusText = activeFilterDate ? "Ocultar lista de días" : "Ver lista de días con sus avances";
 
       let html = `<div class="notebook-title" onclick="toggleNotebook(this)">${displayTitle} <span class="notebook-arrow">${arrowIcon}</span></div>`;
       html += `<div class="notebook-body" style="display: ${bodyDisplay};">`;
@@ -972,9 +963,8 @@
 
       if (logs.length > 0) {
         html += `
-          <div class="notebook-more-line" onclick="toggleEntries(this)">
-            <span class="more-plus">${plusIcon}</span>
-            <span class="more-text">${plusText}</span>
+          <div class="notebook-more-wrap">
+            <button class="notebook-circle-btn" onclick="toggleEntries(this)" title="Ver / Ocultar días">${plusIcon}</button>
           </div>
           <div class="notebook-entries" style="display: ${entriesDisplay};">
         `;
@@ -989,13 +979,6 @@
           `;
         });
         html += `</div>`;
-      } else {
-        html += `
-          <div class="notebook-more-line" style="opacity: 0.55; cursor: default;">
-            <span class="more-plus">+</span>
-            <span class="more-text">Sin avances registrados aún</span>
-          </div>
-        `;
       }
 
       html += `</div>`; // Close notebook-body
