@@ -114,7 +114,7 @@
       background-color: #fdfbf7;
       color: #1e3a8a;
       position: relative;
-      padding: 30px 40px 40px 60px;
+      padding: 22px 40px 24px 60px;
       border: 1px solid #cbd5e1;
       border-radius: 4px 12px 12px 4px;
       box-shadow: -4px 0px 0px #cbd5e1, 3px 5px 12px rgba(0,0,0,0.15);
@@ -125,7 +125,8 @@
       );
       line-height: 30px;
       font-size: 1.2rem;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+      transition: padding 0.2s ease;
     }
 
     .notebook-page::before {
@@ -139,22 +140,35 @@
     }
 
     .notebook-title {
-      font-size: 1.9rem;
+      font-size: 1.85rem;
       font-weight: 700;
-      margin-bottom: 15px;
+      margin-bottom: 0;
       border-bottom: 2px dashed #1e3a8a;
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
       line-height: 1.2;
       cursor: pointer;
       transition: opacity 0.2s;
+      user-select: none;
     }
 
     .notebook-title:hover {
       opacity: 0.7;
     }
 
+    .notebook-arrow {
+      font-size: 1.1rem;
+      display: inline-block;
+      transition: transform 0.2s ease;
+    }
+
+    .notebook-body {
+      margin-top: 15px;
+    }
+
     .notebook-checklist {
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
     
     .notebook-checklist-title {
@@ -194,10 +208,49 @@
       background: white;
     }
 
+    .notebook-more-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+      margin-bottom: 12px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      cursor: pointer;
+      padding: 6px 14px;
+      border: 2px dashed #1e3a8a;
+      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+      background: rgba(255, 255, 255, 0.85);
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .notebook-more-line:hover {
+      background: #ffffff;
+      transform: scale(1.02);
+      box-shadow: 2px 2px 0px #1e3a8a;
+    }
+
+    .notebook-more-line .more-plus {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border: 2px solid #1e3a8a;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      font-weight: bold;
+      line-height: 1;
+      background: #fdfbf7;
+    }
+
     .notebook-entries {
       display: none; /* Oculto por defecto */
       flex-direction: column;
       gap: 10px;
+      margin-top: 8px;
     }
 
     .notebook-entry {
@@ -689,17 +742,42 @@
   }
 
   // Función para desplegar u ocultar la lista de entradas del cuaderno
+  function toggleNotebook(element) {
+    const page = element.closest('.notebook-page');
+    if (!page) return;
+    
+    const body = page.querySelector('.notebook-body');
+    const arrow = element.querySelector('.notebook-arrow');
+    if (!body) return;
+
+    if (window.getComputedStyle(body).display === 'none') {
+      body.style.display = 'block';
+      if (arrow) arrow.textContent = '▾';
+    } else {
+      body.style.display = 'none';
+      if (arrow) arrow.textContent = '▸';
+    }
+  }
+
   function toggleEntries(element) {
     const page = element.closest('.notebook-page');
     if (!page) return;
     
     const entries = page.querySelector('.notebook-entries');
-    if (entries) {
-      if (window.getComputedStyle(entries).display === 'none') {
-        entries.style.display = 'flex';
-      } else {
-        entries.style.display = 'none';
-      }
+    if (!entries) return;
+
+    const icon = element.querySelector('.more-plus');
+    const textSpan = element.querySelector('.more-text');
+    const isHidden = window.getComputedStyle(entries).display === 'none';
+
+    if (isHidden) {
+      entries.style.display = 'flex';
+      if (icon) icon.textContent = '−';
+      if (textSpan) textSpan.textContent = 'Ocultar lista de días';
+    } else {
+      entries.style.display = 'none';
+      if (icon) icon.textContent = '+';
+      if (textSpan) textSpan.textContent = 'Ver lista de días con sus avances';
     }
   }
 
@@ -813,6 +891,7 @@
     ];
 
     let hasVisibleContent = false;
+    const isFiltered = activeFilterMeta !== null || activeFilterDate !== null;
 
     customGroups.forEach(group => {
       let logs = CALENDAR_LOGS.filter(l => group.metas.includes(l.meta));
@@ -840,7 +919,14 @@
       page.className = "notebook-page";
 
       const displayTitle = activeFilterMeta && group.metas.includes(activeFilterMeta) ? activeFilterMeta : group.title;
-      let html = `<div class="notebook-title" onclick="toggleEntries(this)">${displayTitle}</div>`;
+      const bodyDisplay = isFiltered ? "block" : "none";
+      const arrowIcon = isFiltered ? "▾" : "▸";
+      const entriesDisplay = activeFilterDate ? "flex" : "none";
+      const plusIcon = activeFilterDate ? "−" : "+";
+      const plusText = activeFilterDate ? "Ocultar lista de días" : "Ver lista de días con sus avances";
+
+      let html = `<div class="notebook-title" onclick="toggleNotebook(this)">${displayTitle} <span class="notebook-arrow">${arrowIcon}</span></div>`;
+      html += `<div class="notebook-body" style="display: ${bodyDisplay};">`;
 
       if (metasWithTargets.length > 0) {
         metasWithTargets.forEach(g => {
@@ -868,7 +954,13 @@
       }
 
       if (logs.length > 0) {
-        html += `<div class="notebook-entries">`;
+        html += `
+          <div class="notebook-more-line" onclick="toggleEntries(this)">
+            <span class="more-plus">${plusIcon}</span>
+            <span class="more-text">${plusText}</span>
+          </div>
+          <div class="notebook-entries" style="display: ${entriesDisplay};">
+        `;
         logs.sort((a, b) => a.date.localeCompare(b.date)).forEach(log => {
           const dateStr = formatNotebookDate(log.date);
           const logText = log.isCompletion ? `<strong>${log.text}</strong>` : log.text;
@@ -880,14 +972,23 @@
           `;
         });
         html += `</div>`;
+      } else {
+        html += `
+          <div class="notebook-more-line" style="opacity: 0.55; cursor: default;">
+            <span class="more-plus">+</span>
+            <span class="more-text">Sin avances registrados aún</span>
+          </div>
+        `;
       }
+
+      html += `</div>`; // Close notebook-body
 
       page.innerHTML = html;
       container.appendChild(page);
     });
 
     if (!hasVisibleContent) {
-      container.innerHTML = `<div class="notebook-page"><div class="notebook-title">Página en blanco</div><p>No hay apuntes para esta selección.</p></div>`;
+      container.innerHTML = `<div class="notebook-page"><div class="notebook-title">Página en blanco</div><p style="margin-top: 10px;">No hay apuntes para esta selección.</p></div>`;
     }
   }
 
