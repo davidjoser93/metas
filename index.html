@@ -386,6 +386,30 @@
       z-index: 2;
     }
 
+    .cal-projection-words {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin: 2px 0;
+      width: 100%;
+      text-align: center;
+    }
+
+    .cal-projection-word {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      background: rgba(254, 240, 138, 0.65);
+      border: 1px dashed rgba(30, 58, 138, 0.35);
+      border-radius: 3px;
+      padding: 1px 3px;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: 'Kalam', cursive;
+    }
+
     .log-list-container {
       display: flex;
       flex-direction: column;
@@ -759,7 +783,7 @@
     },
     { 
       title: "Inteligencia Artificial, Video Juegos y Álbum de barajitas", 
-      subtitle: "Auditoría de respaldos",
+      subtitle: "Dashboard de auditoría de respaldos",
       metas: ["Inteligencia Artificial", "Video Juegos", "Álbum de barajitas"] 
     },
     { 
@@ -782,6 +806,18 @@
       subtitle: "Hacer mi tarjeta de presentación",
       metas: ["Personal"] 
     }
+  ];
+
+  const FUTURE_PROJECTIONS = [
+    { date: "2026-10-10", meta: "Mi empresa", word: "1000 empresas" },
+    { date: "2026-10-11", meta: "Maestría de Sistemas", word: "Misa" },
+    { date: "2026-10-12", meta: "Personal", word: "Feriado" },
+    { date: "2026-10-12", meta: "Tocar Piano", word: "Piano" },
+    { date: "2026-10-13", meta: "Tocar Piano", word: "Piano" },
+    { date: "2026-10-15", meta: "Maestría de Sistemas", word: "Graduación" },
+    { date: "2026-10-16", meta: "Yar-Yur", word: "Ensayo" },
+    { date: "2026-10-17", meta: "Maestría de Sistemas", word: "Nestlé" },
+    { date: "2026-10-18", meta: "Yar-Yur", word: "Dashboard" }
   ];
 
   let activeFilterGroupTitle = null;
@@ -825,7 +861,9 @@
       return Array.isArray(activeFilterMeta) ? activeFilterMeta : [activeFilterMeta];
     }
     if (activeFilterDate) {
-      return [...new Set(CALENDAR_LOGS.filter(l => l.date === activeFilterDate).map(l => l.meta))];
+      const pastMetas = CALENDAR_LOGS.filter(l => l.date === activeFilterDate).map(l => l.meta);
+      const projMetas = FUTURE_PROJECTIONS.filter(p => p.date === activeFilterDate).map(p => p.meta);
+      return [...new Set([...pastMetas, ...projMetas])];
     }
     return [];
   }
@@ -1009,23 +1047,27 @@
       }
 
       let logs = CALENDAR_LOGS.filter(l => group.metas.includes(l.meta));
+      let projs = FUTURE_PROJECTIONS.filter(p => group.metas.includes(p.meta));
       let metasWithTargets = DATA_GOALS.filter(g => group.metas.includes(g.title) && g.targets && g.targets.length > 0);
 
       if (activeFilterMeta && !Array.isArray(activeFilterMeta)) {
         logs = logs.filter(l => l.meta === activeFilterMeta);
+        projs = projs.filter(p => p.meta === activeFilterMeta);
         metasWithTargets = metasWithTargets.filter(g => g.title === activeFilterMeta);
       }
 
       if (activeFilterDate) {
         logs = logs.filter(l => l.date === activeFilterDate);
+        projs = projs.filter(p => p.date === activeFilterDate);
         metasWithTargets = metasWithTargets.filter(g => {
             const hasActivityToday = logs.some(l => l.meta === g.title);
+            const hasProjToday = projs.some(p => p.meta === g.title);
             const completedTargetToday = g.targets.some(t => t.completedDate === activeFilterDate);
-            return hasActivityToday || completedTargetToday;
+            return hasActivityToday || hasProjToday || completedTargetToday;
         });
       }
 
-      if (logs.length === 0 && metasWithTargets.length === 0) return;
+      if (logs.length === 0 && projs.length === 0 && metasWithTargets.length === 0) return;
       hasVisibleContent = true;
 
       const page = document.createElement("div");
@@ -1072,7 +1114,8 @@
         });
       }
 
-      if (logs.length > 0) {
+      const totalItems = logs.length + projs.length;
+      if (totalItems > 0) {
         html += `
           <div class="notebook-more-wrap">
             <button class="notebook-circle-btn" onclick="toggleEntries(this)" title="Ver / Ocultar días">${plusIcon}</button>
@@ -1082,10 +1125,17 @@
         logs.sort((a, b) => a.date.localeCompare(b.date)).forEach(log => {
           const dateStr = formatNotebookDate(log.date);
           const logText = log.isCompletion ? `<strong>${log.text}</strong>` : log.text;
-          
           html += `
             <div class="notebook-entry">
               <strong>${dateStr}:</strong> ${logText}
+            </div>
+          `;
+        });
+        projs.sort((a, b) => a.date.localeCompare(b.date)).forEach(p => {
+          const dateStr = formatNotebookDate(p.date);
+          html += `
+            <div class="notebook-entry" style="font-style: italic;">
+              <strong>${dateStr}:</strong> <span style="background: rgba(254, 240, 138, 0.55); padding: 1px 6px; border-radius: 3px; border-left: 2px solid #f59e0b;">[Proyección] ${p.word}</span>
             </div>
           `;
         });
@@ -1180,6 +1230,16 @@
         if (isFilteredByMeta && filterMetasList.length > 0) isDimmed = true;
       }
 
+      const dayProjections = FUTURE_PROJECTIONS.filter(p => p.date === dateStr);
+      const visibleProjections = (isFilteredByMeta && filterMetasList.length > 0)
+        ? dayProjections.filter(p => filterMetasList.includes(p.meta))
+        : dayProjections;
+
+      // Si se filtra por meta, no atenuar si el día tiene proyecciones de esa meta
+      if (isFilteredByMeta && filterMetasList.length > 0 && visibleProjections.length > 0) {
+        isDimmed = false;
+      }
+
       if (activeFilterDate && dateStr !== activeFilterDate) {
           isDimmed = true;
       }
@@ -1188,6 +1248,11 @@
 
       cell.innerHTML = `
         <div class="cal-num">${day}</div>
+        ${visibleProjections.length > 0 ? `
+          <div class="cal-projection-words">
+            ${visibleProjections.map(p => `<div class="cal-projection-word" title="${p.meta}: ${p.word}">${p.word}</div>`).join("")}
+          </div>
+        ` : ''}
         ${dayEvents.length > 0 ? `<div class="cal-badge-count">${dayEvents.length} act.</div>` : ''}
       `;
 
@@ -1211,19 +1276,34 @@
       return matchMonth && matchMeta && matchDate;
     });
 
-    if (logs.length === 0) {
+    const projs = FUTURE_PROJECTIONS.filter(p => {
+      const matchMonth = filterYearMonth ? p.date.startsWith(filterYearMonth) : true;
+      let matchMeta = true;
+      if (filterMetas !== null && filterMetas !== undefined) {
+        if (filterMetas.length === 0) matchMeta = false;
+        else matchMeta = filterMetas.includes(p.meta);
+      }
+      const matchDate = filterDate ? p.date === filterDate : true;
+      return matchMonth && matchMeta && matchDate;
+    });
+
+    if (logs.length === 0 && projs.length === 0) {
       container.innerHTML = `<div style="font-style: italic; color: var(--text-muted);">Sin trazos en esta hoja.</div>`;
       return;
     }
 
     const grouped = {};
     logs.forEach(log => {
-      if (!grouped[log.meta]) grouped[log.meta] = [];
-      grouped[log.meta].push(log);
+      if (!grouped[log.meta]) grouped[log.meta] = { logs: [], projs: [] };
+      grouped[log.meta].logs.push(log);
+    });
+    projs.forEach(proj => {
+      if (!grouped[proj.meta]) grouped[proj.meta] = { logs: [], projs: [] };
+      grouped[proj.meta].projs.push(proj);
     });
 
     for (const meta in grouped) {
-      const groupLogs = grouped[meta];
+      const groupData = grouped[meta];
       const conf = GOAL_CONFIG[meta] || { color: "#1e293b" };
 
       const groupDiv = document.createElement("div");
@@ -1232,13 +1312,23 @@
 
       let html = `<div class="log-group-header" style="color: ${conf.color}">${meta}</div>`;
 
-      groupLogs.forEach(log => {
+      groupData.logs.forEach(log => {
         const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(log.date)}</span>` : '';
         const textSpan = log.isCompletion ? `<strong>${log.text}</strong>` : log.text;
 
         html += `
           <div class="log-item-text" style="--pen-color: ${conf.color}">
             <span>${textSpan}</span>
+            ${dateSpan}
+          </div>
+        `;
+      });
+
+      groupData.projs.forEach(proj => {
+        const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(proj.date)}</span>` : '';
+        html += `
+          <div class="log-item-text" style="--pen-color: ${conf.color}; font-style: italic;">
+            <span><strong style="background: rgba(254, 240, 138, 0.6); padding: 1px 4px; border-radius: 3px;">[Proyección]</strong> ${proj.word}</span>
             ${dateSpan}
           </div>
         `;
