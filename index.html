@@ -432,6 +432,12 @@
       font-family: 'Kalam', cursive;
     }
 
+    .cal-day[style*="background"] .cal-projection-word {
+      background: rgba(255, 255, 255, 0.9);
+      color: #0f172a;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+    }
+
     .log-list-container {
       display: flex;
       flex-direction: column;
@@ -1202,14 +1208,24 @@
       if (dateStr === activeFilterDate) cell.classList.add("active-day");
 
       const dayEvents = CALENDAR_LOGS.filter(e => e.date === dateStr);
+      const dayProjections = FUTURE_PROJECTIONS.filter(p => p.date === dateStr);
+      const hasAhorrarCuotaProjection = dayProjections.some(p => p.meta === "Ahorrar");
+      const hasAhorrarLogged = dayEvents.some(e => e.meta === "Ahorrar");
+      const isCuotaPending = hasAhorrarCuotaProjection && !hasAhorrarLogged;
+      const cuotaYellowColor = "#facc15";
+
       let isDimmed = false;
 
       if (dayEvents.length > 0) {
         if (isFilteredByMeta && filterMetasList.length > 0) {
           const matchingEvents = dayEvents.filter(e => filterMetasList.includes(e.meta));
-          if (matchingEvents.length > 0) {
-            const uniqueMetas = [...new Set(matchingEvents.map(e => e.meta))];
-            const cols = uniqueMetas.map(m => (GOAL_CONFIG[m] || { color: "#334155" }).color);
+          const matchesAhorrarCuota = isCuotaPending && filterMetasList.includes("Ahorrar");
+
+          if (matchingEvents.length > 0 || matchesAhorrarCuota) {
+            let cols = [...new Set(matchingEvents.map(e => (GOAL_CONFIG[e.meta] || { color: "#334155" }).color))];
+            if (matchesAhorrarCuota && !cols.includes(cuotaYellowColor)) {
+              cols.push(cuotaYellowColor);
+            }
 
             if (cols.length === 1) {
               cell.style.background = cols[0];
@@ -1224,8 +1240,12 @@
             isDimmed = true;
           }
         } else {
-          const uniqueMetas = [...new Set(dayEvents.map(e => e.meta))];
-          const cols = uniqueMetas.map(m => (GOAL_CONFIG[m] || { color: "#334155" }).color);
+          let uniqueMetas = [...new Set(dayEvents.map(e => e.meta))];
+          let cols = uniqueMetas.map(m => (GOAL_CONFIG[m] || { color: "#334155" }).color);
+
+          if (isCuotaPending && !cols.includes(cuotaYellowColor)) {
+            cols.push(cuotaYellowColor);
+          }
 
           if (cols.length === 1) {
             cell.style.background = cols[0];
@@ -1237,11 +1257,19 @@
             cell.style.background = `repeating-linear-gradient(45deg, ${parts.join(", ")})`;
           }
         }
+      } else if (isCuotaPending) {
+        if (isFilteredByMeta && filterMetasList.length > 0) {
+          if (filterMetasList.includes("Ahorrar")) {
+            cell.style.background = cuotaYellowColor;
+          } else {
+            isDimmed = true;
+          }
+        } else {
+          cell.style.background = cuotaYellowColor;
+        }
       } else {
         if (isFilteredByMeta && filterMetasList.length > 0) isDimmed = true;
       }
-
-      const dayProjections = FUTURE_PROJECTIONS.filter(p => p.date === dateStr);
       const visibleProjections = (isFilteredByMeta && filterMetasList.length > 0)
         ? dayProjections.filter(p => filterMetasList.includes(p.meta))
         : dayProjections;
