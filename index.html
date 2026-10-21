@@ -672,20 +672,31 @@
 
   const DATA_GOALS = [
     { title: "Practicar manejo", targets: [{ name: "Reparar la puerta del Mazda", done: true, completedDate: "2026-09-03" }, { name: "Pintar el Mazda", done: false }, { name: "Actualizar Licencias", done: false }] },
-    { title: "Tocar Piano", targets: [{ name: "Tocar una vez a la semana", done: false }] },
+    { title: "Tocar Piano", targets: [
+      { name: "Tocar una vez a la semana", done: false },
+      { name: "Practicar Make You Feel My Love", done: false },
+      { name: "Practicar Don't Stop Believing", done: false },
+      { name: "Practicar Hey Jude", done: false },
+      { name: "Practicar Nocturno 9 de Chopin", done: false }
+    ] },
     { title: "Hacer ejercicio", targets: [{ name: "Hacer ejercicio una vez a la semana", done: false }] },
     { title: "Maestría de Sistemas", targets: [{ name: "Graduarme de la maestría", done: true, completedDate: "2026-10-15" }, { name: "Hacer catálogo de proyectos de Sistemas", done: false }, { name: "Registrar título", done: false }, { name: "Inscribirme en el Colegio de Ingenieros", done: false }] },
     { title: "Aprende en Realidad", targets: [{ name: "Actualizar la app", done: false }, { name: "Mejorar el menú de la aplicación", done: false }, { name: "Premio si se escanean todos los QR", done: false }, { name: "Activar el escaneo de los cubos", done: false }, { name: "Imprimir en 3D cubos y stickers en colores", done: false }] },
     { title: "Arte en realidad", targets: [{ name: "Diseñar escultura de la guacamaya", done: false }, { name: "Diseñar dioramas con tarjetas NFC", done: false }, { name: "Diseñar esculturas del Nacimiento", done: false }, { name: "Primera escultura con impresión 3D", done: false }] },
     { title: "Inteligencia Artificial", targets: [{ name: "Hacer flujo de nodos completo", done: false }, { name: "Hacer 3D personajes Ser Feliz Hoy", done: false }, { name: "Animaciones personajes Ser Feliz Hoy", done: true, completedDate: "2026-08-31" }] },
-    { title: "Video Juegos", targets: [{ name: "Jugar Hogwarts Legacy", done: false }] },
+    { title: "Video Juegos", targets: [
+      { name: "Jugar Hogwarts Legacy", done: false },
+      { name: "Jugar Super Mario Galaxy", done: false }
+    ] },
     { title: "Álbum de barajitas", targets: [{ name: "Llenar el álbum de Toy Story 5", done: false }] },
     { title: "Yar-Yur", targets: [{ name: "Hacer dashboard completo de Yar-Yur", done: false }, { name: "Catálogo de proyectos realizados", done: false }] },
     { title: "Ahorrar", targets: [{ name: "Registro y control continuo de cuentas", done: false }] },
     { title: "Mi empresa", targets: [
       { name: "Inscribirme en el portal 1000 empresas", done: true, completedDate: "2026-10-15" },
       { name: "Hacer tarjeta de presentación", done: true, completedDate: "2026-10-12" },
-      { name: "Hacer página web", done: true, completedDate: "2026-10-12" }
+      { name: "Hacer página web", done: true, completedDate: "2026-10-12" },
+      { name: "Imprimir mis tarjetas de presentación de Dashboard Retail", done: false },
+      { name: "Reunirme con abogado para establecer empresa", done: false }
     ] },
     { title: "Personal", targets: [{ name: "Tiempo familiar, afectos y organización", done: false }] }
   ];
@@ -779,8 +790,12 @@
     { date: "2026-10-17", meta: "Personal", text: "Hice auditoría de los respaldos" },
     { date: "2026-10-17", meta: "Personal", text: "Cené con mi familia en Strada Romana una Fideguada y un Tiramusú, pagamos la cuenta del restaurante de la fiesta de graduación y mi hermana hizo videos y fotos para el instagram" },
     { date: "2026-10-18", meta: "Maestría de Sistemas", text: "Organicé el proyecto de Yar-Yur System Canal Moderno" },
+    { date: "2026-10-18", meta: "Video Juegos", text: "Instalé el juego Súper Mario Galaxy" },
     { date: "2026-10-19", meta: "Yar-Yur", text: "En la reunión hablé sobre Yar-Yur System" },
-    { date: "2026-10-20", meta: "Mi empresa", text: "Vi el webinar en vivo de 1000 empresas" }
+    { date: "2026-10-19", meta: "Aprende en Realidad", text: "Publicación de nuevo short: Como funciona el motor Stirling - Parte 2" },
+    { date: "2026-10-20", meta: "Mi empresa", text: "Vi el webinar en vivo de 1000 empresas" },
+    { date: "2026-10-20", meta: "Maestría de Sistemas", text: "Probé el funcionamiento de las primeras 6 tabletas de Yar-Yur System Canal Moderno" },
+    { date: "2026-10-21", meta: "Maestría de Sistemas", text: "Le di a Francisco la Tablet 2 de Yar-Yur System" }
   ];
 
   const customGroups = [
@@ -833,6 +848,9 @@
 
   const FUTURE_PROJECTIONS = [
     { date: "2026-10-21", meta: "Mi empresa", word: "Webinar en diferido 1000 empresas" },
+    { date: "2026-10-21", meta: "Maestría de Sistemas", word: "Escribirle a Eventos Premier por las fotografías" },
+    { date: "2026-10-21", meta: "Maestría de Sistemas", word: "Cambiar a verde el punto amarillo del dashboard" },
+    { date: "2026-10-23", meta: "Maestría de Sistemas", word: "Terminar de organizar las 4 tablets restantes" },
     { date: "2026-10-24", meta: "Personal", word: "Cumpleaños Lorenita" },
     { date: "2026-10-25", meta: "Personal", word: "Cambiar el protector de la pantalla del teléfono" },
     { date: "2026-10-25", meta: "Yar-Yur", word: "Dashboard de Yar-Yur: dejarlo preparado" },
