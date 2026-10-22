@@ -795,7 +795,9 @@
     { date: "2026-10-19", meta: "Aprende en Realidad", text: "Publicación de nuevo short: Como funciona el motor Stirling - Parte 2" },
     { date: "2026-10-20", meta: "Mi empresa", text: "Vi el webinar en vivo de 1000 empresas" },
     { date: "2026-10-20", meta: "Maestría de Sistemas", text: "Probé el funcionamiento de las primeras 6 tabletas de Yar-Yur System Canal Moderno" },
-    { date: "2026-10-21", meta: "Maestría de Sistemas", text: "Le di a Francisco la Tablet 2 de Yar-Yur System" }
+    { date: "2026-10-21", meta: "Maestría de Sistemas", text: "Le di a Francisco la Tablet 2 de Yar-Yur System" },
+    { date: "2026-10-21", meta: "Maestría de Sistemas", text: "Le escribí a Eventos Premier por las fotografías (quedé en avisarles la semana que viene para el pago)" },
+    { date: "2026-10-22", meta: "Maestría de Sistemas", text: "Le di al instalador David la Tablet 6 Yar-Yur System" }
   ];
 
   const customGroups = [
@@ -847,13 +849,13 @@
   ];
 
   const FUTURE_PROJECTIONS = [
-    { date: "2026-10-21", meta: "Mi empresa", word: "Webinar en diferido 1000 empresas" },
-    { date: "2026-10-21", meta: "Maestría de Sistemas", word: "Escribirle a Eventos Premier por las fotografías" },
-    { date: "2026-10-21", meta: "Maestría de Sistemas", word: "Cambiar a verde el punto amarillo del dashboard" },
+    { date: "2026-10-22", meta: "Maestría de Sistemas", word: "Cambiar a verde el punto amarillo del dashboard" },
     { date: "2026-10-23", meta: "Maestría de Sistemas", word: "Terminar de organizar las 4 tablets restantes" },
     { date: "2026-10-24", meta: "Personal", word: "Cumpleaños Lorenita" },
     { date: "2026-10-25", meta: "Personal", word: "Cambiar el protector de la pantalla del teléfono" },
     { date: "2026-10-25", meta: "Yar-Yur", word: "Dashboard de Yar-Yur: dejarlo preparado" },
+    { date: "2026-10-25", meta: "Mi empresa", word: "Webinar en diferido 1000 empresas" },
+    { date: "2026-10-30", meta: "Maestría de Sistemas", word: "Escribir a Eventos Premier para el pago de las fotografías" },
     { date: "2026-10-30", meta: "Ahorrar", word: "Segunda quincena de octubre" },
     { date: "2026-10-31", meta: "Ahorrar", word: "$65 Rori" },
     { date: "2026-10-31", meta: "Ahorrar", word: "$65 BeFashion" },
@@ -1132,9 +1134,6 @@
       let safeTitle = group.title.replace(/'/g, "\\'");
       let html = `<div class="notebook-header-wrap" onclick="toggleTitleFilter('${safeTitle}')">`;
       html += `<div class="notebook-title">${displayTitle} <span class="notebook-arrow">${arrowIcon}</span></div>`;
-      if (group.subtitle) {
-        html += `<div class="notebook-subtitle">${group.subtitle}</div>`;
-      }
       html += `</div>`;
       html += `<div class="notebook-body" style="display: ${bodyDisplay};">`;
 
