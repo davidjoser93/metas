@@ -617,6 +617,34 @@
       min-height: 64px;
     }
 
+    .sketchy-checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--pen-color);
+      cursor: pointer;
+      user-select: none;
+      padding: 4px 10px;
+      background: rgba(254, 240, 138, 0.5);
+      border: 1.5px dashed var(--pen-color);
+      border-radius: 6px;
+      align-self: flex-start;
+      transition: background-color 0.15s ease;
+    }
+
+    .sketchy-checkbox-label:hover {
+      background: rgba(254, 240, 138, 0.9);
+    }
+
+    .sketchy-checkbox-label input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #1e3a8a;
+      cursor: pointer;
+    }
+
     .sketchy-btn-row {
       display: flex;
       gap: 8px;
@@ -777,7 +805,7 @@
       <div class="panel-header nav-header" id="monthRightHeader">
         <span style="width: 40px;" id="monthRightSpacer"></span>
         <span id="monthRightTitle" class="cal-nav-title">Distribución de Octubre</span>
-        <button class="cal-nav-btn" id="addApunteBtn" style="display: none;" onclick="toggleAddApunteForm()" title="Añadir apunte del día">+</button>
+        <button class="cal-nav-btn" id="addApunteBtn" style="display: none;" onclick="toggleAddApunteForm()" title="Añadir apunte o proyección del día">+</button>
       </div>
       <div id="monthChartsWrap" style="display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100%;">
         <div class="canvas-container">
@@ -1113,7 +1141,9 @@
   let isAddingApunte = false;
   let newApunteCategory = "";
   let newApunteText = "";
+  let newApunteIsProjection = false;
   let editingLogId = null;
+  let editingProjId = null;
   let addingChecklistGoalId = null;
 
   // Estados para conservar desplegados los cuadernos al actualizar Firebase
@@ -1202,6 +1232,7 @@
       activeFilterDate = null;
       isAddingApunte = false;
       editingLogId = null;
+      editingProjId = null;
       const grp = customGroups.find(g => g.title === groupTitle);
       activeFilterMeta = grp ? (grp.metas.length === 1 ? grp.metas[0] : grp.metas) : null;
     }
@@ -1217,6 +1248,7 @@
       activeFilterDate = null;
       isAddingApunte = false;
       editingLogId = null;
+      editingProjId = null;
       const grp = customGroups.find(g => g.metas.includes(meta));
       activeFilterGroupTitle = grp ? grp.title : null;
     }
@@ -1228,12 +1260,15 @@
       activeFilterDate = null;
       isAddingApunte = false;
       editingLogId = null;
+      editingProjId = null;
     } else {
       activeFilterDate = dateStr;
       isAddingApunte = false;
       newApunteCategory = "";
       newApunteText = "";
+      newApunteIsProjection = false;
       editingLogId = null;
+      editingProjId = null;
     }
     activeFilterMeta = null;
     activeFilterGroupTitle = null;
@@ -1288,18 +1323,21 @@
         activeFilterDate = null;
         isAddingApunte = false;
         editingLogId = null;
+        editingProjId = null;
       }
       updateView();
     }
   }
 
-  // --- FUNCIONES DE APUNTES DEL DÍA (CREAR, EDITAR, ELIMINAR EN FIREBASE) ---
+  // --- FUNCIONES DE APUNTES Y PROYECCIONES DEL DÍA (CREAR, EDITAR, ELIMINAR EN FIREBASE) ---
 
   function toggleAddApunteForm() {
     isAddingApunte = !isAddingApunte;
     newApunteCategory = "";
     newApunteText = "";
+    newApunteIsProjection = false;
     editingLogId = null;
+    editingProjId = null;
     updateView();
   }
 
@@ -1315,21 +1353,34 @@
   function saveNewApunte() {
     const textInput = document.getElementById("newApunteTextInput");
     const textVal = textInput ? textInput.value.trim() : newApunteText.trim();
+    const projCheckbox = document.getElementById("newApunteIsProjCheckbox");
+    const isProj = projCheckbox ? projCheckbox.checked : newApunteIsProjection;
+
     if (!activeFilterDate || !newApunteCategory || !textVal) return;
 
-    db.ref("calendarLogs").push({
-      date: activeFilterDate,
-      meta: newApunteCategory,
-      text: textVal
-    });
+    if (isProj) {
+      db.ref("futureProjections").push({
+        date: activeFilterDate,
+        meta: newApunteCategory,
+        word: textVal
+      });
+    } else {
+      db.ref("calendarLogs").push({
+        date: activeFilterDate,
+        meta: newApunteCategory,
+        text: textVal
+      });
+    }
 
     isAddingApunte = false;
     newApunteCategory = "";
     newApunteText = "";
+    newApunteIsProjection = false;
   }
 
   function startEditApunte(logId) {
     editingLogId = logId;
+    editingProjId = null;
     isAddingApunte = false;
     updateView();
   }
@@ -1342,16 +1393,29 @@
   function saveEditedApunte(logId) {
     const catEl = document.getElementById(`editCat_${logId}`);
     const txtEl = document.getElementById(`editTxt_${logId}`);
+    const projCheckEl = document.getElementById(`editIsProj_${logId}`);
     if (!catEl || !txtEl) return;
 
     const newCat = catEl.value;
     const newTxt = txtEl.value.trim();
+    const convertToProj = projCheckEl ? projCheckEl.checked : false;
     if (!newCat || !newTxt) return;
 
-    db.ref(`calendarLogs/${logId}`).update({
-      meta: newCat,
-      text: newTxt
-    });
+    const currentLog = CALENDAR_LOGS.find(l => l._id === logId);
+
+    if (convertToProj && currentLog) {
+      db.ref("futureProjections").push({
+        date: currentLog.date,
+        meta: newCat,
+        word: newTxt
+      });
+      db.ref(`calendarLogs/${logId}`).remove();
+    } else {
+      db.ref(`calendarLogs/${logId}`).update({
+        meta: newCat,
+        text: newTxt
+      });
+    }
 
     editingLogId = null;
   }
@@ -1359,6 +1423,54 @@
   function deleteApunte(logId) {
     db.ref(`calendarLogs/${logId}`).remove();
     editingLogId = null;
+  }
+
+  function startEditProj(projId) {
+    editingProjId = projId;
+    editingLogId = null;
+    isAddingApunte = false;
+    updateView();
+  }
+
+  function cancelEditProj() {
+    editingProjId = null;
+    updateView();
+  }
+
+  function saveEditedProj(projId) {
+    const catEl = document.getElementById(`editProjCat_${projId}`);
+    const txtEl = document.getElementById(`editProjTxt_${projId}`);
+    const projCheckEl = document.getElementById(`editProjIsProj_${projId}`);
+    if (!catEl || !txtEl) return;
+
+    const newCat = catEl.value;
+    const newTxt = txtEl.value.trim();
+    const keepAsProj = projCheckEl ? projCheckEl.checked : true;
+    if (!newCat || !newTxt) return;
+
+    const currentProj = FUTURE_PROJECTIONS.find(p => p._id === projId);
+
+    if (!keepAsProj && currentProj) {
+      // Si se desmarca "Es una proyección", pasa a ser un apunte realizado del día
+      db.ref("calendarLogs").push({
+        date: currentProj.date,
+        meta: newCat,
+        text: newTxt
+      });
+      db.ref(`futureProjections/${projId}`).remove();
+    } else {
+      db.ref(`futureProjections/${projId}`).update({
+        meta: newCat,
+        word: newTxt
+      });
+    }
+
+    editingProjId = null;
+  }
+
+  function deleteProj(projId) {
+    db.ref(`futureProjections/${projId}`).remove();
+    editingProjId = null;
   }
 
   // --- FUNCIONES DE CHECKLIST EN FIREBASE ---
@@ -1778,7 +1890,7 @@
       ).join("");
 
       let formHtml = `
-        <div style="font-weight: 700; color: var(--pen-color);">Nuevo apunte para el ${formatDateEs(filterDate)}:</div>
+        <div style="font-weight: 700; color: var(--pen-color);">Nuevo registro para el ${formatDateEs(filterDate)}:</div>
         <select class="sketchy-select" onchange="onSelectNewApunteCategory(this)">
           <option value="" ${newApunteCategory === "" ? "selected" : ""} disabled>-- 1. Selecciona la categoría --</option>
           ${optionsHtml}
@@ -1787,7 +1899,11 @@
 
       if (newApunteCategory) {
         formHtml += `
-          <textarea id="newApunteTextInput" class="sketchy-textarea" placeholder="2. Escribe aquí el apunte del día..." oninput="newApunteText = this.value">${escapeHtml(newApunteText)}</textarea>
+          <textarea id="newApunteTextInput" class="sketchy-textarea" placeholder="2. Escribe aquí el apunte o proyección del día..." oninput="newApunteText = this.value">${escapeHtml(newApunteText)}</textarea>
+          <label class="sketchy-checkbox-label">
+            <input type="checkbox" id="newApunteIsProjCheckbox" ${newApunteIsProjection ? "checked" : ""} onchange="newApunteIsProjection = this.checked" />
+            <span>📌 Marcar como Proyección</span>
+          </label>
           <div class="sketchy-btn-row">
             <button class="sketchy-btn cancel" onclick="toggleAddApunteForm()">Cancelar</button>
             <button class="sketchy-btn save" onclick="saveNewApunte()">💾 Guardar</button>
@@ -1832,7 +1948,7 @@
       emptyMsg.style.fontStyle = "italic";
       emptyMsg.style.color = "var(--text-muted)";
       emptyMsg.textContent = filterDate
-        ? "Sin apuntes registrados en este día. Presiona el botón '+' arriba a la derecha para añadir uno."
+        ? "Sin apuntes ni proyecciones en este día. Presiona el botón '+' arriba a la derecha para añadir uno."
         : "Sin trazos en esta hoja.";
       container.appendChild(emptyMsg);
       return;
@@ -1858,6 +1974,7 @@
 
       let html = `<div class="log-group-header" style="color: ${conf.color}">${escapeHtml(meta)}</div>`;
 
+      // Renderizado de Apuntes Realizados
       groupData.logs.forEach(log => {
         if (editingLogId === log._id) {
           const catOptions = CATEGORIES_LIST.map(cat =>
@@ -1872,6 +1989,10 @@
               </select>
               <label style="font-size: 0.9rem; font-weight: 700;">Texto del apunte:</label>
               <textarea id="editTxt_${log._id}" class="sketchy-textarea">${escapeHtml(log.text)}</textarea>
+              <label class="sketchy-checkbox-label">
+                <input type="checkbox" id="editIsProj_${log._id}" />
+                <span>📌 Es una proyección</span>
+              </label>
               <div class="sketchy-btn-row">
                 <button class="sketchy-btn delete" onclick="deleteApunte('${log._id}')">🗑️ Eliminar</button>
                 <button class="sketchy-btn cancel" onclick="cancelEditApunte()">Cancelar</button>
@@ -1895,14 +2016,44 @@
         }
       });
 
+      // Renderizado de Proyecciones con botón de lápiz para editar
       groupData.projs.forEach(proj => {
-        const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(proj.date)}</span>` : '';
-        html += `
-          <div class="log-item-text" style="--pen-color: ${conf.color}; font-style: italic;">
-            <span><strong style="background: rgba(254, 240, 138, 0.6); padding: 1px 4px; border-radius: 3px;">[Proyección]</strong> ${escapeHtml(proj.word)}</span>
-            ${dateSpan}
-          </div>
-        `;
+        if (editingProjId === proj._id) {
+          const catOptions = CATEGORIES_LIST.map(cat =>
+            `<option value="${escapeHtml(cat)}" ${proj.meta === cat ? "selected" : ""}>${escapeHtml(cat)}</option>`
+          ).join("");
+
+          html += `
+            <div class="sketchy-form-box" style="margin: 6px 0;">
+              <label style="font-size: 0.9rem; font-weight: 700;">Categoría:</label>
+              <select id="editProjCat_${proj._id}" class="sketchy-select">
+                ${catOptions}
+              </select>
+              <label style="font-size: 0.9rem; font-weight: 700;">Texto de la proyección:</label>
+              <textarea id="editProjTxt_${proj._id}" class="sketchy-textarea">${escapeHtml(proj.word)}</textarea>
+              <label class="sketchy-checkbox-label" title="Desmarca esta casilla si ya realizaste esta proyección y quieres pasarla a apunte del día">
+                <input type="checkbox" id="editProjIsProj_${proj._id}" checked />
+                <span>📌 Es una proyección</span>
+              </label>
+              <div class="sketchy-btn-row">
+                <button class="sketchy-btn delete" onclick="deleteProj('${proj._id}')">🗑️ Eliminar</button>
+                <button class="sketchy-btn cancel" onclick="cancelEditProj()">Cancelar</button>
+                <button class="sketchy-btn save" onclick="saveEditedProj('${proj._id}')">💾 Guardar</button>
+              </div>
+            </div>
+          `;
+        } else {
+          const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(proj.date)}</span>` : '';
+          html += `
+            <div class="log-item-row">
+              <div class="log-item-text" style="--pen-color: ${conf.color}; font-style: italic;">
+                <span><strong style="background: rgba(254, 240, 138, 0.6); padding: 1px 4px; border-radius: 3px;">[Proyección]</strong> ${escapeHtml(proj.word)}</span>
+                ${dateSpan}
+              </div>
+              <button class="edit-pencil-btn" onclick="startEditProj('${proj._id}')" title="Editar o eliminar proyección">✏️</button>
+            </div>
+          `;
+        }
       });
 
       groupDiv.innerHTML = html;
