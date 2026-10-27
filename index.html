@@ -85,6 +85,7 @@
       align-items: center;
       justify-content: space-between;
       user-select: none;
+      gap: 10px;
     }
 
     .cal-nav-btn {
@@ -104,6 +105,7 @@
       box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
       transition: all 0.15s ease;
       user-select: none;
+      flex-shrink: 0;
     }
 
     .cal-nav-btn:hover:not(:disabled) {
@@ -253,6 +255,15 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      border-radius: 4px;
+      padding: 0 4px;
+      transition: background-color 0.12s ease;
+    }
+
+    .notebook-target-item:hover {
+      background-color: rgba(254, 240, 138, 0.45);
     }
 
     .notebook-target-item.completed {
@@ -262,16 +273,62 @@
     }
 
     .notebook-checkbox {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       width: 18px;
       height: 18px;
       border: 2px solid #1e3a8a;
       border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
       line-height: 16px;
       text-align: center;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
       background: white;
+      flex-shrink: 0;
+      transition: transform 0.1s ease, background-color 0.15s ease;
+    }
+
+    .notebook-target-item:hover .notebook-checkbox {
+      transform: scale(1.1);
+      background: #fef08a;
+    }
+
+    .checklist-add-wrap {
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .checklist-add-trigger {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1.5px dashed #1e3a8a;
+      border-radius: 6px;
+      color: #1e3a8a;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 1px 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .checklist-add-trigger:hover {
+      background: #fef08a;
+      border-style: solid;
+    }
+
+    .checklist-inline-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 6px 10px;
+      border: 2px solid #1e3a8a;
+      border-radius: 8px;
+      max-width: 600px;
     }
 
     .notebook-more-wrap {
@@ -309,7 +366,7 @@
     }
 
     .notebook-entries {
-      display: none; /* Oculto por defecto */
+      display: none;
       flex-direction: column;
       gap: 10px;
       margin-top: 8px;
@@ -442,7 +499,7 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
-      max-height: 400px;
+      max-height: 460px;
       overflow-y: auto;
       padding-right: 10px;
     }
@@ -474,11 +531,19 @@
       padding-bottom: 4px;
     }
 
+    .log-item-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
     .log-item-text {
       font-size: 1rem;
       color: var(--text);
       padding-left: 14px;
       position: relative;
+      flex: 1;
     }
     
     .log-item-text::before {
@@ -495,6 +560,108 @@
       display: block;
       margin-left: 14px;
       font-style: italic;
+    }
+
+    .edit-pencil-btn {
+      background: #ffffff;
+      border: 1.5px solid var(--pen-color);
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      opacity: 0.75;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .edit-pencil-btn:hover {
+      opacity: 1;
+      background: #fef08a;
+      transform: scale(1.08);
+    }
+
+    /* Formularios de Apuntes y Edición */
+    .sketchy-form-box {
+      background: #fdfbf7;
+      border: 2px solid var(--pen-color);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 2px 3px 0px rgba(0, 0, 0, 0.08);
+    }
+
+    .sketchy-select,
+    .sketchy-input,
+    .sketchy-textarea {
+      width: 100%;
+      padding: 6px 10px;
+      border: 2px solid var(--pen-color);
+      border-radius: 6px;
+      background: #ffffff;
+      font-size: 1rem;
+      color: var(--text);
+      outline: none;
+    }
+
+    .sketchy-select:focus,
+    .sketchy-input:focus,
+    .sketchy-textarea:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    .sketchy-textarea {
+      resize: vertical;
+      min-height: 64px;
+    }
+
+    .sketchy-btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .sketchy-btn {
+      padding: 4px 12px;
+      border: 2px solid var(--pen-color);
+      border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      background: #ffffff;
+      color: var(--pen-color);
+      box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+      transition: all 0.15s ease;
+    }
+
+    .sketchy-btn:hover {
+      transform: scale(1.04);
+    }
+
+    .sketchy-btn.save {
+      background: #bbf7d0;
+    }
+
+    .sketchy-btn.save:hover {
+      background: #86efac;
+    }
+
+    .sketchy-btn.delete {
+      background: #fecdd3;
+      color: #881337;
+      border-color: #881337;
+      margin-right: auto;
+    }
+
+    .sketchy-btn.delete:hover {
+      background: #fda4af;
+    }
+
+    .sketchy-btn.cancel {
+      background: #f1f5f9;
     }
 
     .canvas-container {
@@ -520,14 +687,6 @@
       
       .container {
         gap: 20px;
-      }
-      
-      header h1 {
-        font-size: 2.1rem;
-      }
-      
-      header p {
-        font-size: 1rem;
       }
 
       .split-layout {
@@ -599,7 +758,6 @@
         padding: 10px 12px;
       }
     }
-
   </style>
 </head>
 <body>
@@ -616,7 +774,11 @@
       <div class="calendar-grid" id="calendarGrid"></div>
     </div>
     <div class="sketchy-panel" id="monthRightPanel">
-      <div class="panel-header" id="monthRightTitle">Distribución de Octubre</div>
+      <div class="panel-header nav-header" id="monthRightHeader">
+        <span style="width: 40px;" id="monthRightSpacer"></span>
+        <span id="monthRightTitle" class="cal-nav-title">Distribución de Octubre</span>
+        <button class="cal-nav-btn" id="addApunteBtn" style="display: none;" onclick="toggleAddApunteForm()" title="Añadir apunte del día">+</button>
+      </div>
       <div id="monthChartsWrap" style="display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100%;">
         <div class="canvas-container">
           <canvas id="pieMonthCanvas" width="480" height="230"></canvas>
@@ -651,7 +813,25 @@
   </section>
 </div>
 
+<!-- SDK de Firebase (Compat para uso directo en HTML) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+
 <script>
+  // Configuración de Firebase del proyecto cuaderno-metas
+  const firebaseConfig = {
+    apiKey: "AIzaSyAd4EIVV8bqsZpepDWnbgGp_yj2QqkqFX0",
+    authDomain: "cuaderno-metas.firebaseapp.com",
+    databaseURL: "https://cuaderno-metas-default-rtdb.firebaseio.com",
+    projectId: "cuaderno-metas",
+    storageBucket: "cuaderno-metas.firebasestorage.app",
+    messagingSenderId: "1070768982981",
+    appId: "1:1070768982981:web:ce24f97350edadc15819ac"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
   const GOAL_CONFIG = {
     "Practicar manejo": { color: "#f97316" },
     "Tocar Piano": { color: "#ec4899" },
@@ -670,7 +850,24 @@
     "Personal": { color: "#f59e0b" }
   };
 
-  const DATA_GOALS = [
+  const CATEGORIES_LIST = [
+    "Practicar manejo",
+    "Tocar Piano",
+    "Hacer ejercicio",
+    "Maestría de Sistemas",
+    "Aprende en Realidad",
+    "Arte en realidad",
+    "Inteligencia Artificial",
+    "Video Juegos",
+    "Álbum de barajitas",
+    "Yar-Yur",
+    "Ahorrar",
+    "Mi empresa",
+    "Personal"
+  ];
+
+  // Datos iniciales de respaldo para sembrar Firebase automáticamente la primera vez
+  const INITIAL_DATA_GOALS = [
     { title: "Practicar manejo", targets: [{ name: "Reparar la puerta del Mazda", done: true, completedDate: "2026-09-03" }, { name: "Pintar el Mazda", done: false }, { name: "Actualizar Licencias", done: false }] },
     { title: "Tocar Piano", targets: [
       { name: "Tocar una vez a la semana", done: false },
@@ -701,7 +898,7 @@
     { title: "Personal", targets: [{ name: "Tiempo familiar, afectos y organización", done: false }] }
   ];
 
-  const CALENDAR_LOGS = [
+  const INITIAL_CALENDAR_LOGS = [
     { date: "2026-08-23", meta: "Hacer ejercicio", text: "20 minutos de la rutina 'Día del cuerpo tonificado'" },
     { date: "2026-08-24", meta: "Aprende en Realidad", text: "Publicación de nuevo short: Transformación del calor en energía mecánica" },
     { date: "2026-08-25", meta: "Inteligencia Artificial", text: "Avance flujo de nodos: texturing por prompt adaptado a la geometría 3D" },
@@ -816,6 +1013,46 @@
     { date: "2026-10-27", meta: "Mi empresa", text: "Empecé a desarrollar el dashboard estadístico de Canal Moderno" }
   ];
 
+  const INITIAL_FUTURE_PROJECTIONS = [
+    { date: "2026-10-27", meta: "Maestría de Sistemas", word: "Verificar cómo se registra el título en la página del SAREN" },
+    { date: "2026-10-27", meta: "Mi empresa", word: "Imprimir material del primer módulo de 1000 empresas" },
+    { date: "2026-10-27", meta: "Mi empresa", word: "Imprimir mis tarjetas de presentación de Dashboard Retail" },
+    { date: "2026-10-27", meta: "Mi empresa", word: "Emparejar tablets con antenas de Canal Moderno" },
+    { date: "2026-10-28", meta: "Tocar Piano", word: "Practicar Piano: Make You Feel My Love, Don't Stop Believing, Hey Jude y el nocturno de Chopin" },
+    { date: "2026-10-28", meta: "Mi empresa", word: "Emparejar tablets con antenas de Canal Moderno" },
+    { date: "2026-10-28", meta: "Mi empresa", word: "Continuar con el dashboard estadístico de Canal Moderno" },
+    { date: "2026-10-28", meta: "Mi empresa", word: "Continuar con el siguiente módulo de 1000 empresas" },
+    { date: "2026-10-29", meta: "Ahorrar", word: "Hacer cuentas" },
+    { date: "2026-10-29", meta: "Ahorrar", word: "Identificar todos los pagos recibidos por Yar-Yur" },
+    { date: "2026-10-30", meta: "Maestría de Sistemas", word: "Escribir a Eventos Premier para el pago de las fotografías" },
+    { date: "2026-10-30", meta: "Mi empresa", word: "Comprar lector de códigos de barra en Mercado Libre" },
+    { date: "2026-10-30", meta: "Personal", word: "Comprar cable USB en Mercado Libre" },
+    { date: "2026-10-30", meta: "Ahorrar", word: "Segunda quincena de octubre" },
+    { date: "2026-10-30", meta: "Ahorrar", word: "Depositar en Binance y Zinli" },
+    { date: "2026-10-31", meta: "Personal", word: "Salir con María Teresa" },
+    { date: "2026-10-31", meta: "Ahorrar", word: "$65 Rori" },
+    { date: "2026-10-31", meta: "Ahorrar", word: "$65 BeFashion" },
+    { date: "2026-11-01", meta: "Personal", word: "Cambiar el protector de la pantalla del teléfono" },
+    { date: "2026-11-05", meta: "Personal", word: "Cumpleaños Papá" },
+    { date: "2026-11-08", meta: "Ahorrar", word: "$8 Palacio del Blumer" },
+    { date: "2026-11-08", meta: "Ahorrar", word: "$19 Fountain" },
+    { date: "2026-11-13", meta: "Ahorrar", word: "Primera quincena de noviembre" },
+    { date: "2026-11-14", meta: "Ahorrar", word: "$65 Rori" },
+    { date: "2026-11-14", meta: "Ahorrar", word: "$65 BeFashion" },
+    { date: "2026-11-22", meta: "Ahorrar", word: "$8 Palacio del Blumer" },
+    { date: "2026-11-22", meta: "Ahorrar", word: "$19 Fountain" },
+    { date: "2026-11-28", meta: "Ahorrar", word: "$65 Rori" },
+    { date: "2026-11-30", meta: "Ahorrar", word: "Segunda quincena de noviembre" },
+    { date: "2026-12-12", meta: "Ahorrar", word: "$65 Rori" },
+    { date: "2026-12-15", meta: "Ahorrar", word: "Primera quincena de diciembre" },
+    { date: "2026-12-16", meta: "Personal", word: "Cumpleaños Narqui" },
+    { date: "2026-12-26", meta: "Ahorrar", word: "$65 Rori" }
+  ];
+
+  let DATA_GOALS = [];
+  let CALENDAR_LOGS = [];
+  let FUTURE_PROJECTIONS = [];
+
   const customGroups = [
     { 
       title: "Maestría de Sistemas", 
@@ -864,69 +1101,34 @@
     }
   ];
 
-  const FUTURE_PROJECTIONS = [
-    { date: "2026-10-27", meta: "Maestría de Sistemas", word: "Verificar cómo se registra el título en la página del SAREN" },
-    { date: "2026-10-27", meta: "Mi empresa", word: "Imprimir material del primer módulo de 1000 empresas" },
-    { date: "2026-10-27", meta: "Mi empresa", word: "Imprimir mis tarjetas de presentación de Dashboard Retail" },
-    { date: "2026-10-27", meta: "Mi empresa", word: "Emparejar tablets con antenas de Canal Moderno" },
-    { date: "2026-10-28", meta: "Tocar Piano", word: "Practicar Piano: Make You Feel My Love, Don't Stop Believing, Hey Jude y el nocturno de Chopin" },
-    { date: "2026-10-28", meta: "Mi empresa", word: "Emparejar tablets con antenas de Canal Moderno" },
-    { date: "2026-10-28", meta: "Mi empresa", word: "Continuar con el dashboard estadístico de Canal Moderno" },
-    { date: "2026-10-28", meta: "Mi empresa", word: "Continuar con el siguiente módulo de 1000 empresas" },
-    { date: "2026-10-29", meta: "Ahorrar", word: "Hacer cuentas" },
-    { date: "2026-10-29", meta: "Ahorrar", word: "Identificar todos los pagos recibidos por Yar-Yur" },
-    { date: "2026-10-30", meta: "Maestría de Sistemas", word: "Escribir a Eventos Premier para el pago de las fotografías" },
-    { date: "2026-10-30", meta: "Mi empresa", word: "Comprar lector de códigos de barra en Mercado Libre" },
-    { date: "2026-10-30", meta: "Personal", word: "Comprar cable USB en Mercado Libre" },
-    { date: "2026-10-30", meta: "Ahorrar", word: "Segunda quincena de octubre" },
-    { date: "2026-10-30", meta: "Ahorrar", word: "Depositar en Binance y Zinli" },
-    { date: "2026-10-31", meta: "Personal", word: "Salir con María Teresa" },
-    { date: "2026-10-31", meta: "Ahorrar", word: "$65 Rori" },
-    { date: "2026-10-31", meta: "Ahorrar", word: "$65 BeFashion" },
-    { date: "2026-11-01", meta: "Personal", word: "Cambiar el protector de la pantalla del teléfono" },
-    { date: "2026-11-05", meta: "Personal", word: "Cumpleaños Papá" },
-    { date: "2026-11-08", meta: "Ahorrar", word: "$8 Palacio del Blumer" },
-    { date: "2026-11-08", meta: "Ahorrar", word: "$19 Fountain" },
-    { date: "2026-11-13", meta: "Ahorrar", word: "Primera quincena de noviembre" },
-    { date: "2026-11-14", meta: "Ahorrar", word: "$65 Rori" },
-    { date: "2026-11-14", meta: "Ahorrar", word: "$65 BeFashion" },
-    { date: "2026-11-22", meta: "Ahorrar", word: "$8 Palacio del Blumer" },
-    { date: "2026-11-22", meta: "Ahorrar", word: "$19 Fountain" },
-    { date: "2026-11-28", meta: "Ahorrar", word: "$65 Rori" },
-    { date: "2026-11-30", meta: "Ahorrar", word: "Segunda quincena de noviembre" },
-    { date: "2026-12-12", meta: "Ahorrar", word: "$65 Rori" },
-    { date: "2026-12-15", meta: "Ahorrar", word: "Primera quincena de diciembre" },
-    { date: "2026-12-16", meta: "Personal", word: "Cumpleaños Narqui" },
-    { date: "2026-12-26", meta: "Ahorrar", word: "$65 Rori" },
-  ];
-
-  function getAvailableViews() {
-    const ymSet = new Set();
-    CALENDAR_LOGS.forEach(l => {
-      if (l.date && l.date.length >= 7) ymSet.add(l.date.substring(0, 7));
-    });
-    FUTURE_PROJECTIONS.forEach(p => {
-      if (p.date && p.date.length >= 7) ymSet.add(p.date.substring(0, 7));
-    });
-    const sortedYm = Array.from(ymSet).sort();
-    return [...sortedYm, "global"];
-  }
-
-  const initialToday = new Date();
-  const initialYm = `${initialToday.getFullYear()}-${String(initialToday.getMonth() + 1).padStart(2, "0")}`;
-  const initViews = getAvailableViews();
-  let currentViewIndex = initViews.indexOf(initialYm) !== -1 ? initViews.indexOf(initialYm) : Math.max(0, initViews.length - 2);
-
+  // Estados de navegación y edición
+  let currentViewIndex = -1;
   let activeFilterGroupTitle = null;
   let activeFilterMeta = null;
   let activeFilterDate = null;
   let hoveredMeta = null;
   const canvasClickRegions = {};
 
+  // Estados para formularios en tiempo real
+  let isAddingApunte = false;
+  let newApunteCategory = "";
+  let newApunteText = "";
+  let editingLogId = null;
+  let addingChecklistGoalId = null;
+
+  // Estados para conservar desplegados los cuadernos al actualizar Firebase
+  const expandedNotebookTitles = new Set();
+  const expandedNotebookEntries = new Set();
+
   const DAYS_ES = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
   const MONTHS_ES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
   const DAYS_FULL_ES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
   const MONTHS_FULL_ES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+  function getTodayStr() {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  }
 
   function formatShortDateEs(dateStr) {
     const [y, m, d] = dateStr.split("-");
@@ -947,6 +1149,32 @@
     const dayName = DAYS_FULL_ES[dateObj.getDay()];
     const monthName = MONTHS_FULL_ES[dateObj.getMonth()].toLowerCase(); 
     return `${dayName} ${parseInt(d)} de ${monthName} del ${y}`;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function getAvailableViews() {
+    const ymSet = new Set();
+    const today = new Date();
+    const currentYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+    ymSet.add(currentYm);
+
+    CALENDAR_LOGS.forEach(l => {
+      if (l.date && l.date.length >= 7) ymSet.add(l.date.substring(0, 7));
+    });
+    FUTURE_PROJECTIONS.forEach(p => {
+      if (p.date && p.date.length >= 7) ymSet.add(p.date.substring(0, 7));
+    });
+    const sortedYm = Array.from(ymSet).sort();
+    return [...sortedYm, "global"];
   }
 
   function getActiveMetas() {
@@ -972,6 +1200,8 @@
     } else {
       activeFilterGroupTitle = groupTitle;
       activeFilterDate = null;
+      isAddingApunte = false;
+      editingLogId = null;
       const grp = customGroups.find(g => g.title === groupTitle);
       activeFilterMeta = grp ? (grp.metas.length === 1 ? grp.metas[0] : grp.metas) : null;
     }
@@ -985,6 +1215,8 @@
     } else {
       activeFilterMeta = meta;
       activeFilterDate = null;
+      isAddingApunte = false;
+      editingLogId = null;
       const grp = customGroups.find(g => g.metas.includes(meta));
       activeFilterGroupTitle = grp ? grp.title : null;
     }
@@ -992,13 +1224,23 @@
   }
 
   function setDateFilter(dateStr) {
-    activeFilterDate = activeFilterDate === dateStr ? null : dateStr;
+    if (activeFilterDate === dateStr) {
+      activeFilterDate = null;
+      isAddingApunte = false;
+      editingLogId = null;
+    } else {
+      activeFilterDate = dateStr;
+      isAddingApunte = false;
+      newApunteCategory = "";
+      newApunteText = "";
+      editingLogId = null;
+    }
     activeFilterMeta = null;
     activeFilterGroupTitle = null;
     updateView();
   }
 
-  function toggleNotebook(element) {
+  function toggleNotebook(element, groupTitle) {
     const page = element.closest('.notebook-page');
     if (!page) return;
     
@@ -1009,13 +1251,15 @@
     if (window.getComputedStyle(body).display === 'none') {
       body.style.display = 'block';
       if (arrow) arrow.textContent = '▾';
+      if (groupTitle) expandedNotebookTitles.add(groupTitle);
     } else {
       body.style.display = 'none';
       if (arrow) arrow.textContent = '▸';
+      if (groupTitle) expandedNotebookTitles.delete(groupTitle);
     }
   }
 
-  function toggleEntries(element) {
+  function toggleEntries(element, groupTitle) {
     const page = element.closest('.notebook-page');
     if (!page) return;
     
@@ -1027,9 +1271,11 @@
     if (isHidden) {
       entries.style.display = 'flex';
       element.textContent = '−';
+      if (groupTitle) expandedNotebookEntries.add(groupTitle);
     } else {
       entries.style.display = 'none';
       element.textContent = '+';
+      if (groupTitle) expandedNotebookEntries.delete(groupTitle);
     }
   }
 
@@ -1040,15 +1286,129 @@
       currentViewIndex = newIndex;
       if (activeFilterDate && views[currentViewIndex] !== "global" && !activeFilterDate.startsWith(views[currentViewIndex])) {
         activeFilterDate = null;
+        isAddingApunte = false;
+        editingLogId = null;
       }
       updateView();
     }
   }
 
+  // --- FUNCIONES DE APUNTES DEL DÍA (CREAR, EDITAR, ELIMINAR EN FIREBASE) ---
+
+  function toggleAddApunteForm() {
+    isAddingApunte = !isAddingApunte;
+    newApunteCategory = "";
+    newApunteText = "";
+    editingLogId = null;
+    updateView();
+  }
+
+  function onSelectNewApunteCategory(selectEl) {
+    newApunteCategory = selectEl.value;
+    updateView();
+    setTimeout(() => {
+      const inputEl = document.getElementById("newApunteTextInput");
+      if (inputEl) inputEl.focus();
+    }, 50);
+  }
+
+  function saveNewApunte() {
+    const textInput = document.getElementById("newApunteTextInput");
+    const textVal = textInput ? textInput.value.trim() : newApunteText.trim();
+    if (!activeFilterDate || !newApunteCategory || !textVal) return;
+
+    db.ref("calendarLogs").push({
+      date: activeFilterDate,
+      meta: newApunteCategory,
+      text: textVal
+    });
+
+    isAddingApunte = false;
+    newApunteCategory = "";
+    newApunteText = "";
+  }
+
+  function startEditApunte(logId) {
+    editingLogId = logId;
+    isAddingApunte = false;
+    updateView();
+  }
+
+  function cancelEditApunte() {
+    editingLogId = null;
+    updateView();
+  }
+
+  function saveEditedApunte(logId) {
+    const catEl = document.getElementById(`editCat_${logId}`);
+    const txtEl = document.getElementById(`editTxt_${logId}`);
+    if (!catEl || !txtEl) return;
+
+    const newCat = catEl.value;
+    const newTxt = txtEl.value.trim();
+    if (!newCat || !newTxt) return;
+
+    db.ref(`calendarLogs/${logId}`).update({
+      meta: newCat,
+      text: newTxt
+    });
+
+    editingLogId = null;
+  }
+
+  function deleteApunte(logId) {
+    db.ref(`calendarLogs/${logId}`).remove();
+    editingLogId = null;
+  }
+
+  // --- FUNCIONES DE CHECKLIST EN FIREBASE ---
+
+  function toggleChecklistItem(goalId, targetId, newDoneState) {
+    const completedDateVal = newDoneState ? (activeFilterDate || getTodayStr()) : null;
+    db.ref(`dataGoals/${goalId}/targets/${targetId}`).update({
+      done: newDoneState,
+      completedDate: completedDateVal
+    });
+  }
+
+  function openAddChecklistForm(goalId, groupTitle) {
+    addingChecklistGoalId = goalId;
+    if (groupTitle) expandedNotebookTitles.add(groupTitle);
+    renderRegistroMetas();
+    setTimeout(() => {
+      const inp = document.getElementById(`newChecklistInput_${goalId}`);
+      if (inp) inp.focus();
+    }, 50);
+  }
+
+  function cancelAddChecklistForm() {
+    addingChecklistGoalId = null;
+    renderRegistroMetas();
+  }
+
+  function saveNewChecklistItem(goalId) {
+    const inp = document.getElementById(`newChecklistInput_${goalId}`);
+    if (!inp) return;
+    const nameVal = inp.value.trim();
+    if (!nameVal) return;
+
+    db.ref(`dataGoals/${goalId}/targets`).push({
+      name: nameVal,
+      done: false
+    });
+
+    addingChecklistGoalId = null;
+  }
+
+  // --- ACTUALIZACIÓN DE VISTAS ---
+
   function updateView() {
     const views = getAvailableViews();
+    const today = new Date();
+    const initialYm = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+
     if (currentViewIndex < 0 || currentViewIndex >= views.length) {
-      currentViewIndex = Math.max(0, views.indexOf(initialYm) !== -1 ? views.indexOf(initialYm) : views.length - 2);
+      currentViewIndex = views.indexOf(initialYm) !== -1 ? views.indexOf(initialYm) : Math.max(0, views.length - 2);
     }
 
     const currentView = views[currentViewIndex];
@@ -1090,16 +1450,27 @@
       const monthChartsWrap = document.getElementById("monthChartsWrap");
       const listMonth = document.getElementById("listMonth");
       const monthRightTitle = document.getElementById("monthRightTitle");
+      const addApunteBtn = document.getElementById("addApunteBtn");
+      const monthRightSpacer = document.getElementById("monthRightSpacer");
 
       if (isFiltering) {
         monthChartsWrap.style.display = "none";
         listMonth.style.display = "flex";
-        monthRightTitle.textContent = activeFilterDate ? "Apuntes del Día" : `Apuntes de ${monthName} (Filtrado)`;
+        monthRightTitle.textContent = activeFilterDate ? `Apuntes del Día (${formatShortDateEs(activeFilterDate)})` : `Apuntes de ${monthName} (Filtrado)`;
+        if (addApunteBtn) {
+          addApunteBtn.style.display = activeFilterDate ? "inline-flex" : "none";
+          addApunteBtn.textContent = isAddingApunte ? "−" : "+";
+        }
+        if (monthRightSpacer) {
+          monthRightSpacer.style.display = activeFilterDate ? "inline-block" : "none";
+        }
         renderGroupedLogList("listMonth", currentView, activeFilterDate ? null : activeMetas, activeFilterDate);
       } else {
         monthChartsWrap.style.display = "flex";
         listMonth.style.display = "none";
         monthRightTitle.textContent = `Distribución de ${monthName}`;
+        if (addApunteBtn) addApunteBtn.style.display = "none";
+        if (monthRightSpacer) monthRightSpacer.style.display = "none";
         drawMonthlyPieChart("pieMonthCanvas", currentView);
       }
     }
@@ -1113,7 +1484,6 @@
     const activeMetas = getActiveMetas();
 
     customGroups.forEach(group => {
-      // Si hay un título activo filtrado, ocultar todos los demás títulos
       if (activeFilterGroupTitle && group.title !== activeFilterGroupTitle) {
         return;
       }
@@ -1124,7 +1494,7 @@
 
       let logs = CALENDAR_LOGS.filter(l => group.metas.includes(l.meta));
       let projs = FUTURE_PROJECTIONS.filter(p => group.metas.includes(p.meta));
-      let metasWithTargets = DATA_GOALS.filter(g => group.metas.includes(g.title) && g.targets && g.targets.length > 0);
+      let metasWithTargets = DATA_GOALS.filter(g => group.metas.includes(g.title));
 
       if (activeFilterMeta && !Array.isArray(activeFilterMeta)) {
         logs = logs.filter(l => l.meta === activeFilterMeta);
@@ -1136,10 +1506,10 @@
         logs = logs.filter(l => l.date === activeFilterDate);
         projs = projs.filter(p => p.date === activeFilterDate);
         metasWithTargets = metasWithTargets.filter(g => {
-            const hasActivityToday = logs.some(l => l.meta === g.title);
-            const hasProjToday = projs.some(p => p.meta === g.title);
-            const completedTargetToday = g.targets.some(t => t.completedDate === activeFilterDate);
-            return hasActivityToday || hasProjToday || completedTargetToday;
+          const hasActivityToday = logs.some(l => l.meta === g.title);
+          const hasProjToday = projs.some(p => p.meta === g.title);
+          const completedTargetToday = (g.targets || []).some(t => t.completedDate === activeFilterDate);
+          return hasActivityToday || hasProjToday || completedTargetToday;
         });
       }
 
@@ -1149,41 +1519,63 @@
       const page = document.createElement("div");
       page.className = "notebook-page";
 
-      const isThisActive = activeFilterGroupTitle === group.title || (activeFilterMeta && group.metas.includes(activeFilterMeta)) || (activeFilterDate !== null);
+      const isThisActive =
+        activeFilterGroupTitle === group.title ||
+        (activeFilterMeta && group.metas.includes(activeFilterMeta)) ||
+        (activeFilterDate !== null) ||
+        expandedNotebookTitles.has(group.title);
+
       const displayTitle = activeFilterMeta && !Array.isArray(activeFilterMeta) && group.metas.includes(activeFilterMeta) ? activeFilterMeta : group.title;
       const bodyDisplay = isThisActive ? "block" : "none";
       const arrowIcon = isThisActive ? "▾" : "▸";
-      const entriesDisplay = activeFilterDate ? "flex" : "none";
-      const plusIcon = activeFilterDate ? "−" : "+";
 
-      let safeTitle = group.title.replace(/'/g, "\\'");
+      const isEntriesOpen = (activeFilterDate !== null) || expandedNotebookEntries.has(group.title);
+      const entriesDisplay = isEntriesOpen ? "flex" : "none";
+      const plusIcon = isEntriesOpen ? "−" : "+";
+
+      const safeTitle = group.title.replace(/'/g, "\\'");
       let html = `<div class="notebook-header-wrap" onclick="toggleTitleFilter('${safeTitle}')">`;
-      html += `<div class="notebook-title">${displayTitle} <span class="notebook-arrow">${arrowIcon}</span></div>`;
+      html += `<div class="notebook-title">${escapeHtml(displayTitle)} <span class="notebook-arrow">${arrowIcon}</span></div>`;
       html += `</div>`;
       html += `<div class="notebook-body" style="display: ${bodyDisplay};">`;
 
       if (metasWithTargets.length > 0) {
         metasWithTargets.forEach(g => {
-          if (g.targets.length > 0) {
-            html += `<div class="notebook-checklist">`;
-            if (group.metas.length > 1 && !activeFilterMeta) {
-              html += `<div class="notebook-checklist-title">${g.title}:</div>`;
-            }
-            
-            html += `<ul class="notebook-target-list">`;
-            g.targets.forEach(t => {
-              const isTargetOfThisDay = activeFilterDate && t.completedDate === activeFilterDate;
-              const textStyle = isTargetOfThisDay ? "font-weight: bold; color: #f43f5e;" : "";
-              
-              html += `
-                <li class="notebook-target-item ${t.done ? 'completed' : ''}">
-                  <span class="notebook-checkbox">${t.done ? '✓' : ''}</span>
-                  <span style="${textStyle}">${t.name}${t.done && t.completedDate ? ` (${formatShortDateEs(t.completedDate)})` : ''}</span>
-                </li>
-              `;
-            });
-            html += `</ul></div>`;
+          html += `<div class="notebook-checklist">`;
+          if (group.metas.length > 1 && !activeFilterMeta) {
+            html += `<div class="notebook-checklist-title">${escapeHtml(g.title)}:</div>`;
           }
+          
+          html += `<ul class="notebook-target-list">`;
+          (g.targets || []).forEach(t => {
+            const isTargetOfThisDay = activeFilterDate && t.completedDate === activeFilterDate;
+            const textStyle = isTargetOfThisDay ? "font-weight: bold; color: #f43f5e;" : "";
+            
+            html += `
+              <li class="notebook-target-item ${t.done ? 'completed' : ''}" onclick="toggleChecklistItem('${g._id}', '${t._id}', ${!t.done})" title="Haz clic para marcar o desmarcar">
+                <span class="notebook-checkbox">${t.done ? '✓' : ''}</span>
+                <span style="${textStyle}">${escapeHtml(t.name)}${t.done && t.completedDate ? ` (${formatShortDateEs(t.completedDate)})` : ''}</span>
+              </li>
+            `;
+          });
+          html += `</ul>`;
+
+          // Botón o formulario para añadir un nuevo ítem al checklist
+          html += `<div class="checklist-add-wrap">`;
+          if (addingChecklistGoalId === g._id) {
+            html += `
+              <div class="checklist-inline-form">
+                <input type="text" id="newChecklistInput_${g._id}" class="sketchy-input" placeholder="Nuevo ítem para ${escapeHtml(g.title)}..." style="flex: 1; min-width: 180px;" onkeydown="if(event.key==='Enter') saveNewChecklistItem('${g._id}')" />
+                <button class="sketchy-btn save" onclick="saveNewChecklistItem('${g._id}')">Guardar</button>
+                <button class="sketchy-btn cancel" onclick="cancelAddChecklistForm()">Cancelar</button>
+              </div>
+            `;
+          } else {
+            html += `
+              <button class="checklist-add-trigger" onclick="openAddChecklistForm('${g._id}', '${safeTitle}')">+ Añadir ítem al checklist</button>
+            `;
+          }
+          html += `</div></div>`;
         });
       }
 
@@ -1191,13 +1583,13 @@
       if (totalItems > 0) {
         html += `
           <div class="notebook-more-wrap">
-            <button class="notebook-circle-btn" onclick="toggleEntries(this)" title="Ver / Ocultar días">${plusIcon}</button>
+            <button class="notebook-circle-btn" onclick="toggleEntries(this, '${safeTitle}')" title="Ver / Ocultar días">${plusIcon}</button>
           </div>
           <div class="notebook-entries" style="display: ${entriesDisplay};">
         `;
         logs.sort((a, b) => a.date.localeCompare(b.date)).forEach(log => {
           const dateStr = formatNotebookDate(log.date);
-          const logText = log.isCompletion ? `<strong>${log.text}</strong>` : log.text;
+          const logText = log.isCompletion ? `<strong>${escapeHtml(log.text)}</strong>` : escapeHtml(log.text);
           html += `
             <div class="notebook-entry">
               <strong>${dateStr}:</strong> ${logText}
@@ -1208,14 +1600,14 @@
           const dateStr = formatNotebookDate(p.date);
           html += `
             <div class="notebook-entry" style="font-style: italic;">
-              <strong>${dateStr}:</strong> <span style="background: rgba(254, 240, 138, 0.55); padding: 1px 6px; border-radius: 3px; border-left: 2px solid #f59e0b;">[Proyección] ${p.word}</span>
+              <strong>${dateStr}:</strong> <span style="background: rgba(254, 240, 138, 0.55); padding: 1px 6px; border-radius: 3px; border-left: 2px solid #f59e0b;">[Proyección] ${escapeHtml(p.word)}</span>
             </div>
           `;
         });
         html += `</div>`;
       }
 
-      html += `</div>`; // Close notebook-body
+      html += `</div>`;
 
       page.innerHTML = html;
       container.appendChild(page);
@@ -1241,8 +1633,7 @@
 
     const firstDayIndex = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const todayStr = getTodayStr();
     const activeMetas = getActiveMetas();
     const isFilteredByMeta = (activeFilterGroupTitle !== null || activeFilterMeta !== null || hoveredMeta !== null);
     const filterMetasList = hoveredMeta ? [hoveredMeta] : activeMetas;
@@ -1267,10 +1658,9 @@
       const dayProjections = FUTURE_PROJECTIONS.filter(p => p.date === dateStr);
       const hasAhorrarLogged = dayEvents.some(e => e.meta === "Ahorrar");
       
-      const cuotaYellowColor = "#facc15";      // Amarillo para cuotas de financiamiento / pagos
-      const cobroAppleGreenColor = "#84cc16";  // Verde manzana para cobros de quincenas
+      const cuotaYellowColor = "#facc15";
+      const cobroAppleGreenColor = "#84cc16";
 
-      // Identificar proyecciones de Ahorrar pendientes
       const pendingAhorrarProjs = hasAhorrarLogged ? [] : dayProjections.filter(p => p.meta === "Ahorrar");
       const isCobroPending = pendingAhorrarProjs.some(p => p.word.toLowerCase().includes("quincena") || p.word.toLowerCase().includes("cobro"));
       const isPagoPending = pendingAhorrarProjs.some(p => p.word.includes("$") || p.word.toLowerCase().includes("cuota"));
@@ -1344,17 +1734,17 @@
       } else {
         if (isFilteredByMeta && filterMetasList.length > 0) isDimmed = true;
       }
+
       const visibleProjections = (isFilteredByMeta && filterMetasList.length > 0)
         ? dayProjections.filter(p => filterMetasList.includes(p.meta))
         : dayProjections;
 
-      // Si se filtra por meta, no atenuar si el día tiene proyecciones de esa meta
       if (isFilteredByMeta && filterMetasList.length > 0 && visibleProjections.length > 0) {
         isDimmed = false;
       }
 
       if (activeFilterDate && dateStr !== activeFilterDate) {
-          isDimmed = true;
+        isDimmed = true;
       }
 
       if (isDimmed) cell.classList.add("dimmed");
@@ -1363,7 +1753,7 @@
         <div class="cal-num">${day}</div>
         ${visibleProjections.length > 0 ? `
           <div class="cal-projection-words">
-            ${visibleProjections.map(p => `<div class="cal-projection-word" title="${p.meta}: ${p.word}">${p.word}</div>`).join("")}
+            ${visibleProjections.map(p => `<div class="cal-projection-word" title="${escapeHtml(p.meta)}: ${escapeHtml(p.word)}">${escapeHtml(p.word)}</div>`).join("")}
           </div>
         ` : ''}
         ${dayEvents.length > 0 ? `<div class="cal-badge-count">${dayEvents.length} act.</div>` : ''}
@@ -1377,6 +1767,43 @@
   function renderGroupedLogList(containerId, filterYearMonth, filterMetas, filterDate) {
     const container = document.getElementById(containerId);
     container.innerHTML = "";
+
+    // Si estamos en "Apuntes del Día" y se presionó el botón "+"
+    if (filterDate && isAddingApunte) {
+      const addBox = document.createElement("div");
+      addBox.className = "sketchy-form-box";
+
+      const optionsHtml = CATEGORIES_LIST.map(cat =>
+        `<option value="${escapeHtml(cat)}" ${newApunteCategory === cat ? "selected" : ""}>${escapeHtml(cat)}</option>`
+      ).join("");
+
+      let formHtml = `
+        <div style="font-weight: 700; color: var(--pen-color);">Nuevo apunte para el ${formatDateEs(filterDate)}:</div>
+        <select class="sketchy-select" onchange="onSelectNewApunteCategory(this)">
+          <option value="" ${newApunteCategory === "" ? "selected" : ""} disabled>-- 1. Selecciona la categoría --</option>
+          ${optionsHtml}
+        </select>
+      `;
+
+      if (newApunteCategory) {
+        formHtml += `
+          <textarea id="newApunteTextInput" class="sketchy-textarea" placeholder="2. Escribe aquí el apunte del día..." oninput="newApunteText = this.value">${escapeHtml(newApunteText)}</textarea>
+          <div class="sketchy-btn-row">
+            <button class="sketchy-btn cancel" onclick="toggleAddApunteForm()">Cancelar</button>
+            <button class="sketchy-btn save" onclick="saveNewApunte()">💾 Guardar</button>
+          </div>
+        `;
+      } else {
+        formHtml += `
+          <div class="sketchy-btn-row">
+            <button class="sketchy-btn cancel" onclick="toggleAddApunteForm()">Cancelar</button>
+          </div>
+        `;
+      }
+
+      addBox.innerHTML = formHtml;
+      container.appendChild(addBox);
+    }
 
     const logs = CALENDAR_LOGS.filter(l => {
       const matchMonth = filterYearMonth ? l.date.startsWith(filterYearMonth) : true;
@@ -1401,7 +1828,13 @@
     });
 
     if (logs.length === 0 && projs.length === 0) {
-      container.innerHTML = `<div style="font-style: italic; color: var(--text-muted);">Sin trazos en esta hoja.</div>`;
+      const emptyMsg = document.createElement("div");
+      emptyMsg.style.fontStyle = "italic";
+      emptyMsg.style.color = "var(--text-muted)";
+      emptyMsg.textContent = filterDate
+        ? "Sin apuntes registrados en este día. Presiona el botón '+' arriba a la derecha para añadir uno."
+        : "Sin trazos en esta hoja.";
+      container.appendChild(emptyMsg);
       return;
     }
 
@@ -1423,25 +1856,50 @@
       groupDiv.className = "log-group";
       groupDiv.style.borderLeftColor = conf.color;
 
-      let html = `<div class="log-group-header" style="color: ${conf.color}">${meta}</div>`;
+      let html = `<div class="log-group-header" style="color: ${conf.color}">${escapeHtml(meta)}</div>`;
 
       groupData.logs.forEach(log => {
-        const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(log.date)}</span>` : '';
-        const textSpan = log.isCompletion ? `<strong>${log.text}</strong>` : log.text;
+        if (editingLogId === log._id) {
+          const catOptions = CATEGORIES_LIST.map(cat =>
+            `<option value="${escapeHtml(cat)}" ${log.meta === cat ? "selected" : ""}>${escapeHtml(cat)}</option>`
+          ).join("");
 
-        html += `
-          <div class="log-item-text" style="--pen-color: ${conf.color}">
-            <span>${textSpan}</span>
-            ${dateSpan}
-          </div>
-        `;
+          html += `
+            <div class="sketchy-form-box" style="margin: 6px 0;">
+              <label style="font-size: 0.9rem; font-weight: 700;">Categoría:</label>
+              <select id="editCat_${log._id}" class="sketchy-select">
+                ${catOptions}
+              </select>
+              <label style="font-size: 0.9rem; font-weight: 700;">Texto del apunte:</label>
+              <textarea id="editTxt_${log._id}" class="sketchy-textarea">${escapeHtml(log.text)}</textarea>
+              <div class="sketchy-btn-row">
+                <button class="sketchy-btn delete" onclick="deleteApunte('${log._id}')">🗑️ Eliminar</button>
+                <button class="sketchy-btn cancel" onclick="cancelEditApunte()">Cancelar</button>
+                <button class="sketchy-btn save" onclick="saveEditedApunte('${log._id}')">💾 Guardar</button>
+              </div>
+            </div>
+          `;
+        } else {
+          const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(log.date)}</span>` : '';
+          const textSpan = log.isCompletion ? `<strong>${escapeHtml(log.text)}</strong>` : escapeHtml(log.text);
+
+          html += `
+            <div class="log-item-row">
+              <div class="log-item-text" style="--pen-color: ${conf.color}">
+                <span>${textSpan}</span>
+                ${dateSpan}
+              </div>
+              <button class="edit-pencil-btn" onclick="startEditApunte('${log._id}')" title="Editar o eliminar apunte">✏️</button>
+            </div>
+          `;
+        }
       });
 
       groupData.projs.forEach(proj => {
         const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(proj.date)}</span>` : '';
         html += `
           <div class="log-item-text" style="--pen-color: ${conf.color}; font-style: italic;">
-            <span><strong style="background: rgba(254, 240, 138, 0.6); padding: 1px 4px; border-radius: 3px;">[Proyección]</strong> ${proj.word}</span>
+            <span><strong style="background: rgba(254, 240, 138, 0.6); padding: 1px 4px; border-radius: 3px;">[Proyección]</strong> ${escapeHtml(proj.word)}</span>
             ${dateSpan}
           </div>
         `;
@@ -1588,7 +2046,7 @@
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (!canvasClickRegions[canvasId]) canvasClickRegions[canvasId] = [];
+    canvasClickRegions[canvasId] = [];
 
     const activeMetas = getActiveMetas();
 
@@ -1606,6 +2064,8 @@
     const sortedGoals = [...DATA_GOALS].sort((a, b) => counts[b.title] - counts[a.title] || a.title.localeCompare(b.title));
 
     const labels = sortedGoals.map(g => g.title);
+    if (labels.length === 0) return;
+
     const values = labels.map(k => counts[k]);
     const maxVal = Math.max(5, ...values);
 
@@ -1803,21 +2263,84 @@
       hoveredMeta = foundMeta;
       e.target.style.cursor = foundMeta ? 'pointer' : 'default';
       redrawVisibleCharts();
-      renderCalendars();
+      const views = getAvailableViews();
+      const currentView = views[currentViewIndex];
+      if (currentView && currentView !== "global") {
+        const [yStr, mStr] = currentView.split("-");
+        renderMonthCalendar("calendarGrid", parseInt(yStr, 10), parseInt(mStr, 10) - 1);
+      }
     }
   }
 
-  function handleCanvasMouseLeave(e, canvasId) {
+  function handleCanvasMouseLeave() {
     if (hoveredMeta !== null) {
       hoveredMeta = null;
       redrawVisibleCharts();
-      renderCalendars();
+      const views = getAvailableViews();
+      const currentView = views[currentViewIndex];
+      if (currentView && currentView !== "global") {
+        const [yStr, mStr] = currentView.split("-");
+        renderMonthCalendar("calendarGrid", parseInt(yStr, 10), parseInt(mStr, 10) - 1);
+      }
     }
   }
 
-  function init() {
-    updateView();
+  function connectFirebaseRealtime() {
+    db.ref("/").on("value", (snapshot) => {
+      const data = snapshot.val();
 
+      // Si Firebase está completamente vacío, sembramos la data inicial automáticamente
+      if (!data || (!data.dataGoals && !data.calendarLogs && !data.futureProjections && !data.initialized)) {
+        db.ref("/").set({
+          initialized: true,
+          dataGoals: INITIAL_DATA_GOALS,
+          calendarLogs: INITIAL_CALENDAR_LOGS,
+          futureProjections: INITIAL_FUTURE_PROJECTIONS
+        });
+        return;
+      }
+
+      // Cargar DATA_GOALS con sus respectivos IDs de Firebase
+      DATA_GOALS = [];
+      if (data.dataGoals) {
+        Object.entries(data.dataGoals).forEach(([gKey, gVal]) => {
+          if (gVal) {
+            const targets = [];
+            if (gVal.targets) {
+              Object.entries(gVal.targets).forEach(([tKey, tVal]) => {
+                if (tVal) targets.push({ ...tVal, _id: tKey });
+              });
+            }
+            DATA_GOALS.push({ ...gVal, _id: gKey, targets });
+          }
+        });
+      }
+
+      // Cargar CALENDAR_LOGS con sus respectivos IDs de Firebase
+      CALENDAR_LOGS = [];
+      if (data.calendarLogs) {
+        Object.entries(data.calendarLogs).forEach(([lKey, lVal]) => {
+          if (lVal && lVal.date && lVal.meta) {
+            CALENDAR_LOGS.push({ ...lVal, _id: lKey });
+          }
+        });
+      }
+
+      // Cargar FUTURE_PROJECTIONS con sus respectivos IDs de Firebase
+      FUTURE_PROJECTIONS = [];
+      if (data.futureProjections) {
+        Object.entries(data.futureProjections).forEach(([pKey, pVal]) => {
+          if (pVal && pVal.date && pVal.meta) {
+            FUTURE_PROJECTIONS.push({ ...pVal, _id: pKey });
+          }
+        });
+      }
+
+      updateView();
+    });
+  }
+
+  function init() {
     const canvasIds = [
       "pieChartGeneral", "barGeneralCanvas", "pieMonthCanvas"
     ];
@@ -1827,9 +2350,11 @@
       if (el) {
         el.addEventListener("click", (e) => handleCanvasClick(e, id));
         el.addEventListener("mousemove", (e) => handleCanvasMouseMove(e, id));
-        el.addEventListener("mouseleave", (e) => handleCanvasMouseLeave(e, id));
+        el.addEventListener("mouseleave", () => handleCanvasMouseLeave());
       }
     });
+
+    connectFirebaseRealtime();
   }
 
   window.onload = init;
