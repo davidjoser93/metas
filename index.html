@@ -580,45 +580,36 @@
       transform: scale(1.08);
     }
 
-    .reorder-arrows-wrap {
-      display: inline-flex;
-      flex-direction: column;
-      gap: 1px;
-      margin-top: 1px;
-      flex-shrink: 0;
-      user-select: none;
-    }
-
     .reorder-arrow-btn {
       background: #ffffff;
       border: 1.5px solid #94a3b8;
       border-radius: 4px;
       color: #334155;
       cursor: pointer;
-      font-size: 0.65rem;
+      font-size: 0.75rem;
       line-height: 1;
-      padding: 1px 4px;
+      padding: 2px 6px;
       font-weight: 700;
       transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 20px;
-      height: 14px;
+      flex-shrink: 0;
+      user-select: none;
     }
 
-    .reorder-arrow-btn:hover:not(:disabled) {
+    .reorder-arrow-btn:hover {
       background: #fef08a;
       border-color: #1e293b;
       color: #0f172a;
-      transform: scale(1.1);
+      transform: scale(1.12);
     }
 
-    .reorder-arrow-btn:disabled {
-      opacity: 0.2;
-      cursor: default;
-      pointer-events: none;
-      border-color: #cbd5e1;
+    .cat-reorder-btn {
+      padding: 3px 8px;
+      font-size: 0.85rem;
+      border-radius: 5px;
+      border-color: #64748b;
     }
 
     .next-day-btn {
@@ -1151,6 +1142,7 @@
   let DATA_GOALS = [];
   let CALENDAR_LOGS = [];
   let FUTURE_PROJECTIONS = [];
+  let DAY_CATEGORY_ORDER = {};
 
   const customGroups = [
     { 
@@ -1650,6 +1642,80 @@
     updates[`calendarLogs/${targetLog._id}`] = currentData;
 
     db.ref().update(updates);
+  }
+
+  function moveCategoryUp(meta, dateStr) {
+    if (!dateStr) return;
+
+    const dateLogs = CALENDAR_LOGS.filter(l => l.date === dateStr);
+    const dateProjs = FUTURE_PROJECTIONS.filter(p => p.date === dateStr);
+
+    const presentCategories = [];
+    dateLogs.forEach(l => {
+      if (!presentCategories.includes(l.meta)) presentCategories.push(l.meta);
+    });
+    dateProjs.forEach(p => {
+      if (!presentCategories.includes(p.meta)) presentCategories.push(p.meta);
+    });
+
+    const savedOrder = (DAY_CATEGORY_ORDER && DAY_CATEGORY_ORDER[dateStr]) ? [...DAY_CATEGORY_ORDER[dateStr]] : [];
+
+    presentCategories.sort((a, b) => {
+      const idxA = savedOrder.indexOf(a);
+      const idxB = savedOrder.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return 0;
+    });
+
+    const currIdx = presentCategories.indexOf(meta);
+    if (currIdx <= 0) return;
+
+    const prevMeta = presentCategories[currIdx - 1];
+    presentCategories[currIdx - 1] = meta;
+    presentCategories[currIdx] = prevMeta;
+
+    if (!DAY_CATEGORY_ORDER) DAY_CATEGORY_ORDER = {};
+    DAY_CATEGORY_ORDER[dateStr] = presentCategories;
+
+    db.ref(`dayCategoryOrder/${dateStr}`).set(presentCategories);
+    reorderItemsForCategories(dateStr, meta, prevMeta);
+    updateView();
+  }
+
+  function reorderItemsForCategories(dateStr, topMeta, bottomMeta) {
+    const logsTop = CALENDAR_LOGS.filter(l => l.date === dateStr && l.meta === topMeta);
+    const logsBottom = CALENDAR_LOGS.filter(l => l.date === dateStr && l.meta === bottomMeta);
+
+    if (logsTop.length > 0 && logsBottom.length > 0) {
+      const allLogKeys = [...logsBottom.map(l => l._id), ...logsTop.map(l => l._id)];
+      const allLogPayloads = [
+        ...logsTop.map(l => ({ date: l.date, meta: l.meta, text: l.text, ...(l.isCompletion !== undefined ? { isCompletion: l.isCompletion } : {}) })),
+        ...logsBottom.map(l => ({ date: l.date, meta: l.meta, text: l.text, ...(l.isCompletion !== undefined ? { isCompletion: l.isCompletion } : {}) }))
+      ];
+      const logUpdates = {};
+      allLogKeys.forEach((key, idx) => {
+        logUpdates[`calendarLogs/${key}`] = allLogPayloads[idx];
+      });
+      db.ref().update(logUpdates);
+    }
+
+    const projsTop = FUTURE_PROJECTIONS.filter(p => p.date === dateStr && p.meta === topMeta);
+    const projsBottom = FUTURE_PROJECTIONS.filter(p => p.date === dateStr && p.meta === bottomMeta);
+
+    if (projsTop.length > 0 && projsBottom.length > 0) {
+      const allProjKeys = [...projsBottom.map(p => p._id), ...projsTop.map(p => p._id)];
+      const allProjPayloads = [
+        ...projsTop.map(p => ({ date: p.date, meta: p.meta, word: p.word, ...(p.done !== undefined ? { done: p.done } : {}) })),
+        ...projsBottom.map(p => ({ date: p.date, meta: p.meta, word: p.word, ...(p.done !== undefined ? { done: p.done } : {}) }))
+      ];
+      const projUpdates = {};
+      allProjKeys.forEach((key, idx) => {
+        projUpdates[`futureProjections/${key}`] = allProjPayloads[idx];
+      });
+      db.ref().update(projUpdates);
+    }
   }
 
   function moveProj(projId, direction) {
@@ -2176,7 +2242,21 @@
       grouped[proj.meta].projs.push(proj);
     });
 
-    for (const meta in grouped) {
+    // Ordenar categorías según el orden guardado para la fecha si existe
+    const catKeys = Object.keys(grouped);
+    if (filterDate && DAY_CATEGORY_ORDER && DAY_CATEGORY_ORDER[filterDate]) {
+      const savedOrder = DAY_CATEGORY_ORDER[filterDate];
+      catKeys.sort((a, b) => {
+        const idxA = savedOrder.indexOf(a);
+        const idxB = savedOrder.indexOf(b);
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return 0;
+      });
+    }
+
+    catKeys.forEach((meta, catIdx) => {
       const groupData = grouped[meta];
       const conf = GOAL_CONFIG[meta] || { color: "#1e293b" };
 
@@ -2184,7 +2264,17 @@
       groupDiv.className = "log-group";
       groupDiv.style.borderLeftColor = conf.color;
 
-      let html = `<div class="log-group-header" style="color: ${conf.color}">${escapeHtml(meta)}</div>`;
+      // Flecha hacia arriba solo para las categorías siguientes a la primera
+      const catArrowHtml = (filterDate && catKeys.length > 1 && catIdx > 0)
+        ? `<button class="reorder-arrow-btn cat-reorder-btn" onclick="moveCategoryUp('${escapeHtml(meta)}', '${filterDate}')" title="Subir categoría ${escapeHtml(meta)}">▲</button>`
+        : '';
+
+      let html = `
+        <div class="log-group-header" style="color: ${conf.color}; display: flex; align-items: center; gap: 8px;">
+          ${catArrowHtml}
+          <span>${escapeHtml(meta)}</span>
+        </div>
+      `;
 
       // Renderizado de Apuntes Realizados
       const showLogArrows = filterDate && groupData.logs.length > 1;
@@ -2222,11 +2312,9 @@
           const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(log.date)}</span>` : "";
           const textSpan = log.isCompletion ? `<strong>${escapeHtml(log.text)}</strong>` : escapeHtml(log.text);
 
-          const arrowsHtml = showLogArrows ? `
-            <div class="reorder-arrows-wrap">
-              <button class="reorder-arrow-btn" onclick="moveLog('${log._id}', -1)" ${logIdx === 0 ? "disabled" : ""} title="Subir item">▲</button>
-              <button class="reorder-arrow-btn" onclick="moveLog('${log._id}', 1)" ${logIdx === groupData.logs.length - 1 ? "disabled" : ""} title="Bajar item">▼</button>
-            </div>
+          // Flecha hacia arriba solo para ítems a partir del segundo (índice > 0). El primero no muestra nada.
+          const arrowsHtml = (showLogArrows && logIdx > 0) ? `
+            <button class="reorder-arrow-btn" onclick="moveLog('${log._id}', -1)" title="Subir item">▲</button>
           ` : "";
 
           html += `
@@ -2277,11 +2365,9 @@
         } else {
           const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(proj.date)}</span>` : "";
 
-          const arrowsHtml = showProjArrows ? `
-            <div class="reorder-arrows-wrap">
-              <button class="reorder-arrow-btn" onclick="moveProj('${proj._id}', -1)" ${projIdx === 0 ? "disabled" : ""} title="Subir proyección">▲</button>
-              <button class="reorder-arrow-btn" onclick="moveProj('${proj._id}', 1)" ${projIdx === groupData.projs.length - 1 ? "disabled" : ""} title="Bajar proyección">▼</button>
-            </div>
+          // Flecha hacia arriba solo para ítems a partir del segundo (índice > 0). El primero no muestra nada.
+          const arrowsHtml = (showProjArrows && projIdx > 0) ? `
+            <button class="reorder-arrow-btn" onclick="moveProj('${proj._id}', -1)" title="Subir proyección">▲</button>
           ` : "";
 
           html += `
@@ -2299,7 +2385,7 @@
 
       groupDiv.innerHTML = html;
       container.appendChild(groupDiv);
-    }
+    });
   }
 
   function drawMonthlyPieChart(canvasId, filterYearMonth) {
@@ -2728,6 +2814,8 @@
         });
       }
 
+      DAY_CATEGORY_ORDER = data.dayCategoryOrder || {};
+
       updateView();
     });
   }
@@ -2773,6 +2861,7 @@
 
       const payload = {
         fechaExportacion: new Date().toISOString(),
+        dayCategoryOrder: DAY_CATEGORY_ORDER,
         dataGoals: cleanGoals,
         calendarLogs: cleanLogs,
         futureProjections: cleanProjections
