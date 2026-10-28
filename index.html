@@ -580,6 +580,70 @@
       transform: scale(1.08);
     }
 
+    .reorder-arrows-wrap {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 1px;
+      margin-top: 1px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .reorder-arrow-btn {
+      background: #ffffff;
+      border: 1.5px solid #94a3b8;
+      border-radius: 4px;
+      color: #334155;
+      cursor: pointer;
+      font-size: 0.65rem;
+      line-height: 1;
+      padding: 1px 4px;
+      font-weight: 700;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 14px;
+    }
+
+    .reorder-arrow-btn:hover:not(:disabled) {
+      background: #fef08a;
+      border-color: #1e293b;
+      color: #0f172a;
+      transform: scale(1.1);
+    }
+
+    .reorder-arrow-btn:disabled {
+      opacity: 0.2;
+      cursor: default;
+      pointer-events: none;
+      border-color: #cbd5e1;
+    }
+
+    .next-day-btn {
+      background: #eff6ff !important;
+      color: #1d4ed8 !important;
+      border: 1.5px solid #3b82f6 !important;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.9rem;
+      font-family: "Kalam", cursive;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 1px 2px 0px rgba(0, 0, 0, 0.08);
+      transition: all 0.15s ease;
+    }
+
+    .next-day-btn:hover {
+      background: #dbeafe !important;
+      transform: scale(1.04);
+      box-shadow: 2px 3px 0px #1d4ed8;
+    }
+
     /* Formularios de Apuntes y Edición */
     .sketchy-form-box {
       background: #fdfbf7;
@@ -1480,6 +1544,147 @@
     editingProjId = null;
   }
 
+  function getNextDayStr(dateStr) {
+    if (!dateStr) return getTodayStr();
+    const [y, m, d] = dateStr.split("-");
+    const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+    dateObj.setDate(dateObj.getDate() + 1);
+    const nextY = dateObj.getFullYear();
+    const nextM = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const nextD = String(dateObj.getDate()).padStart(2, "0");
+    return `${nextY}-${nextM}-${nextD}`;
+  }
+
+  function reprogramarDiaSiguienteLog(logId) {
+    const currentLog = CALENDAR_LOGS.find(l => l._id === logId);
+    if (!currentLog) return;
+
+    const catEl = document.getElementById(`editCat_${logId}`);
+    const txtEl = document.getElementById(`editTxt_${logId}`);
+    const projCheckEl = document.getElementById(`editIsProj_${logId}`);
+
+    const newCat = catEl ? catEl.value : currentLog.meta;
+    const newTxt = txtEl ? txtEl.value.trim() : currentLog.text;
+    const convertToProj = projCheckEl ? projCheckEl.checked : false;
+
+    const nextDate = getNextDayStr(currentLog.date);
+
+    if (convertToProj) {
+      db.ref("futureProjections").push({
+        date: nextDate,
+        meta: newCat,
+        word: newTxt
+      });
+      db.ref(`calendarLogs/${logId}`).remove();
+    } else {
+      db.ref(`calendarLogs/${logId}`).update({
+        date: nextDate,
+        meta: newCat,
+        text: newTxt
+      });
+    }
+
+    editingLogId = null;
+  }
+
+  function reprogramarDiaSiguienteProj(projId) {
+    const currentProj = FUTURE_PROJECTIONS.find(p => p._id === projId);
+    if (!currentProj) return;
+
+    const catEl = document.getElementById(`editProjCat_${projId}`);
+    const txtEl = document.getElementById(`editProjTxt_${projId}`);
+    const projCheckEl = document.getElementById(`editProjIsProj_${projId}`);
+
+    const newCat = catEl ? catEl.value : currentProj.meta;
+    const newTxt = txtEl ? txtEl.value.trim() : currentProj.word;
+    const keepAsProj = projCheckEl ? projCheckEl.checked : true;
+
+    const nextDate = getNextDayStr(currentProj.date);
+
+    if (!keepAsProj) {
+      db.ref("calendarLogs").push({
+        date: nextDate,
+        meta: newCat,
+        text: newTxt
+      });
+      db.ref(`futureProjections/${projId}`).remove();
+    } else {
+      db.ref(`futureProjections/${projId}`).update({
+        date: nextDate,
+        meta: newCat,
+        word: newTxt
+      });
+    }
+
+    editingProjId = null;
+  }
+
+  function moveLog(logId, direction) {
+    const currentLog = CALENDAR_LOGS.find(l => l._id === logId);
+    if (!currentLog) return;
+
+    const sameGroup = CALENDAR_LOGS.filter(l => l.date === currentLog.date && l.meta === currentLog.meta);
+    const currIdx = sameGroup.findIndex(l => l._id === logId);
+    const targetIdx = currIdx + direction;
+
+    if (targetIdx < 0 || targetIdx >= sameGroup.length) return;
+
+    const targetLog = sameGroup[targetIdx];
+
+    const currentData = {
+      date: currentLog.date,
+      meta: currentLog.meta,
+      text: currentLog.text
+    };
+    if (currentLog.isCompletion !== undefined) currentData.isCompletion = currentLog.isCompletion;
+
+    const targetData = {
+      date: targetLog.date,
+      meta: targetLog.meta,
+      text: targetLog.text
+    };
+    if (targetLog.isCompletion !== undefined) targetData.isCompletion = targetLog.isCompletion;
+
+    const updates = {};
+    updates[`calendarLogs/${currentLog._id}`] = targetData;
+    updates[`calendarLogs/${targetLog._id}`] = currentData;
+
+    db.ref().update(updates);
+  }
+
+  function moveProj(projId, direction) {
+    const currentProj = FUTURE_PROJECTIONS.find(p => p._id === projId);
+    if (!currentProj) return;
+
+    const sameGroup = FUTURE_PROJECTIONS.filter(p => p.date === currentProj.date && p.meta === currentProj.meta);
+    const currIdx = sameGroup.findIndex(p => p._id === projId);
+    const targetIdx = currIdx + direction;
+
+    if (targetIdx < 0 || targetIdx >= sameGroup.length) return;
+
+    const targetProj = sameGroup[targetIdx];
+
+    const currentData = {
+      date: currentProj.date,
+      meta: currentProj.meta,
+      word: currentProj.word
+    };
+    if (currentProj.done !== undefined) currentData.done = currentProj.done;
+
+    const targetData = {
+      date: targetProj.date,
+      meta: targetProj.meta,
+      word: targetProj.word
+    };
+    if (targetProj.done !== undefined) targetData.done = targetProj.done;
+
+    const updates = {};
+    updates[`futureProjections/${currentProj._id}`] = targetData;
+    updates[`futureProjections/${targetProj._id}`] = currentData;
+
+    db.ref().update(updates);
+  }
+
   // --- FUNCIONES DE CHECKLIST EN FIREBASE ---
 
   function toggleChecklistItem(goalId, targetId, newDoneState) {
@@ -1982,7 +2187,8 @@
       let html = `<div class="log-group-header" style="color: ${conf.color}">${escapeHtml(meta)}</div>`;
 
       // Renderizado de Apuntes Realizados
-      groupData.logs.forEach(log => {
+      const showLogArrows = filterDate && groupData.logs.length > 1;
+      groupData.logs.forEach((log, logIdx) => {
         if (editingLogId === log._id) {
           const catOptions = CATEGORIES_LIST.map(cat =>
             `<option value="${escapeHtml(cat)}" ${log.meta === cat ? "selected" : ""}>${escapeHtml(cat)}</option>`
@@ -1996,10 +2202,15 @@
               </select>
               <label style="font-size: 0.9rem; font-weight: 700;">Texto del apunte:</label>
               <textarea id="editTxt_${log._id}" class="sketchy-textarea">${escapeHtml(log.text)}</textarea>
-              <label class="sketchy-checkbox-label">
-                <input type="checkbox" id="editIsProj_${log._id}" />
-                <span>📌 Es una proyección</span>
-              </label>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0; gap: 8px; flex-wrap: wrap;">
+                <label class="sketchy-checkbox-label" style="margin: 0;">
+                  <input type="checkbox" id="editIsProj_${log._id}" />
+                  <span>📌 Es una proyección</span>
+                </label>
+                <button type="button" class="sketchy-btn next-day-btn" onclick="reprogramarDiaSiguienteLog('${log._id}')" title="Reprogramar este apunte para el día siguiente">
+                  📅 Día siguiente ➡️
+                </button>
+              </div>
               <div class="sketchy-btn-row">
                 <button class="sketchy-btn delete" onclick="deleteApunte('${log._id}')">🗑️ Eliminar</button>
                 <button class="sketchy-btn cancel" onclick="cancelEditApunte()">Cancelar</button>
@@ -2008,11 +2219,19 @@
             </div>
           `;
         } else {
-          const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(log.date)}</span>` : '';
+          const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(log.date)}</span>` : "";
           const textSpan = log.isCompletion ? `<strong>${escapeHtml(log.text)}</strong>` : escapeHtml(log.text);
+
+          const arrowsHtml = showLogArrows ? `
+            <div class="reorder-arrows-wrap">
+              <button class="reorder-arrow-btn" onclick="moveLog('${log._id}', -1)" ${logIdx === 0 ? "disabled" : ""} title="Subir item">▲</button>
+              <button class="reorder-arrow-btn" onclick="moveLog('${log._id}', 1)" ${logIdx === groupData.logs.length - 1 ? "disabled" : ""} title="Bajar item">▼</button>
+            </div>
+          ` : "";
 
           html += `
             <div class="log-item-row">
+              ${arrowsHtml}
               <div class="log-item-text" style="--pen-color: ${conf.color}">
                 <span>${textSpan}</span>
                 ${dateSpan}
@@ -2024,7 +2243,8 @@
       });
 
       // Renderizado de Proyecciones con botón de lápiz para editar
-      groupData.projs.forEach(proj => {
+      const showProjArrows = filterDate && groupData.projs.length > 1;
+      groupData.projs.forEach((proj, projIdx) => {
         if (editingProjId === proj._id) {
           const catOptions = CATEGORIES_LIST.map(cat =>
             `<option value="${escapeHtml(cat)}" ${proj.meta === cat ? "selected" : ""}>${escapeHtml(cat)}</option>`
@@ -2038,10 +2258,15 @@
               </select>
               <label style="font-size: 0.9rem; font-weight: 700;">Texto de la proyección:</label>
               <textarea id="editProjTxt_${proj._id}" class="sketchy-textarea">${escapeHtml(proj.word)}</textarea>
-              <label class="sketchy-checkbox-label" title="Desmarca esta casilla si ya realizaste esta proyección y quieres pasarla a apunte del día">
-                <input type="checkbox" id="editProjIsProj_${proj._id}" checked />
-                <span>📌 Es una proyección</span>
-              </label>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0; gap: 8px; flex-wrap: wrap;">
+                <label class="sketchy-checkbox-label" style="margin: 0;" title="Desmarca esta casilla si ya realizaste esta proyección y quieres pasarla a apunte del día">
+                  <input type="checkbox" id="editProjIsProj_${proj._id}" checked />
+                  <span>📌 Es una proyección</span>
+                </label>
+                <button type="button" class="sketchy-btn next-day-btn" onclick="reprogramarDiaSiguienteProj('${proj._id}')" title="Reprogramar esta proyección para el día siguiente">
+                  📅 Día siguiente ➡️
+                </button>
+              </div>
               <div class="sketchy-btn-row">
                 <button class="sketchy-btn delete" onclick="deleteProj('${proj._id}')">🗑️ Eliminar</button>
                 <button class="sketchy-btn cancel" onclick="cancelEditProj()">Cancelar</button>
@@ -2050,9 +2275,18 @@
             </div>
           `;
         } else {
-          const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(proj.date)}</span>` : '';
+          const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(proj.date)}</span>` : "";
+
+          const arrowsHtml = showProjArrows ? `
+            <div class="reorder-arrows-wrap">
+              <button class="reorder-arrow-btn" onclick="moveProj('${proj._id}', -1)" ${projIdx === 0 ? "disabled" : ""} title="Subir proyección">▲</button>
+              <button class="reorder-arrow-btn" onclick="moveProj('${proj._id}', 1)" ${projIdx === groupData.projs.length - 1 ? "disabled" : ""} title="Bajar proyección">▼</button>
+            </div>
+          ` : "";
+
           html += `
             <div class="log-item-row">
+              ${arrowsHtml}
               <div class="log-item-text" style="--pen-color: ${conf.color}; font-style: italic;">
                 <span><strong style="background: rgba(254, 240, 138, 0.6); padding: 1px 4px; border-radius: 3px;">[Proyección]</strong> ${escapeHtml(proj.word)}</span>
                 ${dateSpan}
