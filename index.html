@@ -839,6 +839,13 @@
   <section class="sketchy-panel" id="sectionRegistro">
     <div class="registro-container" id="registroMetasContainer"></div>
   </section>
+
+  <div style="text-align: center; margin: 15px 0 30px 0;">
+    <button id="btnGuardarDrive" class="cal-nav-btn" style="width: auto; padding: 10px 24px; font-size: 1.25rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;" onclick="guardarCambiosEnDrive()">
+      💾 Guardar cambios en Drive
+    </button>
+    <div id="statusGuardado" style="margin-top: 10px; font-size: 1.1rem; font-weight: 700; color: #1e3a8a;"></div>
+  </div>
 </div>
 
 <!-- SDK de Firebase (Compat para uso directo en HTML) -->
@@ -2489,6 +2496,81 @@
 
       updateView();
     });
+  }
+
+
+  async function guardarCambiosEnDrive() {
+    const btn = document.getElementById("btnGuardarDrive");
+    const statusEl = document.getElementById("statusGuardado");
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyGVEirVLcVAGdaQ0bPSvAKYed4QJuWOCV6EsYSag7J-xT_F_8GQIrFSKXmT6MOcehl/exec";
+
+    if (btn) btn.disabled = true;
+    if (statusEl) {
+      statusEl.style.color = "#1e3a8a";
+      statusEl.textContent = "⏳ Guardando datos en Google Drive...";
+    }
+
+    try {
+      // Sanitizar IDs internos para dejar la estructura limpia
+      const cleanGoals = DATA_GOALS.map(g => {
+        const copy = { ...g };
+        delete copy._id;
+        if (copy.targets) {
+          copy.targets = copy.targets.map(t => {
+            const tCopy = { ...t };
+            delete tCopy._id;
+            return tCopy;
+          });
+        }
+        return copy;
+      });
+
+      const cleanLogs = CALENDAR_LOGS.map(l => {
+        const copy = { ...l };
+        delete copy._id;
+        return copy;
+      });
+
+      const cleanProjections = FUTURE_PROJECTIONS.map(p => {
+        const copy = { ...p };
+        delete copy._id;
+        return copy;
+      });
+
+      const payload = {
+        fechaExportacion: new Date().toISOString(),
+        dataGoals: cleanGoals,
+        calendarLogs: cleanLogs,
+        futureProjections: cleanProjections
+      };
+
+      await fetch(WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (statusEl) {
+        statusEl.style.color = "#15803d";
+        statusEl.textContent = "✅ ¡Datos sincronizados y guardados en Google Drive exitosamente!";
+      }
+    } catch (error) {
+      console.error("Error al guardar en Drive:", error);
+      if (statusEl) {
+        statusEl.style.color = "#dc2626";
+        statusEl.textContent = "❌ Error al guardar en Drive: " + error.message;
+      }
+    } finally {
+      if (btn) btn.disabled = false;
+      setTimeout(() => {
+        if (statusEl && statusEl.textContent.includes("exitosamente")) {
+          statusEl.textContent = "";
+        }
+      }, 5000);
+    }
   }
 
   function init() {
