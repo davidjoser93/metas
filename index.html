@@ -2264,10 +2264,15 @@
       groupDiv.className = "log-group";
       groupDiv.style.borderLeftColor = conf.color;
 
-      // Flecha hacia arriba solo para las categorías siguientes a la primera
-      const catArrowHtml = (filterDate && catKeys.length > 1 && catIdx > 0)
-        ? `<button class="reorder-arrow-btn cat-reorder-btn" onclick="moveCategoryUp('${escapeHtml(meta)}', '${filterDate}')" title="Subir categoría ${escapeHtml(meta)}">▲</button>`
-        : '';
+      // Flecha hacia arriba para categorías (la primera reserva el espacio con visibility: hidden para alineación)
+      let catArrowHtml = "";
+      if (filterDate && catKeys.length > 1) {
+        if (catIdx > 0) {
+          catArrowHtml = `<button class="reorder-arrow-btn cat-reorder-btn" onclick="moveCategoryUp('${escapeHtml(meta)}', '${filterDate}')" title="Subir categoría ${escapeHtml(meta)}">▲</button>`;
+        } else {
+          catArrowHtml = `<span class="reorder-arrow-btn cat-reorder-btn" style="visibility: hidden; pointer-events: none;" aria-hidden="true">▲</span>`;
+        }
+      }
 
       let html = `
         <div class="log-group-header" style="color: ${conf.color}; display: flex; align-items: center; gap: 8px;">
@@ -2312,10 +2317,15 @@
           const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(log.date)}</span>` : "";
           const textSpan = log.isCompletion ? `<strong>${escapeHtml(log.text)}</strong>` : escapeHtml(log.text);
 
-          // Flecha hacia arriba solo para ítems a partir del segundo (índice > 0). El primero no muestra nada.
-          const arrowsHtml = (showLogArrows && logIdx > 0) ? `
-            <button class="reorder-arrow-btn" onclick="moveLog('${log._id}', -1)" title="Subir item">▲</button>
-          ` : "";
+          // Flecha hacia arriba para apuntes (el primer ítem reserva el espacio con visibility: hidden para mantener alineación)
+          let arrowsHtml = "";
+          if (showLogArrows) {
+            if (logIdx > 0) {
+              arrowsHtml = `<button class="reorder-arrow-btn" onclick="moveLog('${log._id}', -1)" title="Subir item">▲</button>`;
+            } else {
+              arrowsHtml = `<span class="reorder-arrow-btn" style="visibility: hidden; pointer-events: none;" aria-hidden="true">▲</span>`;
+            }
+          }
 
           html += `
             <div class="log-item-row">
@@ -2365,10 +2375,15 @@
         } else {
           const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(proj.date)}</span>` : "";
 
-          // Flecha hacia arriba solo para ítems a partir del segundo (índice > 0). El primero no muestra nada.
-          const arrowsHtml = (showProjArrows && projIdx > 0) ? `
-            <button class="reorder-arrow-btn" onclick="moveProj('${proj._id}', -1)" title="Subir proyección">▲</button>
-          ` : "";
+          // Flecha hacia arriba para proyecciones (el primer ítem reserva el espacio con visibility: hidden para mantener alineación)
+          let arrowsHtml = "";
+          if (showProjArrows) {
+            if (projIdx > 0) {
+              arrowsHtml = `<button class="reorder-arrow-btn" onclick="moveProj('${proj._id}', -1)" title="Subir proyección">▲</button>`;
+            } else {
+              arrowsHtml = `<span class="reorder-arrow-btn" style="visibility: hidden; pointer-events: none;" aria-hidden="true">▲</span>`;
+            }
+          }
 
           html += `
             <div class="log-item-row">
