@@ -635,6 +635,41 @@
       box-shadow: 2px 3px 0px #1d4ed8;
     }
 
+    .calendar-pick-btn {
+      background: #fefce8 !important;
+      color: #a16207 !important;
+      border: 1.5px solid #eab308 !important;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.9rem;
+      font-family: "Kalam", cursive;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 1px 2px 0px rgba(0, 0, 0, 0.08);
+      transition: all 0.15s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .calendar-pick-btn:hover {
+      background: #fef08a !important;
+      transform: scale(1.04);
+      box-shadow: 2px 3px 0px #a16207;
+    }
+
+    .hidden-date-input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
+    }
+
     /* Formularios de Apuntes y Edición */
     .sketchy-form-box {
       background: #fdfbf7;
@@ -1611,6 +1646,84 @@
     editingProjId = null;
   }
 
+  function abrirSelectorFecha(inputId) {
+    const inp = document.getElementById(inputId);
+    if (!inp) return;
+    if (typeof inp.showPicker === "function") {
+      try {
+        inp.showPicker();
+      } catch (e) {
+        inp.focus();
+        inp.click();
+      }
+    } else {
+      inp.focus();
+      inp.click();
+    }
+  }
+
+  function reprogramarFechaEspecificaLog(logId, targetDate) {
+    if (!targetDate) return;
+    const currentLog = CALENDAR_LOGS.find(l => l._id === logId);
+    if (!currentLog) return;
+
+    const catEl = document.getElementById(`editCat_${logId}`);
+    const txtEl = document.getElementById(`editTxt_${logId}`);
+    const projCheckEl = document.getElementById(`editIsProj_${logId}`);
+
+    const newCat = catEl ? catEl.value : currentLog.meta;
+    const newTxt = txtEl ? txtEl.value.trim() : currentLog.text;
+    const convertToProj = projCheckEl ? projCheckEl.checked : false;
+
+    if (convertToProj) {
+      db.ref("futureProjections").push({
+        date: targetDate,
+        meta: newCat,
+        word: newTxt
+      });
+      db.ref(`calendarLogs/${logId}`).remove();
+    } else {
+      db.ref(`calendarLogs/${logId}`).update({
+        date: targetDate,
+        meta: newCat,
+        text: newTxt
+      });
+    }
+
+    editingLogId = null;
+  }
+
+  function reprogramarFechaEspecificaProj(projId, targetDate) {
+    if (!targetDate) return;
+    const currentProj = FUTURE_PROJECTIONS.find(p => p._id === projId);
+    if (!currentProj) return;
+
+    const catEl = document.getElementById(`editProjCat_${projId}`);
+    const txtEl = document.getElementById(`editProjTxt_${projId}`);
+    const projCheckEl = document.getElementById(`editProjIsProj_${projId}`);
+
+    const newCat = catEl ? catEl.value : currentProj.meta;
+    const newTxt = txtEl ? txtEl.value.trim() : currentProj.word;
+    const keepAsProj = projCheckEl ? projCheckEl.checked : true;
+
+    if (!keepAsProj) {
+      db.ref("calendarLogs").push({
+        date: targetDate,
+        meta: newCat,
+        text: newTxt
+      });
+      db.ref(`futureProjections/${projId}`).remove();
+    } else {
+      db.ref(`futureProjections/${projId}`).update({
+        date: targetDate,
+        meta: newCat,
+        word: newTxt
+      });
+    }
+
+    editingProjId = null;
+  }
+
   function moveLog(logId, direction) {
     const currentLog = CALENDAR_LOGS.find(l => l._id === logId);
     if (!currentLog) return;
@@ -2302,9 +2415,15 @@
                   <input type="checkbox" id="editIsProj_${log._id}" />
                   <span>📌 Es una proyección</span>
                 </label>
-                <button type="button" class="sketchy-btn next-day-btn" onclick="reprogramarDiaSiguienteLog('${log._id}')" title="Reprogramar este apunte para el día siguiente">
-                  📅 Día siguiente ➡️
-                </button>
+                <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <button type="button" class="sketchy-btn next-day-btn" onclick="reprogramarDiaSiguienteLog('${log._id}')" title="Reprogramar este apunte para el día siguiente">
+                    ➡️ Día siguiente
+                  </button>
+                  <div class="sketchy-btn calendar-pick-btn" onclick="abrirSelectorFecha('datePickerLog_${log._id}')" title="Seleccionar una fecha específica en el calendario">
+                    🗓️ Elegir fecha
+                    <input type="date" id="datePickerLog_${log._id}" class="hidden-date-input" value="${log.date}" onchange="reprogramarFechaEspecificaLog('${log._id}', this.value)" />
+                  </div>
+                </div>
               </div>
               <div class="sketchy-btn-row">
                 <button class="sketchy-btn delete" onclick="deleteApunte('${log._id}')">🗑️ Eliminar</button>
@@ -2361,9 +2480,15 @@
                   <input type="checkbox" id="editProjIsProj_${proj._id}" checked />
                   <span>📌 Es una proyección</span>
                 </label>
-                <button type="button" class="sketchy-btn next-day-btn" onclick="reprogramarDiaSiguienteProj('${proj._id}')" title="Reprogramar esta proyección para el día siguiente">
-                  📅 Día siguiente ➡️
-                </button>
+                <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <button type="button" class="sketchy-btn next-day-btn" onclick="reprogramarDiaSiguienteProj('${proj._id}')" title="Reprogramar esta proyección para el día siguiente">
+                    ➡️ Día siguiente
+                  </button>
+                  <div class="sketchy-btn calendar-pick-btn" onclick="abrirSelectorFecha('datePickerProj_${proj._id}')" title="Seleccionar una fecha específica en el calendario">
+                    🗓️ Elegir fecha
+                    <input type="date" id="datePickerProj_${proj._id}" class="hidden-date-input" value="${proj.date}" onchange="reprogramarFechaEspecificaProj('${proj._id}', this.value)" />
+                  </div>
+                </div>
               </div>
               <div class="sketchy-btn-row">
                 <button class="sketchy-btn delete" onclick="deleteProj('${proj._id}')">🗑️ Eliminar</button>
