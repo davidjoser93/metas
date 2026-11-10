@@ -254,8 +254,8 @@
     .notebook-target-item {
       display: flex;
       align-items: center;
-      gap: 10px;
-      cursor: pointer;
+      justify-content: space-between;
+      gap: 8px;
       user-select: none;
       border-radius: 4px;
       padding: 0 4px;
@@ -266,7 +266,15 @@
       background-color: rgba(254, 240, 138, 0.45);
     }
 
-    .notebook-target-item.completed {
+    .notebook-target-clickable {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .notebook-target-item.completed .notebook-target-text {
       text-decoration: line-through;
       text-decoration-thickness: 2px;
       opacity: 0.8;
@@ -289,7 +297,7 @@
       transition: transform 0.1s ease, background-color 0.15s ease;
     }
 
-    .notebook-target-item:hover .notebook-checkbox {
+    .notebook-target-clickable:hover .notebook-checkbox {
       transform: scale(1.1);
       background: #fef08a;
     }
@@ -1243,6 +1251,8 @@
   let editingLogId = null;
   let editingProjId = null;
   let addingChecklistGoalId = null;
+  let editingChecklistGoalId = null;
+  let editingChecklistTargetId = null;
 
   // Estados para conservar desplegados los cuadernos al actualizar Firebase
   const expandedNotebookTitles = new Set();
@@ -1903,6 +1913,80 @@
     addingChecklistGoalId = null;
   }
 
+  function startEditChecklistItem(goalId, targetId, groupTitle) {
+    editingChecklistGoalId = goalId;
+    editingChecklistTargetId = targetId;
+    addingChecklistGoalId = null;
+    if (groupTitle) expandedNotebookTitles.add(groupTitle);
+    renderRegistroMetas();
+    setTimeout(() => {
+      const inp = document.getElementById(`editChecklistInput_${goalId}_${targetId}`);
+      if (inp) inp.focus();
+    }, 50);
+  }
+
+  function cancelEditChecklistItem() {
+    editingChecklistGoalId = null;
+    editingChecklistTargetId = null;
+    renderRegistroMetas();
+  }
+
+  function saveEditedChecklistItem(goalId, targetId) {
+    const inp = document.getElementById(`editChecklistInput_${goalId}_${targetId}`);
+    if (!inp) return;
+    const newName = inp.value.trim();
+    if (!newName) return;
+
+    db.ref(`dataGoals/${goalId}/targets/${targetId}`).update({
+      name: newName
+    });
+
+    editingChecklistGoalId = null;
+    editingChecklistTargetId = null;
+  }
+
+  function deleteChecklistItem(goalId, targetId) {
+    db.ref(`dataGoals/${goalId}/targets/${targetId}`).remove();
+    editingChecklistGoalId = null;
+    editingChecklistTargetId = null;
+  }
+
+  function moveChecklistItem(goalId, targetId, direction) {
+    const goalObj = DATA_GOALS.find(g => g._id === goalId);
+    if (!goalObj || !goalObj.targets) return;
+
+    const targets = goalObj.targets;
+    const currIdx = targets.findIndex(t => t._id === targetId);
+    const targetIdx = currIdx + direction;
+
+    if (currIdx < 0 || targetIdx < 0 || targetIdx >= targets.length) return;
+
+    const currTarget = targets[currIdx];
+    const otherTarget = targets[targetIdx];
+
+    const currData = {
+      name: currTarget.name,
+      done: !!currTarget.done
+    };
+    if (currTarget.completedDate !== undefined && currTarget.completedDate !== null) {
+      currData.completedDate = currTarget.completedDate;
+    }
+
+    const otherData = {
+      name: otherTarget.name,
+      done: !!otherTarget.done
+    };
+    if (otherTarget.completedDate !== undefined && otherTarget.completedDate !== null) {
+      otherData.completedDate = otherTarget.completedDate;
+    }
+
+    const updates = {};
+    updates[`dataGoals/${goalId}/targets/${currTarget._id}`] = otherData;
+    updates[`dataGoals/${goalId}/targets/${otherTarget._id}`] = currData;
+
+    db.ref().update(updates);
+  }
+
   // --- ACTUALIZACIÓN DE VISTAS ---
 
   function updateView() {
@@ -2050,16 +2134,44 @@
           }
           
           html += `<ul class="notebook-target-list">`;
-          (g.targets || []).forEach(t => {
-            const isTargetOfThisDay = activeFilterDate && t.completedDate === activeFilterDate;
-            const textStyle = isTargetOfThisDay ? "font-weight: bold; color: #f43f5e;" : "";
-            
-            html += `
-              <li class="notebook-target-item ${t.done ? 'completed' : ''}" onclick="toggleChecklistItem('${g._id}', '${t._id}', ${!t.done})" title="Haz clic para marcar o desmarcar">
-                <span class="notebook-checkbox">${t.done ? '✓' : ''}</span>
-                <span style="${textStyle}">${escapeHtml(t.name)}${t.done && t.completedDate ? ` (${formatShortDateEs(t.completedDate)})` : ''}</span>
-              </li>
-            `;
+          const targetsList = g.targets || [];
+          const showTargetArrows = targetsList.length > 1;
+          targetsList.forEach((t, tIdx) => {
+            if (editingChecklistGoalId === g._id && editingChecklistTargetId === t._id) {
+              html += `
+                <li style="margin: 6px 0; list-style: none;">
+                  <div class="checklist-inline-form">
+                    <input type="text" id="editChecklistInput_${g._id}_${t._id}" class="sketchy-input" value="${escapeHtml(t.name)}" style="flex: 1; min-width: 180px;" onkeydown="if(event.key==='Enter') saveEditedChecklistItem('${g._id}', '${t._id}')" />
+                    <button class="sketchy-btn delete" onclick="deleteChecklistItem('${g._id}', '${t._id}')">🗑️ Eliminar</button>
+                    <button class="sketchy-btn cancel" onclick="cancelEditChecklistItem()">Cancelar</button>
+                    <button class="sketchy-btn save" onclick="saveEditedChecklistItem('${g._id}', '${t._id}')">💾 Guardar</button>
+                  </div>
+                </li>
+              `;
+            } else {
+              const isTargetOfThisDay = activeFilterDate && t.completedDate === activeFilterDate;
+              const textStyle = isTargetOfThisDay ? "font-weight: bold; color: #f43f5e;" : "";
+
+              let arrowHtml = "";
+              if (showTargetArrows) {
+                if (tIdx > 0) {
+                  arrowHtml = `<button class="reorder-arrow-btn" onclick="moveChecklistItem('${g._id}', '${t._id}', -1)" title="Subir ítem">▲</button>`;
+                } else {
+                  arrowHtml = `<span class="reorder-arrow-btn" style="visibility: hidden; pointer-events: none;" aria-hidden="true">▲</span>`;
+                }
+              }
+
+              html += `
+                <li class="notebook-target-item ${t.done ? 'completed' : ''}">
+                  ${arrowHtml}
+                  <div class="notebook-target-clickable" onclick="toggleChecklistItem('${g._id}', '${t._id}', ${!t.done})" title="Haz clic para marcar o desmarcar">
+                    <span class="notebook-checkbox">${t.done ? '✓' : ''}</span>
+                    <span class="notebook-target-text" style="${textStyle}">${escapeHtml(t.name)}${t.done && t.completedDate ? ` (${formatShortDateEs(t.completedDate)})` : ''}</span>
+                  </div>
+                  <button class="edit-pencil-btn" onclick="startEditChecklistItem('${g._id}', '${t._id}', '${safeTitle}')" title="Editar o eliminar ítem del checklist">✏️</button>
+                </li>
+              `;
+            }
           });
           html += `</ul>`;
 
