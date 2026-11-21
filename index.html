@@ -678,6 +678,41 @@
       z-index: 2;
     }
 
+    .bottom-actions-wrap {
+      margin: 15px 0 30px 0;
+    }
+
+    .bottom-actions-bar {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .bottom-actions-center {
+      grid-column: 2;
+      display: flex;
+      justify-content: center;
+    }
+
+    .bottom-actions-right {
+      grid-column: 3;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    @media (max-width: 700px) {
+      .bottom-actions-bar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+      }
+      .bottom-actions-right {
+        justify-content: center;
+      }
+    }
+
     /* Formularios de Apuntes y Edición */
     .sketchy-form-box {
       background: #fdfbf7;
@@ -938,11 +973,20 @@
     <div class="registro-container" id="registroMetasContainer"></div>
   </section>
 
-  <div style="text-align: center; margin: 15px 0 30px 0;">
-    <button id="btnGuardarDrive" class="cal-nav-btn" style="width: auto; padding: 10px 24px; font-size: 1.25rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;" onclick="guardarCambiosEnDrive()">
-      💾 Guardar cambios en Drive
-    </button>
-    <div id="statusGuardado" style="margin-top: 10px; font-size: 1.1rem; font-weight: 700; color: #1e3a8a;"></div>
+  <div class="bottom-actions-wrap">
+    <div class="bottom-actions-bar">
+      <div class="bottom-actions-center">
+        <button id="btnGuardarDrive" class="cal-nav-btn" style="width: auto; height: auto; padding: 10px 24px; font-size: 1.25rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;" onclick="guardarCambiosEnDrive()">
+          💾 Guardar cambios en Drive
+        </button>
+      </div>
+      <div class="bottom-actions-right">
+        <button id="btnPantallaCompleta" class="cal-nav-btn" style="width: auto; height: auto; padding: 10px 18px; font-size: 1.1rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;" onclick="togglePantallaCompleta()" title="Poner la página en pantalla completa">
+          ⛶ Pantalla completa
+        </button>
+      </div>
+    </div>
+    <div id="statusGuardado" style="text-align: center; margin-top: 10px; font-size: 1.1rem; font-weight: 700; color: #1e3a8a;"></div>
   </div>
 </div>
 
@@ -3162,7 +3206,47 @@
       }
     });
 
+    document.addEventListener("fullscreenchange", actualizarTextoBotonFullscreen);
+    document.addEventListener("webkitfullscreenchange", actualizarTextoBotonFullscreen);
+    document.addEventListener("mozfullscreenchange", actualizarTextoBotonFullscreen);
+    document.addEventListener("MSFullscreenChange", actualizarTextoBotonFullscreen);
+
     connectFirebaseRealtime();
+  }
+
+  function togglePantallaCompleta() {
+    const docEl = document.documentElement;
+    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+
+    if (!isFullscreen) {
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(err => console.warn("Error al activar pantalla completa:", err));
+      } else if (docEl.webkitRequestFullscreen) {
+        docEl.webkitRequestFullscreen();
+      } else if (docEl.mozRequestFullScreen) {
+        docEl.mozRequestFullScreen();
+      } else if (docEl.msRequestFullscreen) {
+        docEl.msRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(err => console.warn("Error al salir de pantalla completa:", err));
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
+  }
+
+  function actualizarTextoBotonFullscreen() {
+    const btn = document.getElementById("btnPantallaCompleta");
+    if (!btn) return;
+    const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+    btn.innerHTML = isFullscreen ? "🗗 Salir de pantalla completa" : "⛶ Pantalla completa";
+    btn.title = isFullscreen ? "Salir de pantalla completa" : "Poner la página en pantalla completa";
   }
 
   window.onload = init;
