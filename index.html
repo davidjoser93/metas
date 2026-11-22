@@ -2005,7 +2005,6 @@
     addingChecklistGoalId = goalId;
     if (groupTitle) expandedNotebookTitles.add(groupTitle);
     renderRegistroMetas();
-    renderPendientes();
     setTimeout(() => {
       const inp = document.getElementById(`newChecklistInput_${goalId}`);
       if (inp) inp.focus();
@@ -2330,6 +2329,7 @@
     const isFiltering = activeFilterGroupTitle !== null || activeFilterMeta !== null || activeFilterDate !== null;
 
     renderRegistroMetas();
+    renderPendientes();
 
     const sectionMonth = document.getElementById("sectionMonth");
     const sectionGlobal = document.getElementById("sectionGlobal");
