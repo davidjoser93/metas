@@ -621,26 +621,33 @@
     }
 
     .sortable-ghost {
-      opacity: 0.35 !important;
-      background: rgba(254, 240, 138, 0.55) !important;
-      border: 2px dashed #3b82f6 !important;
-      border-radius: 6px !important;
+      opacity: 1 !important;
+      background: rgba(219, 234, 254, 0.85) !important;
+      border: 2px dashed #2563eb !important;
+      border-left: 2px dashed #2563eb !important;
+      border-radius: 8px !important;
+      box-shadow: inset 0 0 8px rgba(37, 99, 235, 0.15) !important;
+    }
+
+    .sortable-ghost > * {
+      opacity: 0.15 !important;
     }
 
     .sortable-chosen {
-      background: rgba(254, 249, 195, 0.65) !important;
-      border-radius: 6px;
+      border-radius: 8px;
     }
 
+    .sortable-fallback,
     .sortable-drag {
       opacity: 0.96 !important;
       background: #fffbeb !important;
       border: 2px solid #1e293b !important;
       border-radius: 8px !important;
-      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.22) !important;
-      transform: scale(1.02) rotate(-0.35deg);
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.28) !important;
       cursor: grabbing !important;
-      z-index: 9999 !important;
+      z-index: 10000 !important;
+      transition: none !important;
+      pointer-events: none !important;
     }
 
     .sortable-logs-list,
@@ -728,7 +735,7 @@
       padding: 6px 10px;
       border-radius: 8px;
       border-left: 4px solid transparent;
-      transition: filter 0.15s ease, transform 0.15s ease;
+      transition: filter 0.15s ease;
     }
 
     .pendiente-item-row:hover {
@@ -1625,7 +1632,6 @@
       });
     }
 
-    isAddingApunte = false;
     newApunteCategory = "";
     newApunteText = "";
     newApunteIsProjection = false;
@@ -1634,7 +1640,6 @@
   function startEditApunte(logId) {
     editingLogId = logId;
     editingProjId = null;
-    isAddingApunte = false;
     updateView();
   }
 
@@ -1681,7 +1686,6 @@
   function startEditProj(projId) {
     editingProjId = projId;
     editingLogId = null;
-    isAddingApunte = false;
     updateView();
   }
 
@@ -2142,6 +2146,8 @@
 
   function cancelAddChecklistForm() {
     addingChecklistGoalId = null;
+    editingChecklistGoalId = null;
+    editingChecklistTargetId = null;
     renderRegistroMetas();
   }
 
@@ -2156,13 +2162,13 @@
       done: false
     });
 
-    addingChecklistGoalId = null;
+    inp.value = "";
   }
 
   function startEditChecklistItem(goalId, targetId, groupTitle) {
     editingChecklistGoalId = goalId;
     editingChecklistTargetId = targetId;
-    addingChecklistGoalId = null;
+    addingChecklistGoalId = goalId;
     if (groupTitle) expandedNotebookTitles.add(groupTitle);
     renderRegistroMetas();
     setTimeout(() => {
@@ -2264,14 +2270,12 @@
       text: textVal
     });
 
-    isAddingPendiente = false;
     newPendienteCategory = "";
     newPendienteText = "";
   }
 
   function startEditPendiente(pendId) {
     editingPendienteId = pendId;
-    isAddingPendiente = false;
     renderPendientes();
     setTimeout(() => {
       const txt = document.getElementById(`editPendTxt_${pendId}`);
@@ -2386,13 +2390,14 @@
       return;
     }
 
-    const canSort = PENDIENTES.length > 1 && editingPendienteId === null;
+    const isEditMode = isAddingPendiente;
+    const canSort = isEditMode && PENDIENTES.length > 1 && editingPendienteId === null;
     let html = "";
 
     PENDIENTES.forEach((item) => {
       const conf = GOAL_CONFIG[item.meta] || { color: "#1e293b" };
 
-      if (editingPendienteId === item._id) {
+      if (isEditMode && editingPendienteId === item._id) {
         const catOptions = CATEGORIES_LIST.map(cat =>
           `<option value="${escapeHtml(cat)}" ${item.meta === cat ? "selected" : ""}>${escapeHtml(cat)}</option>`
         ).join("");
@@ -2422,7 +2427,7 @@
             <div class="pendiente-item-content">
               <span class="pendiente-item-text">${escapeHtml(item.text)}</span>
             </div>
-            <button class="edit-pencil-btn" onclick="startEditPendiente('${item._id}')" title="Editar o eliminar pendiente">✏️</button>
+            ${isEditMode ? `<button class="edit-pencil-btn" onclick="startEditPendiente('${item._id}')" title="Editar o eliminar pendiente">✏️</button>` : ""}
           </div>
         `;
       }
@@ -2440,6 +2445,7 @@
         animation: 180,
         forceFallback: true,
         fallbackOnBody: true,
+        fallbackClass: "sortable-fallback",
         swapThreshold: 0.65,
         ghostClass: "sortable-ghost",
         chosenClass: "sortable-chosen",
@@ -2601,10 +2607,11 @@
           }
           
           const targetsList = g.targets || [];
-          const canSortTargets = targetsList.length > 1 && editingChecklistGoalId !== g._id;
+          const isChecklistEditMode = addingChecklistGoalId === g._id;
+          const canSortTargets = isChecklistEditMode && targetsList.length > 1 && editingChecklistGoalId !== g._id;
           html += `<ul class="notebook-target-list" data-goal-id="${g._id}" data-sortable-checklist="${canSortTargets ? 'true' : 'false'}">`;
           targetsList.forEach((t) => {
-            if (editingChecklistGoalId === g._id && editingChecklistTargetId === t._id) {
+            if (isChecklistEditMode && editingChecklistGoalId === g._id && editingChecklistTargetId === t._id) {
               html += `
                 <li style="margin: 6px 0; list-style: none;">
                   <div class="checklist-inline-form">
@@ -2627,7 +2634,7 @@
                     <span class="notebook-checkbox">${t.done ? '✓' : ''}</span>
                     <span class="notebook-target-text" style="${textStyle}">${escapeHtml(t.name)}${t.done && t.completedDate ? ` (${formatShortDateEs(t.completedDate)})` : ''}</span>
                   </div>
-                  <button class="edit-pencil-btn" onclick="startEditChecklistItem('${g._id}', '${t._id}', '${safeTitle}')" title="Editar o eliminar ítem del checklist">✏️</button>
+                  ${isChecklistEditMode ? `<button class="edit-pencil-btn" onclick="startEditChecklistItem('${g._id}', '${t._id}', '${safeTitle}')" title="Editar o eliminar ítem del checklist">✏️</button>` : ""}
                 </li>
               `;
             }
@@ -2641,12 +2648,12 @@
               <div class="checklist-inline-form">
                 <input type="text" id="newChecklistInput_${g._id}" class="sketchy-input" placeholder="Nuevo ítem para ${escapeHtml(g.title)}..." style="flex: 1; min-width: 180px;" onkeydown="if(event.key==='Enter') saveNewChecklistItem('${g._id}')" />
                 <button class="sketchy-btn save" onclick="saveNewChecklistItem('${g._id}')">Guardar</button>
-                <button class="sketchy-btn cancel" onclick="cancelAddChecklistForm()">Cancelar</button>
+                <button class="sketchy-btn cancel" onclick="cancelAddChecklistForm()">Listo</button>
               </div>
             `;
           } else {
             html += `
-              <button class="checklist-add-trigger" onclick="openAddChecklistForm('${g._id}', '${safeTitle}')">+ Añadir ítem al checklist</button>
+              <button class="checklist-add-trigger" onclick="openAddChecklistForm('${g._id}', '${safeTitle}')">+ Añadir / Editar ítems</button>
             `;
           }
           html += `</div></div>`;
@@ -2695,6 +2702,7 @@
             animation: 180,
             forceFallback: true,
             fallbackOnBody: true,
+            fallbackClass: "sortable-fallback",
             swapThreshold: 0.65,
             ghostClass: "sortable-ghost",
             chosenClass: "sortable-chosen",
@@ -2967,7 +2975,8 @@
       container._sortableInstance = null;
     }
 
-    const canSortCategories = Boolean(filterDate && catKeys.length > 1 && editingLogId === null && editingProjId === null);
+    const isDayEditMode = Boolean(filterDate && isAddingApunte);
+    const canSortCategories = Boolean(isDayEditMode && catKeys.length > 1 && editingLogId === null && editingProjId === null);
 
     catKeys.forEach((meta) => {
       const groupData = grouped[meta];
@@ -2990,7 +2999,7 @@
       `;
 
       // Renderizado de Apuntes Realizados
-      const canSortLogs = Boolean(filterDate && groupData.logs.length > 1 && editingLogId === null);
+      const canSortLogs = Boolean(isDayEditMode && groupData.logs.length > 1 && editingLogId === null);
       if (groupData.logs.length > 0) {
         html += `<div class="sortable-logs-list" data-meta="${escapeHtml(meta)}" data-date="${filterDate || ''}" data-sortable-logs="${canSortLogs ? 'true' : 'false'}">`;
         groupData.logs.forEach((log) => {
@@ -3041,7 +3050,7 @@
                   <span>${textSpan}</span>
                   ${dateSpan}
                 </div>
-                <button class="edit-pencil-btn" onclick="startEditApunte('${log._id}')" title="Editar o eliminar apunte">✏️</button>
+                ${isDayEditMode ? `<button class="edit-pencil-btn" onclick="startEditApunte('${log._id}')" title="Editar o eliminar apunte">✏️</button>` : ""}
               </div>
             `;
           }
@@ -3050,7 +3059,7 @@
       }
 
       // Renderizado de Proyecciones con botón de lápiz para editar
-      const canSortProjs = Boolean(filterDate && groupData.projs.length > 1 && editingProjId === null);
+      const canSortProjs = Boolean(isDayEditMode && groupData.projs.length > 1 && editingProjId === null);
       if (groupData.projs.length > 0) {
         html += `<div class="sortable-projs-list" data-meta="${escapeHtml(meta)}" data-date="${filterDate || ''}" data-sortable-projs="${canSortProjs ? 'true' : 'false'}">`;
         groupData.projs.forEach((proj) => {
@@ -3100,7 +3109,7 @@
                   <span><strong style="background: rgba(254, 240, 138, 0.6); padding: 1px 4px; border-radius: 3px;">[Proyección]</strong> ${escapeHtml(proj.word)}</span>
                   ${dateSpan}
                 </div>
-                <button class="edit-pencil-btn" onclick="startEditProj('${proj._id}')" title="Editar o eliminar proyección">✏️</button>
+                ${isDayEditMode ? `<button class="edit-pencil-btn" onclick="startEditProj('${proj._id}')" title="Editar o eliminar proyección">✏️</button>` : ""}
               </div>
             `;
           }
@@ -3120,6 +3129,7 @@
             animation: 180,
             forceFallback: true,
             fallbackOnBody: true,
+            fallbackClass: "sortable-fallback",
             swapThreshold: 0.65,
             ghostClass: "sortable-ghost",
             chosenClass: "sortable-chosen",
@@ -3140,6 +3150,7 @@
             animation: 180,
             forceFallback: true,
             fallbackOnBody: true,
+            fallbackClass: "sortable-fallback",
             swapThreshold: 0.65,
             ghostClass: "sortable-ghost",
             chosenClass: "sortable-chosen",
@@ -3161,6 +3172,7 @@
         animation: 180,
         forceFallback: true,
         fallbackOnBody: true,
+        fallbackClass: "sortable-fallback",
         swapThreshold: 0.65,
         ghostClass: "sortable-ghost",
         chosenClass: "sortable-chosen",
