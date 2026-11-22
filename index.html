@@ -678,6 +678,63 @@
       z-index: 2;
     }
 
+    .month-right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .pendientes-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pendiente-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 4px 6px;
+      border-bottom: 1px dashed #cbd5e1;
+      border-radius: 4px;
+      transition: background-color 0.12s ease;
+    }
+
+    .pendiente-item-row:last-child {
+      border-bottom: none;
+    }
+
+    .pendiente-item-row:hover {
+      background-color: rgba(254, 240, 138, 0.35);
+    }
+
+    .pendiente-item-content {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .pendiente-cat-badge {
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 1px 8px;
+      border: 1.5px solid;
+      border-radius: 12px;
+      background: #ffffff;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .pendiente-item-text {
+      font-size: 1rem;
+      color: var(--text);
+      word-break: break-word;
+    }
+
     .bottom-actions-wrap {
       margin: 15px 0 30px 0;
     }
@@ -934,18 +991,29 @@
       </div>
       <div class="calendar-grid" id="calendarGrid"></div>
     </div>
-    <div class="sketchy-panel" id="monthRightPanel">
-      <div class="panel-header nav-header" id="monthRightHeader">
-        <span style="width: 40px;" id="monthRightSpacer"></span>
-        <span id="monthRightTitle" class="cal-nav-title">Distribución de Octubre</span>
-        <button class="cal-nav-btn" id="addApunteBtn" style="display: none;" onclick="toggleAddApunteForm()" title="Añadir apunte o proyección del día">+</button>
-      </div>
-      <div id="monthChartsWrap" style="display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100%;">
-        <div class="canvas-container">
-          <canvas id="pieMonthCanvas" width="480" height="230"></canvas>
+    <div class="month-right-column">
+      <div class="sketchy-panel" id="monthRightPanel">
+        <div class="panel-header nav-header" id="monthRightHeader">
+          <span style="width: 40px;" id="monthRightSpacer"></span>
+          <span id="monthRightTitle" class="cal-nav-title">Distribución de Octubre</span>
+          <button class="cal-nav-btn" id="addApunteBtn" style="display: none;" onclick="toggleAddApunteForm()" title="Añadir apunte o proyección del día">+</button>
         </div>
+        <div id="monthChartsWrap" style="display: flex; flex-direction: column; gap: 20px; align-items: center; justify-content: center; height: 100%;">
+          <div class="canvas-container">
+            <canvas id="pieMonthCanvas" width="480" height="230"></canvas>
+          </div>
+        </div>
+        <div class="log-list-container" id="listMonth" style="display: none;"></div>
       </div>
-      <div class="log-list-container" id="listMonth" style="display: none;"></div>
+
+      <div class="sketchy-panel" id="pendientesPanel">
+        <div class="panel-header nav-header">
+          <span style="width: 40px;"></span>
+          <span class="cal-nav-title">Pendientes</span>
+          <button class="cal-nav-btn" id="addPendienteBtn" onclick="toggleAddPendienteForm()" title="Añadir pendiente">+</button>
+        </div>
+        <div class="pendientes-list-container" id="pendientesContainer"></div>
+      </div>
     </div>
   </section>
 
@@ -1230,6 +1298,7 @@
   let CALENDAR_LOGS = [];
   let FUTURE_PROJECTIONS = [];
   let DAY_CATEGORY_ORDER = {};
+  let PENDIENTES = [];
 
   const customGroups = [
     { 
@@ -1297,6 +1366,10 @@
   let addingChecklistGoalId = null;
   let editingChecklistGoalId = null;
   let editingChecklistTargetId = null;
+  let isAddingPendiente = false;
+  let newPendienteCategory = "";
+  let newPendienteText = "";
+  let editingPendienteId = null;
 
   // Estados para conservar desplegados los cuadernos al actualizar Firebase
   const expandedNotebookTitles = new Set();
@@ -1932,6 +2005,7 @@
     addingChecklistGoalId = goalId;
     if (groupTitle) expandedNotebookTitles.add(groupTitle);
     renderRegistroMetas();
+    renderPendientes();
     setTimeout(() => {
       const inp = document.getElementById(`newChecklistInput_${goalId}`);
       if (inp) inp.focus();
@@ -2029,6 +2103,214 @@
     updates[`dataGoals/${goalId}/targets/${otherTarget._id}`] = currData;
 
     db.ref().update(updates);
+  }
+
+  // --- FUNCIONES DE PENDIENTES EN FIREBASE ---
+
+  function toggleAddPendienteForm() {
+    isAddingPendiente = !isAddingPendiente;
+    editingPendienteId = null;
+    if (!isAddingPendiente) {
+      newPendienteCategory = "";
+      newPendienteText = "";
+    }
+    renderPendientes();
+  }
+
+  function onSelectNewPendienteCategory(selectEl) {
+    newPendienteCategory = selectEl.value;
+    renderPendientes();
+    setTimeout(() => {
+      const txt = document.getElementById("newPendienteTextInput");
+      if (txt) txt.focus();
+    }, 50);
+  }
+
+  function saveNewPendiente() {
+    const txtEl = document.getElementById("newPendienteTextInput");
+    const textVal = txtEl ? txtEl.value.trim() : newPendienteText.trim();
+    if (!newPendienteCategory || !textVal) return;
+
+    db.ref("pendientes").push({
+      meta: newPendienteCategory,
+      text: textVal
+    });
+
+    isAddingPendiente = false;
+    newPendienteCategory = "";
+    newPendienteText = "";
+  }
+
+  function startEditPendiente(pendId) {
+    editingPendienteId = pendId;
+    isAddingPendiente = false;
+    renderPendientes();
+    setTimeout(() => {
+      const txt = document.getElementById(`editPendTxt_${pendId}`);
+      if (txt) txt.focus();
+    }, 50);
+  }
+
+  function cancelEditPendiente() {
+    editingPendienteId = null;
+    renderPendientes();
+  }
+
+  function saveEditedPendiente(pendId) {
+    const catEl = document.getElementById(`editPendCat_${pendId}`);
+    const txtEl = document.getElementById(`editPendTxt_${pendId}`);
+    if (!catEl || !txtEl) return;
+
+    const newCat = catEl.value;
+    const newTxt = txtEl.value.trim();
+    if (!newCat || !newTxt) return;
+
+    db.ref(`pendientes/${pendId}`).update({
+      meta: newCat,
+      text: newTxt
+    });
+
+    editingPendienteId = null;
+  }
+
+  function deletePendiente(pendId) {
+    db.ref(`pendientes/${pendId}`).remove();
+    editingPendienteId = null;
+  }
+
+  function movePendiente(pendId, direction) {
+    const currIdx = PENDIENTES.findIndex(p => p._id === pendId);
+    const targetIdx = currIdx + direction;
+    if (currIdx < 0 || targetIdx < 0 || targetIdx >= PENDIENTES.length) return;
+
+    const currItem = PENDIENTES[currIdx];
+    const targetItem = PENDIENTES[targetIdx];
+
+    const updates = {};
+    updates[`pendientes/${currItem._id}`] = {
+      meta: targetItem.meta,
+      text: targetItem.text
+    };
+    updates[`pendientes/${targetItem._id}`] = {
+      meta: currItem.meta,
+      text: currItem.text
+    };
+
+    db.ref().update(updates);
+  }
+
+  function renderPendientes() {
+    const container = document.getElementById("pendientesContainer");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const addBtn = document.getElementById("addPendienteBtn");
+    if (addBtn) {
+      addBtn.textContent = isAddingPendiente ? "×" : "+";
+    }
+
+    if (isAddingPendiente) {
+      const addBox = document.createElement("div");
+      addBox.className = "sketchy-form-box";
+      addBox.style.marginBottom = "8px";
+
+      const optionsHtml = CATEGORIES_LIST.map(cat =>
+        `<option value="${escapeHtml(cat)}" ${newPendienteCategory === cat ? "selected" : ""}>${escapeHtml(cat)}</option>`
+      ).join("");
+
+      let formHtml = `
+        <div style="font-weight: 700; color: var(--pen-color);">Nuevo pendiente:</div>
+        <select class="sketchy-select" onchange="onSelectNewPendienteCategory(this)">
+          <option value="" ${newPendienteCategory === "" ? "selected" : ""} disabled>-- 1. Selecciona la categoría --</option>
+          ${optionsHtml}
+        </select>
+      `;
+
+      if (newPendienteCategory) {
+        formHtml += `
+          <textarea id="newPendienteTextInput" class="sketchy-textarea" placeholder="2. Escribe una pequeña descripción..." oninput="newPendienteText = this.value">${escapeHtml(newPendienteText)}</textarea>
+          <div class="sketchy-btn-row">
+            <button class="sketchy-btn cancel" onclick="toggleAddPendienteForm()">Cancelar</button>
+            <button class="sketchy-btn save" onclick="saveNewPendiente()">💾 Guardar</button>
+          </div>
+        `;
+      } else {
+        formHtml += `
+          <div class="sketchy-btn-row">
+            <button class="sketchy-btn cancel" onclick="toggleAddPendienteForm()">Cancelar</button>
+          </div>
+        `;
+      }
+
+      addBox.innerHTML = formHtml;
+      container.appendChild(addBox);
+    }
+
+    if (PENDIENTES.length === 0) {
+      if (!isAddingPendiente) {
+        const emptyMsg = document.createElement("div");
+        emptyMsg.style.fontStyle = "italic";
+        emptyMsg.style.color = "var(--text-muted)";
+        emptyMsg.style.textAlign = "center";
+        emptyMsg.textContent = "Sin pendientes anotados. Presiona '+' arriba a la derecha para agregar uno.";
+        container.appendChild(emptyMsg);
+      }
+      return;
+    }
+
+    const showArrows = PENDIENTES.length > 1;
+    let html = "";
+
+    PENDIENTES.forEach((item, idx) => {
+      const conf = GOAL_CONFIG[item.meta] || { color: "#1e293b" };
+
+      if (editingPendienteId === item._id) {
+        const catOptions = CATEGORIES_LIST.map(cat =>
+          `<option value="${escapeHtml(cat)}" ${item.meta === cat ? "selected" : ""}>${escapeHtml(cat)}</option>`
+        ).join("");
+
+        html += `
+          <div class="sketchy-form-box" style="margin: 6px 0;">
+            <label style="font-size: 0.9rem; font-weight: 700;">Categoría:</label>
+            <select id="editPendCat_${item._id}" class="sketchy-select">
+              ${catOptions}
+            </select>
+            <label style="font-size: 0.9rem; font-weight: 700;">Descripción:</label>
+            <textarea id="editPendTxt_${item._id}" class="sketchy-textarea">${escapeHtml(item.text)}</textarea>
+            <div class="sketchy-btn-row">
+              <button class="sketchy-btn delete" onclick="deletePendiente('${item._id}')">🗑️ Eliminar</button>
+              <button class="sketchy-btn cancel" onclick="cancelEditPendiente()">Cancelar</button>
+              <button class="sketchy-btn save" onclick="saveEditedPendiente('${item._id}')">💾 Guardar</button>
+            </div>
+          </div>
+        `;
+      } else {
+        let arrowHtml = "";
+        if (showArrows) {
+          if (idx > 0) {
+            arrowHtml = `<button class="reorder-arrow-btn" onclick="movePendiente('${item._id}', -1)" title="Subir pendiente">▲</button>`;
+          } else {
+            arrowHtml = `<span class="reorder-arrow-btn" style="visibility: hidden; pointer-events: none;" aria-hidden="true">▲</span>`;
+          }
+        }
+
+        html += `
+          <div class="pendiente-item-row">
+            ${arrowHtml}
+            <div class="pendiente-item-content">
+              <span class="pendiente-cat-badge" style="border-color: ${conf.color}; color: ${conf.color};">${escapeHtml(item.meta)}</span>
+              <span class="pendiente-item-text">${escapeHtml(item.text)}</span>
+            </div>
+            <button class="edit-pencil-btn" onclick="startEditPendiente('${item._id}')" title="Editar o eliminar pendiente">✏️</button>
+          </div>
+        `;
+      }
+    });
+
+    const listWrap = document.createElement("div");
+    listWrap.className = "pendientes-list-container";
+    listWrap.innerHTML = html;
+    container.appendChild(listWrap);
   }
 
   // --- ACTUALIZACIÓN DE VISTAS ---
@@ -3112,6 +3394,15 @@
 
       DAY_CATEGORY_ORDER = data.dayCategoryOrder || {};
 
+      PENDIENTES = [];
+      if (data.pendientes) {
+        Object.entries(data.pendientes).forEach(([pKey, pVal]) => {
+          if (pVal && pVal.text) {
+            PENDIENTES.push({ ...pVal, _id: pKey });
+          }
+        });
+      }
+
       updateView();
     });
   }
@@ -3155,12 +3446,19 @@
         return copy;
       });
 
+      const cleanPendientes = PENDIENTES.map(p => {
+        const copy = { ...p };
+        delete copy._id;
+        return copy;
+      });
+
       const payload = {
         fechaExportacion: new Date().toISOString(),
         dayCategoryOrder: DAY_CATEGORY_ORDER,
         dataGoals: cleanGoals,
         calendarLogs: cleanLogs,
-        futureProjections: cleanProjections
+        futureProjections: cleanProjections,
+        pendientes: cleanPendientes
       };
 
       await fetch(WEB_APP_URL, {
