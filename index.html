@@ -725,18 +725,14 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding: 4px 6px;
-      border-bottom: 1px dashed #cbd5e1;
-      border-radius: 4px;
-      transition: background-color 0.12s ease;
-    }
-
-    .pendiente-item-row:last-child {
-      border-bottom: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border-left: 4px solid transparent;
+      transition: filter 0.15s ease, transform 0.15s ease;
     }
 
     .pendiente-item-row:hover {
-      background-color: rgba(254, 240, 138, 0.35);
+      filter: brightness(0.97);
     }
 
     .pendiente-item-content {
@@ -1883,6 +1879,16 @@
     editingProjId = null;
   }
 
+  function hexToPastelRgba(hex, alpha) {
+    if (!hex || typeof hex !== "string") return `rgba(226, 232, 240, ${alpha})`;
+    const clean = hex.replace("#", "");
+    if (clean.length !== 6) return `rgba(226, 232, 240, ${alpha})`;
+    const r = parseInt(clean.substring(0, 2), 16);
+    const g = parseInt(clean.substring(2, 4), 16);
+    const b = parseInt(clean.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
   function getDragHandleHtml(extraClass, titleText) {
     const cls = extraClass ? `drag-handle ${extraClass}` : "drag-handle";
     const ttl = titleText || "Mantén presionado y arrastra para reordenar";
@@ -2409,11 +2415,11 @@
       } else {
         const handleHtml = canSort ? getDragHandleHtml("item-drag-handle", "Mantén presionado y arrastra para reordenar") : "";
 
+        const pastelBg = hexToPastelRgba(conf.color, 0.16);
         html += `
-          <div class="pendiente-item-row" data-pend-id="${item._id}">
+          <div class="pendiente-item-row" data-pend-id="${item._id}" style="background-color: ${pastelBg}; border-left-color: ${conf.color};" title="Categoría: ${escapeHtml(item.meta)}">
             ${handleHtml}
             <div class="pendiente-item-content">
-              <span class="pendiente-cat-badge" style="border-color: ${conf.color}; color: ${conf.color};">${escapeHtml(item.meta)}</span>
               <span class="pendiente-item-text">${escapeHtml(item.text)}</span>
             </div>
             <button class="edit-pencil-btn" onclick="startEditPendiente('${item._id}')" title="Editar o eliminar pendiente">✏️</button>
