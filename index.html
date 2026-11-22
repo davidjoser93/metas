@@ -588,36 +588,66 @@
       transform: scale(1.08);
     }
 
-    .reorder-arrow-btn {
-      background: #ffffff;
-      border: 1.5px solid #94a3b8;
-      border-radius: 4px;
-      color: #334155;
-      cursor: pointer;
-      font-size: 0.75rem;
-      line-height: 1;
-      padding: 2px 6px;
-      font-weight: 700;
-      transition: all 0.15s ease;
+    .drag-handle {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      padding: 4px 5px;
+      border-radius: 5px;
+      color: #64748b;
+      cursor: grab;
+      touch-action: none;
       user-select: none;
+      -webkit-user-select: none;
+      flex-shrink: 0;
+      transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
     }
 
-    .reorder-arrow-btn:hover {
+    .drag-handle:hover {
       background: #fef08a;
-      border-color: #1e293b;
+      color: #0f172a;
+      transform: scale(1.08);
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+      background: #fde047;
       color: #0f172a;
       transform: scale(1.12);
     }
 
-    .cat-reorder-btn {
-      padding: 3px 8px;
-      font-size: 0.85rem;
-      border-radius: 5px;
-      border-color: #64748b;
+    .cat-drag-handle {
+      padding: 4px 6px;
+    }
+
+    .sortable-ghost {
+      opacity: 0.35 !important;
+      background: rgba(254, 240, 138, 0.55) !important;
+      border: 2px dashed #3b82f6 !important;
+      border-radius: 6px !important;
+    }
+
+    .sortable-chosen {
+      background: rgba(254, 249, 195, 0.65) !important;
+      border-radius: 6px;
+    }
+
+    .sortable-drag {
+      opacity: 0.96 !important;
+      background: #fffbeb !important;
+      border: 2px solid #1e293b !important;
+      border-radius: 8px !important;
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.22) !important;
+      transform: scale(1.02) rotate(-0.35deg);
+      cursor: grabbing !important;
+      z-index: 9999 !important;
+    }
+
+    .sortable-logs-list,
+    .sortable-projs-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
 
     .next-day-btn {
@@ -1061,6 +1091,8 @@
 <!-- SDK de Firebase (Compat para uso directo en HTML) -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<!-- SortableJS para reordenamiento táctil y con ratón (pull and hold) -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js"></script>
 
 <script>
   // Configuración de Firebase del proyecto cuaderno-metas
@@ -1851,6 +1883,97 @@
     editingProjId = null;
   }
 
+  function getDragHandleHtml(extraClass, titleText) {
+    const cls = extraClass ? `drag-handle ${extraClass}` : "drag-handle";
+    const ttl = titleText || "Mantén presionado y arrastra para reordenar";
+    return `<span class="${cls}" title="${ttl}" aria-label="${ttl}"><svg width="16" height="14" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="2" y1="4.5" x2="14" y2="4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="2" y1="9.5" x2="14" y2="9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>`;
+  }
+
+  function persistLogsOrder(dateStr, meta, newOrderedIds) {
+    const sameGroup = CALENDAR_LOGS.filter(l => l.date === dateStr && l.meta === meta);
+    if (sameGroup.length !== newOrderedIds.length) return;
+
+    const byId = {};
+    sameGroup.forEach(l => { byId[l._id] = l; });
+
+    const originalKeys = sameGroup.map(l => l._id);
+    const updates = {};
+    newOrderedIds.forEach((id, idx) => {
+      const item = byId[id];
+      if (!item) return;
+      const payload = { date: item.date, meta: item.meta, text: item.text };
+      if (item.isCompletion !== undefined) payload.isCompletion = item.isCompletion;
+      updates[`calendarLogs/${originalKeys[idx]}`] = payload;
+    });
+    db.ref().update(updates);
+  }
+
+  function persistProjsOrder(dateStr, meta, newOrderedIds) {
+    const sameGroup = FUTURE_PROJECTIONS.filter(p => p.date === dateStr && p.meta === meta);
+    if (sameGroup.length !== newOrderedIds.length) return;
+
+    const byId = {};
+    sameGroup.forEach(p => { byId[p._id] = p; });
+
+    const originalKeys = sameGroup.map(p => p._id);
+    const updates = {};
+    newOrderedIds.forEach((id, idx) => {
+      const item = byId[id];
+      if (!item) return;
+      const payload = { date: item.date, meta: item.meta, word: item.word };
+      if (item.done !== undefined) payload.done = item.done;
+      updates[`futureProjections/${originalKeys[idx]}`] = payload;
+    });
+    db.ref().update(updates);
+  }
+
+  function persistChecklistOrder(goalId, newOrderedIds) {
+    const goalObj = DATA_GOALS.find(g => g._id === goalId);
+    if (!goalObj || !goalObj.targets || goalObj.targets.length !== newOrderedIds.length) return;
+
+    const byId = {};
+    goalObj.targets.forEach(t => { byId[t._id] = t; });
+
+    const originalKeys = goalObj.targets.map(t => t._id);
+    const updates = {};
+    newOrderedIds.forEach((id, idx) => {
+      const item = byId[id];
+      if (!item) return;
+      const payload = { name: item.name, done: !!item.done };
+      if (item.completedDate !== undefined && item.completedDate !== null) {
+        payload.completedDate = item.completedDate;
+      }
+      updates[`dataGoals/${goalId}/targets/${originalKeys[idx]}`] = payload;
+    });
+    db.ref().update(updates);
+  }
+
+  function persistPendientesOrder(newOrderedIds) {
+    if (PENDIENTES.length !== newOrderedIds.length) return;
+
+    const byId = {};
+    PENDIENTES.forEach(p => { byId[p._id] = p; });
+
+    const originalKeys = PENDIENTES.map(p => p._id);
+    const updates = {};
+    newOrderedIds.forEach((id, idx) => {
+      const item = byId[id];
+      if (!item) return;
+      updates[`pendientes/${originalKeys[idx]}`] = {
+        meta: item.meta,
+        text: item.text
+      };
+    });
+    db.ref().update(updates);
+  }
+
+  function persistDayCategoryOrder(dateStr, newCategoryOrder) {
+    if (!dateStr || !newCategoryOrder || newCategoryOrder.length === 0) return;
+    if (!DAY_CATEGORY_ORDER) DAY_CATEGORY_ORDER = {};
+    DAY_CATEGORY_ORDER[dateStr] = newCategoryOrder;
+    db.ref(`dayCategoryOrder/${dateStr}`).set(newCategoryOrder);
+  }
+
   function moveLog(logId, direction) {
     const currentLog = CALENDAR_LOGS.find(l => l._id === logId);
     if (!currentLog) return;
@@ -2257,10 +2380,10 @@
       return;
     }
 
-    const showArrows = PENDIENTES.length > 1;
+    const canSort = PENDIENTES.length > 1 && editingPendienteId === null;
     let html = "";
 
-    PENDIENTES.forEach((item, idx) => {
+    PENDIENTES.forEach((item) => {
       const conf = GOAL_CONFIG[item.meta] || { color: "#1e293b" };
 
       if (editingPendienteId === item._id) {
@@ -2284,18 +2407,11 @@
           </div>
         `;
       } else {
-        let arrowHtml = "";
-        if (showArrows) {
-          if (idx > 0) {
-            arrowHtml = `<button class="reorder-arrow-btn" onclick="movePendiente('${item._id}', -1)" title="Subir pendiente">▲</button>`;
-          } else {
-            arrowHtml = `<span class="reorder-arrow-btn" style="visibility: hidden; pointer-events: none;" aria-hidden="true">▲</span>`;
-          }
-        }
+        const handleHtml = canSort ? getDragHandleHtml("item-drag-handle", "Mantén presionado y arrastra para reordenar") : "";
 
         html += `
-          <div class="pendiente-item-row">
-            ${arrowHtml}
+          <div class="pendiente-item-row" data-pend-id="${item._id}">
+            ${handleHtml}
             <div class="pendiente-item-content">
               <span class="pendiente-cat-badge" style="border-color: ${conf.color}; color: ${conf.color};">${escapeHtml(item.meta)}</span>
               <span class="pendiente-item-text">${escapeHtml(item.text)}</span>
@@ -2310,6 +2426,25 @@
     listWrap.className = "pendientes-list-container";
     listWrap.innerHTML = html;
     container.appendChild(listWrap);
+
+    if (canSort && typeof Sortable !== "undefined") {
+      Sortable.create(listWrap, {
+        handle: ".item-drag-handle",
+        draggable: ".pendiente-item-row",
+        animation: 180,
+        forceFallback: true,
+        fallbackOnBody: true,
+        swapThreshold: 0.65,
+        ghostClass: "sortable-ghost",
+        chosenClass: "sortable-chosen",
+        dragClass: "sortable-drag",
+        onEnd: (evt) => {
+          if (evt.oldIndex === evt.newIndex) return;
+          const newOrder = Array.from(listWrap.querySelectorAll(".pendiente-item-row")).map(el => el.dataset.pendId);
+          persistPendientesOrder(newOrder);
+        }
+      });
+    }
   }
 
   // --- ACTUALIZACIÓN DE VISTAS ---
@@ -2459,10 +2594,10 @@
             html += `<div class="notebook-checklist-title">${escapeHtml(g.title)}:</div>`;
           }
           
-          html += `<ul class="notebook-target-list">`;
           const targetsList = g.targets || [];
-          const showTargetArrows = targetsList.length > 1;
-          targetsList.forEach((t, tIdx) => {
+          const canSortTargets = targetsList.length > 1 && editingChecklistGoalId !== g._id;
+          html += `<ul class="notebook-target-list" data-goal-id="${g._id}" data-sortable-checklist="${canSortTargets ? 'true' : 'false'}">`;
+          targetsList.forEach((t) => {
             if (editingChecklistGoalId === g._id && editingChecklistTargetId === t._id) {
               html += `
                 <li style="margin: 6px 0; list-style: none;">
@@ -2477,19 +2612,11 @@
             } else {
               const isTargetOfThisDay = activeFilterDate && t.completedDate === activeFilterDate;
               const textStyle = isTargetOfThisDay ? "font-weight: bold; color: #f43f5e;" : "";
-
-              let arrowHtml = "";
-              if (showTargetArrows) {
-                if (tIdx > 0) {
-                  arrowHtml = `<button class="reorder-arrow-btn" onclick="moveChecklistItem('${g._id}', '${t._id}', -1)" title="Subir ítem">▲</button>`;
-                } else {
-                  arrowHtml = `<span class="reorder-arrow-btn" style="visibility: hidden; pointer-events: none;" aria-hidden="true">▲</span>`;
-                }
-              }
+              const handleHtml = canSortTargets ? getDragHandleHtml("item-drag-handle", "Mantén presionado y arrastra para reordenar") : "";
 
               html += `
-                <li class="notebook-target-item ${t.done ? 'completed' : ''}">
-                  ${arrowHtml}
+                <li class="notebook-target-item ${t.done ? 'completed' : ''}" data-target-id="${t._id}">
+                  ${handleHtml}
                   <div class="notebook-target-clickable" onclick="toggleChecklistItem('${g._id}', '${t._id}', ${!t.done})" title="Haz clic para marcar o desmarcar">
                     <span class="notebook-checkbox">${t.done ? '✓' : ''}</span>
                     <span class="notebook-target-text" style="${textStyle}">${escapeHtml(t.name)}${t.done && t.completedDate ? ` (${formatShortDateEs(t.completedDate)})` : ''}</span>
@@ -2552,6 +2679,28 @@
 
       page.innerHTML = html;
       container.appendChild(page);
+
+      if (typeof Sortable !== "undefined") {
+        page.querySelectorAll('ul.notebook-target-list[data-sortable-checklist="true"]').forEach(ulEl => {
+          const gId = ulEl.dataset.goalId;
+          Sortable.create(ulEl, {
+            handle: ".item-drag-handle",
+            draggable: ".notebook-target-item",
+            animation: 180,
+            forceFallback: true,
+            fallbackOnBody: true,
+            swapThreshold: 0.65,
+            ghostClass: "sortable-ghost",
+            chosenClass: "sortable-chosen",
+            dragClass: "sortable-drag",
+            onEnd: (evt) => {
+              if (evt.oldIndex === evt.newIndex) return;
+              const newOrder = Array.from(ulEl.querySelectorAll("li.notebook-target-item")).map(el => el.dataset.targetId);
+              persistChecklistOrder(gId, newOrder);
+            }
+          });
+        });
+      }
     });
 
     if (!hasVisibleContent) {
@@ -2807,163 +2956,216 @@
       });
     }
 
-    catKeys.forEach((meta, catIdx) => {
+    if (container._sortableInstance) {
+      container._sortableInstance.destroy();
+      container._sortableInstance = null;
+    }
+
+    const canSortCategories = Boolean(filterDate && catKeys.length > 1 && editingLogId === null && editingProjId === null);
+
+    catKeys.forEach((meta) => {
       const groupData = grouped[meta];
       const conf = GOAL_CONFIG[meta] || { color: "#1e293b" };
 
       const groupDiv = document.createElement("div");
       groupDiv.className = "log-group";
       groupDiv.style.borderLeftColor = conf.color;
+      groupDiv.dataset.catMeta = meta;
 
-      // Flecha hacia arriba para categorías (la primera reserva el espacio con visibility: hidden para alineación)
-      let catArrowHtml = "";
-      if (filterDate && catKeys.length > 1) {
-        if (catIdx > 0) {
-          catArrowHtml = `<button class="reorder-arrow-btn cat-reorder-btn" onclick="moveCategoryUp('${escapeHtml(meta)}', '${filterDate}')" title="Subir categoría ${escapeHtml(meta)}">▲</button>`;
-        } else {
-          catArrowHtml = `<span class="reorder-arrow-btn cat-reorder-btn" style="visibility: hidden; pointer-events: none;" aria-hidden="true">▲</span>`;
-        }
-      }
+      const catHandleHtml = canSortCategories
+        ? getDragHandleHtml("cat-drag-handle", `Mantén presionado y arrastra para mover la categoría ${escapeHtml(meta)}`)
+        : "";
 
       let html = `
         <div class="log-group-header" style="color: ${conf.color}; display: flex; align-items: center; gap: 8px;">
-          ${catArrowHtml}
+          ${catHandleHtml}
           <span>${escapeHtml(meta)}</span>
         </div>
       `;
 
       // Renderizado de Apuntes Realizados
-      const showLogArrows = filterDate && groupData.logs.length > 1;
-      groupData.logs.forEach((log, logIdx) => {
-        if (editingLogId === log._id) {
-          const catOptions = CATEGORIES_LIST.map(cat =>
-            `<option value="${escapeHtml(cat)}" ${log.meta === cat ? "selected" : ""}>${escapeHtml(cat)}</option>`
-          ).join("");
+      const canSortLogs = Boolean(filterDate && groupData.logs.length > 1 && editingLogId === null);
+      if (groupData.logs.length > 0) {
+        html += `<div class="sortable-logs-list" data-meta="${escapeHtml(meta)}" data-date="${filterDate || ''}" data-sortable-logs="${canSortLogs ? 'true' : 'false'}">`;
+        groupData.logs.forEach((log) => {
+          if (editingLogId === log._id) {
+            const catOptions = CATEGORIES_LIST.map(cat =>
+              `<option value="${escapeHtml(cat)}" ${log.meta === cat ? "selected" : ""}>${escapeHtml(cat)}</option>`
+            ).join("");
 
-          html += `
-            <div class="sketchy-form-box" style="margin: 6px 0;">
-              <label style="font-size: 0.9rem; font-weight: 700;">Categoría:</label>
-              <select id="editCat_${log._id}" class="sketchy-select">
-                ${catOptions}
-              </select>
-              <label style="font-size: 0.9rem; font-weight: 700;">Texto del apunte:</label>
-              <textarea id="editTxt_${log._id}" class="sketchy-textarea">${escapeHtml(log.text)}</textarea>
-              <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0; gap: 8px; flex-wrap: wrap;">
-                <label class="sketchy-checkbox-label" style="margin: 0;">
-                  <input type="checkbox" id="editIsProj_${log._id}" />
-                  <span>📌 Es una proyección</span>
-                </label>
-                <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                  <button type="button" class="sketchy-btn next-day-btn" onclick="reprogramarDiaSiguienteLog('${log._id}')" title="Reprogramar este apunte para el día siguiente">
-                    ➡️ Día siguiente
-                  </button>
-                  <div class="sketchy-btn calendar-pick-btn" onclick="abrirSelectorFecha('datePickerLog_${log._id}')" title="Seleccionar una fecha específica en el calendario">
-                    🗓️ Elegir fecha
-                    <input type="date" id="datePickerLog_${log._id}" class="hidden-date-input" value="${log.date}" onchange="reprogramarFechaEspecificaLog('${log._id}', this.value)" />
+            html += `
+              <div class="sketchy-form-box" style="margin: 6px 0;">
+                <label style="font-size: 0.9rem; font-weight: 700;">Categoría:</label>
+                <select id="editCat_${log._id}" class="sketchy-select">
+                  ${catOptions}
+                </select>
+                <label style="font-size: 0.9rem; font-weight: 700;">Texto del apunte:</label>
+                <textarea id="editTxt_${log._id}" class="sketchy-textarea">${escapeHtml(log.text)}</textarea>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0; gap: 8px; flex-wrap: wrap;">
+                  <label class="sketchy-checkbox-label" style="margin: 0;">
+                    <input type="checkbox" id="editIsProj_${log._id}" />
+                    <span>📌 Es una proyección</span>
+                  </label>
+                  <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="sketchy-btn next-day-btn" onclick="reprogramarDiaSiguienteLog('${log._id}')" title="Reprogramar este apunte para el día siguiente">
+                      ➡️ Día siguiente
+                    </button>
+                    <div class="sketchy-btn calendar-pick-btn" onclick="abrirSelectorFecha('datePickerLog_${log._id}')" title="Seleccionar una fecha específica en el calendario">
+                      🗓️ Elegir fecha
+                      <input type="date" id="datePickerLog_${log._id}" class="hidden-date-input" value="${log.date}" onchange="reprogramarFechaEspecificaLog('${log._id}', this.value)" />
+                    </div>
                   </div>
                 </div>
+                <div class="sketchy-btn-row">
+                  <button class="sketchy-btn delete" onclick="deleteApunte('${log._id}')">🗑️ Eliminar</button>
+                  <button class="sketchy-btn cancel" onclick="cancelEditApunte()">Cancelar</button>
+                  <button class="sketchy-btn save" onclick="saveEditedApunte('${log._id}')">💾 Guardar</button>
+                </div>
               </div>
-              <div class="sketchy-btn-row">
-                <button class="sketchy-btn delete" onclick="deleteApunte('${log._id}')">🗑️ Eliminar</button>
-                <button class="sketchy-btn cancel" onclick="cancelEditApunte()">Cancelar</button>
-                <button class="sketchy-btn save" onclick="saveEditedApunte('${log._id}')">💾 Guardar</button>
-              </div>
-            </div>
-          `;
-        } else {
-          const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(log.date)}</span>` : "";
-          const textSpan = log.isCompletion ? `<strong>${escapeHtml(log.text)}</strong>` : escapeHtml(log.text);
+            `;
+          } else {
+            const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(log.date)}</span>` : "";
+            const textSpan = log.isCompletion ? `<strong>${escapeHtml(log.text)}</strong>` : escapeHtml(log.text);
+            const handleHtml = canSortLogs ? getDragHandleHtml("item-drag-handle", "Mantén presionado y arrastra para reordenar") : "";
 
-          // Flecha hacia arriba para apuntes (el primer ítem reserva el espacio con visibility: hidden para mantener alineación)
-          let arrowsHtml = "";
-          if (showLogArrows) {
-            if (logIdx > 0) {
-              arrowsHtml = `<button class="reorder-arrow-btn" onclick="moveLog('${log._id}', -1)" title="Subir item">▲</button>`;
-            } else {
-              arrowsHtml = `<span class="reorder-arrow-btn" style="visibility: hidden; pointer-events: none;" aria-hidden="true">▲</span>`;
-            }
+            html += `
+              <div class="log-item-row" data-log-id="${log._id}">
+                ${handleHtml}
+                <div class="log-item-text" style="--pen-color: ${conf.color}">
+                  <span>${textSpan}</span>
+                  ${dateSpan}
+                </div>
+                <button class="edit-pencil-btn" onclick="startEditApunte('${log._id}')" title="Editar o eliminar apunte">✏️</button>
+              </div>
+            `;
           }
-
-          html += `
-            <div class="log-item-row">
-              ${arrowsHtml}
-              <div class="log-item-text" style="--pen-color: ${conf.color}">
-                <span>${textSpan}</span>
-                ${dateSpan}
-              </div>
-              <button class="edit-pencil-btn" onclick="startEditApunte('${log._id}')" title="Editar o eliminar apunte">✏️</button>
-            </div>
-          `;
-        }
-      });
+        });
+        html += `</div>`;
+      }
 
       // Renderizado de Proyecciones con botón de lápiz para editar
-      const showProjArrows = filterDate && groupData.projs.length > 1;
-      groupData.projs.forEach((proj, projIdx) => {
-        if (editingProjId === proj._id) {
-          const catOptions = CATEGORIES_LIST.map(cat =>
-            `<option value="${escapeHtml(cat)}" ${proj.meta === cat ? "selected" : ""}>${escapeHtml(cat)}</option>`
-          ).join("");
+      const canSortProjs = Boolean(filterDate && groupData.projs.length > 1 && editingProjId === null);
+      if (groupData.projs.length > 0) {
+        html += `<div class="sortable-projs-list" data-meta="${escapeHtml(meta)}" data-date="${filterDate || ''}" data-sortable-projs="${canSortProjs ? 'true' : 'false'}">`;
+        groupData.projs.forEach((proj) => {
+          if (editingProjId === proj._id) {
+            const catOptions = CATEGORIES_LIST.map(cat =>
+              `<option value="${escapeHtml(cat)}" ${proj.meta === cat ? "selected" : ""}>${escapeHtml(cat)}</option>`
+            ).join("");
 
-          html += `
-            <div class="sketchy-form-box" style="margin: 6px 0;">
-              <label style="font-size: 0.9rem; font-weight: 700;">Categoría:</label>
-              <select id="editProjCat_${proj._id}" class="sketchy-select">
-                ${catOptions}
-              </select>
-              <label style="font-size: 0.9rem; font-weight: 700;">Texto de la proyección:</label>
-              <textarea id="editProjTxt_${proj._id}" class="sketchy-textarea">${escapeHtml(proj.word)}</textarea>
-              <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0; gap: 8px; flex-wrap: wrap;">
-                <label class="sketchy-checkbox-label" style="margin: 0;" title="Desmarca esta casilla si ya realizaste esta proyección y quieres pasarla a apunte del día">
-                  <input type="checkbox" id="editProjIsProj_${proj._id}" checked />
-                  <span>📌 Es una proyección</span>
-                </label>
-                <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                  <button type="button" class="sketchy-btn next-day-btn" onclick="reprogramarDiaSiguienteProj('${proj._id}')" title="Reprogramar esta proyección para el día siguiente">
-                    ➡️ Día siguiente
-                  </button>
-                  <div class="sketchy-btn calendar-pick-btn" onclick="abrirSelectorFecha('datePickerProj_${proj._id}')" title="Seleccionar una fecha específica en el calendario">
-                    🗓️ Elegir fecha
-                    <input type="date" id="datePickerProj_${proj._id}" class="hidden-date-input" value="${proj.date}" onchange="reprogramarFechaEspecificaProj('${proj._id}', this.value)" />
+            html += `
+              <div class="sketchy-form-box" style="margin: 6px 0;">
+                <label style="font-size: 0.9rem; font-weight: 700;">Categoría:</label>
+                <select id="editProjCat_${proj._id}" class="sketchy-select">
+                  ${catOptions}
+                </select>
+                <label style="font-size: 0.9rem; font-weight: 700;">Texto de la proyección:</label>
+                <textarea id="editProjTxt_${proj._id}" class="sketchy-textarea">${escapeHtml(proj.word)}</textarea>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin: 8px 0; gap: 8px; flex-wrap: wrap;">
+                  <label class="sketchy-checkbox-label" style="margin: 0;" title="Desmarca esta casilla si ya realizaste esta proyección y quieres pasarla a apunte del día">
+                    <input type="checkbox" id="editProjIsProj_${proj._id}" checked />
+                    <span>📌 Es una proyección</span>
+                  </label>
+                  <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="sketchy-btn next-day-btn" onclick="reprogramarDiaSiguienteProj('${proj._id}')" title="Reprogramar esta proyección para el día siguiente">
+                      ➡️ Día siguiente
+                    </button>
+                    <div class="sketchy-btn calendar-pick-btn" onclick="abrirSelectorFecha('datePickerProj_${proj._id}')" title="Seleccionar una fecha específica en el calendario">
+                      🗓️ Elegir fecha
+                      <input type="date" id="datePickerProj_${proj._id}" class="hidden-date-input" value="${proj.date}" onchange="reprogramarFechaEspecificaProj('${proj._id}', this.value)" />
+                    </div>
                   </div>
                 </div>
+                <div class="sketchy-btn-row">
+                  <button class="sketchy-btn delete" onclick="deleteProj('${proj._id}')">🗑️ Eliminar</button>
+                  <button class="sketchy-btn cancel" onclick="cancelEditProj()">Cancelar</button>
+                  <button class="sketchy-btn save" onclick="saveEditedProj('${proj._id}')">💾 Guardar</button>
+                </div>
               </div>
-              <div class="sketchy-btn-row">
-                <button class="sketchy-btn delete" onclick="deleteProj('${proj._id}')">🗑️ Eliminar</button>
-                <button class="sketchy-btn cancel" onclick="cancelEditProj()">Cancelar</button>
-                <button class="sketchy-btn save" onclick="saveEditedProj('${proj._id}')">💾 Guardar</button>
-              </div>
-            </div>
-          `;
-        } else {
-          const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(proj.date)}</span>` : "";
+            `;
+          } else {
+            const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(proj.date)}</span>` : "";
+            const handleHtml = canSortProjs ? getDragHandleHtml("item-drag-handle", "Mantén presionado y arrastra para reordenar") : "";
 
-          // Flecha hacia arriba para proyecciones (el primer ítem reserva el espacio con visibility: hidden para mantener alineación)
-          let arrowsHtml = "";
-          if (showProjArrows) {
-            if (projIdx > 0) {
-              arrowsHtml = `<button class="reorder-arrow-btn" onclick="moveProj('${proj._id}', -1)" title="Subir proyección">▲</button>`;
-            } else {
-              arrowsHtml = `<span class="reorder-arrow-btn" style="visibility: hidden; pointer-events: none;" aria-hidden="true">▲</span>`;
-            }
+            html += `
+              <div class="log-item-row" data-proj-id="${proj._id}">
+                ${handleHtml}
+                <div class="log-item-text" style="--pen-color: ${conf.color}; font-style: italic;">
+                  <span><strong style="background: rgba(254, 240, 138, 0.6); padding: 1px 4px; border-radius: 3px;">[Proyección]</strong> ${escapeHtml(proj.word)}</span>
+                  ${dateSpan}
+                </div>
+                <button class="edit-pencil-btn" onclick="startEditProj('${proj._id}')" title="Editar o eliminar proyección">✏️</button>
+              </div>
+            `;
           }
-
-          html += `
-            <div class="log-item-row">
-              ${arrowsHtml}
-              <div class="log-item-text" style="--pen-color: ${conf.color}; font-style: italic;">
-                <span><strong style="background: rgba(254, 240, 138, 0.6); padding: 1px 4px; border-radius: 3px;">[Proyección]</strong> ${escapeHtml(proj.word)}</span>
-                ${dateSpan}
-              </div>
-              <button class="edit-pencil-btn" onclick="startEditProj('${proj._id}')" title="Editar o eliminar proyección">✏️</button>
-            </div>
-          `;
-        }
-      });
+        });
+        html += `</div>`;
+      }
 
       groupDiv.innerHTML = html;
       container.appendChild(groupDiv);
+
+      if (typeof Sortable !== "undefined") {
+        const logsListEl = groupDiv.querySelector('.sortable-logs-list[data-sortable-logs="true"]');
+        if (logsListEl) {
+          Sortable.create(logsListEl, {
+            handle: ".item-drag-handle",
+            draggable: ".log-item-row",
+            animation: 180,
+            forceFallback: true,
+            fallbackOnBody: true,
+            swapThreshold: 0.65,
+            ghostClass: "sortable-ghost",
+            chosenClass: "sortable-chosen",
+            dragClass: "sortable-drag",
+            onEnd: (evt) => {
+              if (evt.oldIndex === evt.newIndex) return;
+              const newOrder = Array.from(logsListEl.querySelectorAll(".log-item-row")).map(el => el.dataset.logId);
+              persistLogsOrder(filterDate, meta, newOrder);
+            }
+          });
+        }
+
+        const projsListEl = groupDiv.querySelector('.sortable-projs-list[data-sortable-projs="true"]');
+        if (projsListEl) {
+          Sortable.create(projsListEl, {
+            handle: ".item-drag-handle",
+            draggable: ".log-item-row",
+            animation: 180,
+            forceFallback: true,
+            fallbackOnBody: true,
+            swapThreshold: 0.65,
+            ghostClass: "sortable-ghost",
+            chosenClass: "sortable-chosen",
+            dragClass: "sortable-drag",
+            onEnd: (evt) => {
+              if (evt.oldIndex === evt.newIndex) return;
+              const newOrder = Array.from(projsListEl.querySelectorAll(".log-item-row")).map(el => el.dataset.projId);
+              persistProjsOrder(filterDate, meta, newOrder);
+            }
+          });
+        }
+      }
     });
+
+    if (canSortCategories && typeof Sortable !== "undefined") {
+      container._sortableInstance = Sortable.create(container, {
+        handle: ".cat-drag-handle",
+        draggable: ".log-group",
+        animation: 180,
+        forceFallback: true,
+        fallbackOnBody: true,
+        swapThreshold: 0.65,
+        ghostClass: "sortable-ghost",
+        chosenClass: "sortable-chosen",
+        dragClass: "sortable-drag",
+        onEnd: (evt) => {
+          if (evt.oldIndex === evt.newIndex) return;
+          const newCatOrder = Array.from(container.querySelectorAll(".log-group")).map(el => el.dataset.catMeta);
+          persistDayCategoryOrder(filterDate, newCatOrder);
+        }
+      });
+    }
   }
 
   function drawMonthlyPieChart(canvasId, filterYearMonth) {
