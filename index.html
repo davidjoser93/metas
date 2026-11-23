@@ -742,6 +742,36 @@
       filter: brightness(0.97);
     }
 
+    .pendiente-item-row.is-hidden-item {
+      opacity: 0.65;
+    }
+
+    .pendientes-divider-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 4px;
+      margin: 4px 0;
+      user-select: none;
+    }
+
+    .pendientes-divider-line {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #64748b;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .pendientes-divider-line::before,
+    .pendientes-divider-line::after {
+      content: "";
+      flex: 1;
+      border-top: 2px dashed #64748b;
+    }
+
     .pendiente-item-content {
       display: flex;
       align-items: baseline;
@@ -1958,24 +1988,25 @@
     db.ref().update(updates);
   }
 
-  function persistPendientesOrder(newOrderedIds) {
-    if (!newOrderedIds || newOrderedIds.length === 0) return;
+  function persistPendientesOrder(orderedEntries) {
+    if (!orderedEntries || orderedEntries.length === 0) return;
 
-    const idSet = new Set(newOrderedIds);
+    const idSet = new Set(orderedEntries.map(e => e.id));
     const matchingItems = PENDIENTES.filter(p => idSet.has(p._id));
-    if (matchingItems.length !== newOrderedIds.length) return;
+    if (matchingItems.length !== orderedEntries.length) return;
 
     const byId = {};
     matchingItems.forEach(p => { byId[p._id] = p; });
 
     const originalSlotKeys = matchingItems.map(p => p._id);
     const updates = {};
-    newOrderedIds.forEach((id, idx) => {
-      const item = byId[id];
+    orderedEntries.forEach((entry, idx) => {
+      const item = byId[entry.id];
       if (!item) return;
       updates[`pendientes/${originalSlotKeys[idx]}`] = {
         meta: item.meta,
-        text: item.text
+        text: item.text,
+        hidden: !!entry.hidden
       };
     });
     db.ref().update(updates);
@@ -2271,7 +2302,8 @@
 
     db.ref("pendientes").push({
       meta: newPendienteCategory,
-      text: textVal
+      text: textVal,
+      hidden: false
     });
 
     newPendienteCategory = "";
@@ -2384,37 +2416,65 @@
 
     const isFiltering = activeFilterGroupTitle !== null || activeFilterMeta !== null || activeFilterDate !== null;
     const activeMetas = getActiveMetas();
-    const visiblePendientes = isFiltering
+    const filteredPendientes = isFiltering
       ? PENDIENTES.filter(p => activeMetas.includes(p.meta))
       : PENDIENTES;
 
-    if (visiblePendientes.length === 0) {
-      if (!isAddingPendiente) {
+    const isEditMode = isAddingPendiente;
+    const shownAbove = filteredPendientes.filter(p => !p.hidden);
+    const hiddenBelow = filteredPendientes.filter(p => !!p.hidden);
+
+    if (!isEditMode) {
+      if (shownAbove.length === 0) {
         const emptyMsg = document.createElement("div");
         emptyMsg.style.fontStyle = "italic";
         emptyMsg.style.color = "var(--text-muted)";
         emptyMsg.style.textAlign = "center";
-        emptyMsg.textContent = isFiltering
-          ? "Sin pendientes para las categorías filtradas."
-          : "Sin pendientes anotados. Presiona '+' arriba a la derecha para agregar uno.";
+        if (filteredPendientes.length > 0) {
+          emptyMsg.textContent = "Pendientes ocultos. Presiona '+' arriba a la derecha para verlos o editarlos.";
+        } else {
+          emptyMsg.textContent = isFiltering
+            ? "Sin pendientes para las categorías filtradas."
+            : "Sin pendientes anotados. Presiona '+' arriba a la derecha para agregar uno.";
+        }
         container.appendChild(emptyMsg);
+        return;
       }
+
+      let html = "";
+      shownAbove.forEach((item) => {
+        const conf = GOAL_CONFIG[item.meta] || { color: "#1e293b" };
+        const pastelBg = hexToPastelRgba(conf.color, 0.16);
+        html += `
+          <div class="pendiente-item-row" data-pend-id="${item._id}" style="background-color: ${pastelBg}; border-left-color: ${conf.color};" title="Categoría: ${escapeHtml(item.meta)}">
+            <div class="pendiente-item-content">
+              <span class="pendiente-item-text">${escapeHtml(item.text)}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      const listWrap = document.createElement("div");
+      listWrap.className = "pendientes-list-container";
+      listWrap.innerHTML = html;
+      container.appendChild(listWrap);
       return;
     }
 
-    const isEditMode = isAddingPendiente;
-    const canSort = isEditMode && visiblePendientes.length > 1 && editingPendienteId === null;
-    let html = "";
+    // Modo edición: muestra todos los pendientes (visibles arriba, línea divisoria, ocultos abajo)
+    if (filteredPendientes.length === 0) {
+      return;
+    }
 
-    visiblePendientes.forEach((item) => {
+    const canSort = editingPendienteId === null;
+    const renderEditItem = (item, isHidden) => {
       const conf = GOAL_CONFIG[item.meta] || { color: "#1e293b" };
-
-      if (isEditMode && editingPendienteId === item._id) {
+      if (editingPendienteId === item._id) {
         const catOptions = CATEGORIES_LIST.map(cat =>
           `<option value="${escapeHtml(cat)}" ${item.meta === cat ? "selected" : ""}>${escapeHtml(cat)}</option>`
         ).join("");
 
-        html += `
+        return `
           <div class="sketchy-form-box" style="margin: 6px 0;">
             <label style="font-size: 0.9rem; font-weight: 700;">Categoría:</label>
             <select id="editPendCat_${item._id}" class="sketchy-select">
@@ -2429,21 +2489,36 @@
             </div>
           </div>
         `;
-      } else {
-        const handleHtml = canSort ? getDragHandleHtml("item-drag-handle", "Mantén presionado y arrastra para reordenar") : "";
-
-        const pastelBg = hexToPastelRgba(conf.color, 0.16);
-        html += `
-          <div class="pendiente-item-row" data-pend-id="${item._id}" style="background-color: ${pastelBg}; border-left-color: ${conf.color};" title="Categoría: ${escapeHtml(item.meta)}">
-            ${handleHtml}
-            <div class="pendiente-item-content">
-              <span class="pendiente-item-text">${escapeHtml(item.text)}</span>
-            </div>
-            ${isEditMode ? `<button class="edit-pencil-btn" onclick="startEditPendiente('${item._id}')" title="Editar o eliminar pendiente">✏️</button>` : ""}
-          </div>
-        `;
       }
-    });
+
+      const handleHtml = canSort ? getDragHandleHtml("item-drag-handle", "Mantén presionado y arrastra para reordenar o mover sobre/bajo la línea") : "";
+      const pastelBg = hexToPastelRgba(conf.color, 0.16);
+      const hiddenCls = isHidden ? " is-hidden-item" : "";
+      return `
+        <div class="pendiente-item-row${hiddenCls}" data-pend-id="${item._id}" style="background-color: ${pastelBg}; border-left-color: ${conf.color};" title="Categoría: ${escapeHtml(item.meta)}">
+          ${handleHtml}
+          <div class="pendiente-item-content">
+            <span class="pendiente-item-text">${escapeHtml(item.text)}</span>
+          </div>
+          <button class="edit-pencil-btn" onclick="startEditPendiente('${item._id}')" title="Editar o eliminar pendiente">✏️</button>
+        </div>
+      `;
+    };
+
+    let html = "";
+    shownAbove.forEach(item => { html += renderEditItem(item, false); });
+
+    const dividerHandleHtml = canSort ? getDragHandleHtml("item-drag-handle", "Arrastra esta línea o mueve ítems arriba/abajo para mostrar u ocultar") : "";
+    html += `
+      <div class="pendientes-divider-row" data-divider="true">
+        ${dividerHandleHtml}
+        <div class="pendientes-divider-line">
+          <span>👁️ Visibles arriba · Ocultos abajo</span>
+        </div>
+      </div>
+    `;
+
+    hiddenBelow.forEach(item => { html += renderEditItem(item, true); });
 
     const listWrap = document.createElement("div");
     listWrap.className = "pendientes-list-container";
@@ -2453,7 +2528,7 @@
     if (canSort && typeof Sortable !== "undefined") {
       Sortable.create(listWrap, {
         handle: ".item-drag-handle",
-        draggable: ".pendiente-item-row",
+        draggable: ".pendiente-item-row, .pendientes-divider-row",
         animation: 180,
         forceFallback: true,
         fallbackOnBody: true,
@@ -2464,8 +2539,16 @@
         dragClass: "sortable-drag",
         onEnd: (evt) => {
           if (evt.oldIndex === evt.newIndex) return;
-          const newOrder = Array.from(listWrap.querySelectorAll(".pendiente-item-row")).map(el => el.dataset.pendId);
-          persistPendientesOrder(newOrder);
+          let seenDivider = false;
+          const orderedEntries = [];
+          Array.from(listWrap.children).forEach(el => {
+            if (el.dataset.divider === "true") {
+              seenDivider = true;
+            } else if (el.dataset.pendId) {
+              orderedEntries.push({ id: el.dataset.pendId, hidden: seenDivider });
+            }
+          });
+          persistPendientesOrder(orderedEntries);
         }
       });
     }
