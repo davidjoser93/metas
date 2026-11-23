@@ -1111,7 +1111,7 @@
       <div class="panel-header nav-header">
         <button class="cal-nav-btn prev-btn" onclick="navigateCalView(-1)" title="Volver al calendario">◀</button>
         <span class="cal-nav-title">Distribución Global (Cantidad)</span>
-        <a href="https://gemini.google.com/u/4/spark/chat/f29c46ad9bf47b35" target="_blank" rel="noopener noreferrer" class="cal-nav-btn next-btn" title="Editar metas en Gemini" style="text-decoration: none; font-size: 1.2rem;">✏️</a>
+        <span style="width: 40px; flex-shrink: 0;"></span>
       </div>
       <div class="canvas-container">
         <canvas id="barGeneralCanvas" width="540" height="320"></canvas>
@@ -1567,12 +1567,11 @@
       activeFilterGroupTitle = null;
     } else {
       activeFilterMeta = meta;
+      activeFilterGroupTitle = null;
       activeFilterDate = null;
       isAddingApunte = false;
       editingLogId = null;
       editingProjId = null;
-      const grp = customGroups.find(g => g.metas.includes(meta));
-      activeFilterGroupTitle = grp ? grp.title : null;
     }
     updateView();
   }
