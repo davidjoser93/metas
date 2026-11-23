@@ -2712,8 +2712,6 @@
                 </li>
               `;
             } else {
-              const isTargetOfThisDay = activeFilterDate && t.completedDate === activeFilterDate;
-              const textStyle = isTargetOfThisDay ? "font-weight: bold; color: #f43f5e;" : "";
               const handleHtml = canSortTargets ? getDragHandleHtml("item-drag-handle", "Mantén presionado y arrastra para reordenar") : "";
 
               html += `
@@ -2721,7 +2719,7 @@
                   ${handleHtml}
                   <div class="notebook-target-clickable" onclick="toggleChecklistItem('${g._id}', '${t._id}', ${!t.done})" title="Haz clic para marcar o desmarcar">
                     <span class="notebook-checkbox">${t.done ? '✓' : ''}</span>
-                    <span class="notebook-target-text" style="${textStyle}">${escapeHtml(t.name)}${t.done && t.completedDate ? ` (${formatShortDateEs(t.completedDate)})` : ''}</span>
+                    <span class="notebook-target-text">${escapeHtml(t.name)}</span>
                   </div>
                   ${isChecklistEditMode ? `<button class="edit-pencil-btn" onclick="startEditChecklistItem('${g._id}', '${t._id}', '${safeTitle}')" title="Editar o eliminar ítem del checklist">✏️</button>` : ""}
                 </li>
@@ -2759,7 +2757,7 @@
         `;
         logs.sort((a, b) => a.date.localeCompare(b.date)).forEach(log => {
           const dateStr = formatNotebookDate(log.date);
-          const logText = log.isCompletion ? `<strong>${escapeHtml(log.text)}</strong>` : escapeHtml(log.text);
+          const logText = escapeHtml(log.text);
           html += `
             <div class="notebook-entry">
               <strong>${dateStr}:</strong> ${logText}
@@ -3129,7 +3127,7 @@
             `;
           } else {
             const dateSpan = !filterDate ? `<span class="log-item-date">${formatDateEs(log.date)}</span>` : "";
-            const textSpan = log.isCompletion ? `<strong>${escapeHtml(log.text)}</strong>` : escapeHtml(log.text);
+            const textSpan = escapeHtml(log.text);
             const handleHtml = canSortLogs ? getDragHandleHtml("item-drag-handle", "Mantén presionado y arrastra para reordenar") : "";
 
             html += `
