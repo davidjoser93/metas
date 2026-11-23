@@ -746,30 +746,23 @@
       opacity: 0.65;
     }
 
+    .pendiente-item-row.is-hidden-item .pendiente-item-text {
+      color: #64748b;
+    }
+
     .pendientes-divider-row {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 4px;
+      padding: 8px 4px;
       margin: 4px 0;
       user-select: none;
     }
 
     .pendientes-divider-line {
       flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #64748b;
-      font-size: 0.82rem;
-      font-weight: 700;
-    }
-
-    .pendientes-divider-line::before,
-    .pendientes-divider-line::after {
-      content: "";
-      flex: 1;
       border-top: 2px dashed #64748b;
+      height: 0;
     }
 
     .pendiente-item-content {
@@ -2425,12 +2418,14 @@
     const hiddenBelow = filteredPendientes.filter(p => !!p.hidden);
 
     if (!isEditMode) {
-      if (shownAbove.length === 0) {
+      const itemsToDisplay = isFiltering ? [...shownAbove, ...hiddenBelow] : shownAbove;
+
+      if (itemsToDisplay.length === 0) {
         const emptyMsg = document.createElement("div");
         emptyMsg.style.fontStyle = "italic";
         emptyMsg.style.color = "var(--text-muted)";
         emptyMsg.style.textAlign = "center";
-        if (filteredPendientes.length > 0) {
+        if (!isFiltering && filteredPendientes.length > 0) {
           emptyMsg.textContent = "Pendientes ocultos. Presiona '+' arriba a la derecha para verlos o editarlos.";
         } else {
           emptyMsg.textContent = isFiltering
@@ -2442,11 +2437,12 @@
       }
 
       let html = "";
-      shownAbove.forEach((item) => {
+      itemsToDisplay.forEach((item) => {
         const conf = GOAL_CONFIG[item.meta] || { color: "#1e293b" };
         const pastelBg = hexToPastelRgba(conf.color, 0.16);
+        const hiddenCls = item.hidden ? " is-hidden-item" : "";
         html += `
-          <div class="pendiente-item-row" data-pend-id="${item._id}" style="background-color: ${pastelBg}; border-left-color: ${conf.color};" title="Categoría: ${escapeHtml(item.meta)}">
+          <div class="pendiente-item-row${hiddenCls}" data-pend-id="${item._id}" style="background-color: ${pastelBg}; border-left-color: ${conf.color};" title="Categoría: ${escapeHtml(item.meta)}">
             <div class="pendiente-item-content">
               <span class="pendiente-item-text">${escapeHtml(item.text)}</span>
             </div>
@@ -2512,9 +2508,7 @@
     html += `
       <div class="pendientes-divider-row" data-divider="true">
         ${dividerHandleHtml}
-        <div class="pendientes-divider-line">
-          <span>👁️ Visibles arriba · Ocultos abajo</span>
-        </div>
+        <div class="pendientes-divider-line"></div>
       </div>
     `;
 
