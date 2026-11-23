@@ -1959,17 +1959,21 @@
   }
 
   function persistPendientesOrder(newOrderedIds) {
-    if (PENDIENTES.length !== newOrderedIds.length) return;
+    if (!newOrderedIds || newOrderedIds.length === 0) return;
+
+    const idSet = new Set(newOrderedIds);
+    const matchingItems = PENDIENTES.filter(p => idSet.has(p._id));
+    if (matchingItems.length !== newOrderedIds.length) return;
 
     const byId = {};
-    PENDIENTES.forEach(p => { byId[p._id] = p; });
+    matchingItems.forEach(p => { byId[p._id] = p; });
 
-    const originalKeys = PENDIENTES.map(p => p._id);
+    const originalSlotKeys = matchingItems.map(p => p._id);
     const updates = {};
     newOrderedIds.forEach((id, idx) => {
       const item = byId[id];
       if (!item) return;
-      updates[`pendientes/${originalKeys[idx]}`] = {
+      updates[`pendientes/${originalSlotKeys[idx]}`] = {
         meta: item.meta,
         text: item.text
       };
@@ -2378,23 +2382,31 @@
       container.appendChild(addBox);
     }
 
-    if (PENDIENTES.length === 0) {
+    const isFiltering = activeFilterGroupTitle !== null || activeFilterMeta !== null || activeFilterDate !== null;
+    const activeMetas = getActiveMetas();
+    const visiblePendientes = isFiltering
+      ? PENDIENTES.filter(p => activeMetas.includes(p.meta))
+      : PENDIENTES;
+
+    if (visiblePendientes.length === 0) {
       if (!isAddingPendiente) {
         const emptyMsg = document.createElement("div");
         emptyMsg.style.fontStyle = "italic";
         emptyMsg.style.color = "var(--text-muted)";
         emptyMsg.style.textAlign = "center";
-        emptyMsg.textContent = "Sin pendientes anotados. Presiona '+' arriba a la derecha para agregar uno.";
+        emptyMsg.textContent = isFiltering
+          ? "Sin pendientes para las categorías filtradas."
+          : "Sin pendientes anotados. Presiona '+' arriba a la derecha para agregar uno.";
         container.appendChild(emptyMsg);
       }
       return;
     }
 
     const isEditMode = isAddingPendiente;
-    const canSort = isEditMode && PENDIENTES.length > 1 && editingPendienteId === null;
+    const canSort = isEditMode && visiblePendientes.length > 1 && editingPendienteId === null;
     let html = "";
 
-    PENDIENTES.forEach((item) => {
+    visiblePendientes.forEach((item) => {
       const conf = GOAL_CONFIG[item.meta] || { color: "#1e293b" };
 
       if (isEditMode && editingPendienteId === item._id) {
