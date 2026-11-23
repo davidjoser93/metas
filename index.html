@@ -765,6 +765,39 @@
       height: 0;
     }
 
+    .global-log-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 4px 2px;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+
+    .global-log-item:last-child {
+      border-bottom: none;
+    }
+
+    .global-log-num {
+      font-weight: 700;
+      font-size: 0.95rem;
+      min-width: 28px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .global-log-body {
+      flex: 1;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .global-log-date {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: block;
+      font-style: italic;
+    }
+
     .pendiente-item-content {
       display: flex;
       align-items: baseline;
@@ -1091,6 +1124,10 @@
         <div class="canvas-container">
           <canvas id="pieChartGeneral" width="500" height="320"></canvas>
         </div>
+      </div>
+      <div class="sketchy-panel" id="globalLogsPanel" style="display: none;">
+        <div class="panel-header" id="globalLogsTitle">Apuntes Globales</div>
+        <div class="log-list-container" id="globalLogsList"></div>
       </div>
     </div>
   </section>
@@ -2550,6 +2587,62 @@
     }
   }
 
+  function renderGlobalLogsList(filterMetas) {
+    const container = document.getElementById("globalLogsList");
+    const titleEl = document.getElementById("globalLogsTitle");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const matchedLogs = CALENDAR_LOGS
+      .filter(l => filterMetas && filterMetas.includes(l.meta))
+      .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+
+    if (titleEl) {
+      titleEl.textContent = `Apuntes Globales (${matchedLogs.length})`;
+    }
+
+    if (matchedLogs.length === 0) {
+      const emptyMsg = document.createElement("div");
+      emptyMsg.style.fontStyle = "italic";
+      emptyMsg.style.color = "var(--text-muted)";
+      emptyMsg.style.textAlign = "center";
+      emptyMsg.textContent = "Sin apuntes registrados para las categorías filtradas.";
+      container.appendChild(emptyMsg);
+      return;
+    }
+
+    const grouped = {};
+    matchedLogs.forEach(log => {
+      if (!grouped[log.meta]) grouped[log.meta] = [];
+      grouped[log.meta].push(log);
+    });
+
+    Object.keys(grouped).forEach(meta => {
+      const items = grouped[meta];
+      const conf = GOAL_CONFIG[meta] || { color: "#1e293b" };
+
+      const groupDiv = document.createElement("div");
+      groupDiv.className = "log-group";
+      groupDiv.style.borderLeftColor = conf.color;
+
+      let html = `<div class="log-group-header" style="color: ${conf.color}">${escapeHtml(meta)} (${items.length})</div>`;
+      items.forEach((log, idx) => {
+        html += `
+          <div class="global-log-item">
+            <span class="global-log-num" style="color: ${conf.color};">${idx + 1}.</span>
+            <div class="global-log-body">
+              <span>${escapeHtml(log.text)}</span>
+              <span class="global-log-date">${formatDateEs(log.date)}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      groupDiv.innerHTML = html;
+      container.appendChild(groupDiv);
+    });
+  }
+
   // --- ACTUALIZACIÓN DE VISTAS ---
 
   function updateView() {
@@ -2574,20 +2667,42 @@
     const pendientesPanel = document.getElementById("pendientesPanel");
     const monthRightColumn = document.getElementById("monthRightColumn");
     const globalRightColumn = document.getElementById("globalRightColumn");
+    const globalLogsPanel = document.getElementById("globalLogsPanel");
 
     if (isGlobalView) {
       sectionMonth.style.display = "none";
       sectionGlobal.style.display = "grid";
-      if (pendientesPanel && globalRightColumn && pendientesPanel.parentNode !== globalRightColumn) {
-        globalRightColumn.appendChild(pendientesPanel);
+      if (pendientesPanel && globalRightColumn) {
+        if (globalLogsPanel && globalLogsPanel.parentNode === globalRightColumn) {
+          if (pendientesPanel.parentNode !== globalRightColumn || pendientesPanel.nextElementSibling !== globalLogsPanel) {
+            globalRightColumn.insertBefore(pendientesPanel, globalLogsPanel);
+          }
+        } else if (pendientesPanel.parentNode !== globalRightColumn) {
+          globalRightColumn.appendChild(pendientesPanel);
+        }
+        pendientesPanel.style.display = isFiltering ? "flex" : "none";
+      }
+      if (globalLogsPanel) {
+        if (isFiltering) {
+          globalLogsPanel.style.display = "flex";
+          renderGlobalLogsList(activeMetas);
+        } else {
+          globalLogsPanel.style.display = "none";
+        }
       }
       drawMonthlyPieChart("pieChartGeneral", null);
       drawBarChartOrdered("barGeneralCanvas", null);
     } else {
       sectionMonth.style.display = "grid";
       sectionGlobal.style.display = "none";
-      if (pendientesPanel && monthRightColumn && pendientesPanel.parentNode !== monthRightColumn) {
-        monthRightColumn.appendChild(pendientesPanel);
+      if (pendientesPanel && monthRightColumn) {
+        if (pendientesPanel.parentNode !== monthRightColumn) {
+          monthRightColumn.appendChild(pendientesPanel);
+        }
+        pendientesPanel.style.display = "flex";
+      }
+      if (globalLogsPanel) {
+        globalLogsPanel.style.display = "none";
       }
 
       const [yStr, mStr] = currentView.split("-");
