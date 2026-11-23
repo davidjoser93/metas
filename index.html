@@ -1047,7 +1047,7 @@
       </div>
       <div class="calendar-grid" id="calendarGrid"></div>
     </div>
-    <div class="month-right-column">
+    <div class="month-right-column" id="monthRightColumn">
       <div class="sketchy-panel" id="monthRightPanel">
         <div class="panel-header nav-header" id="monthRightHeader">
           <span style="width: 40px;" id="monthRightSpacer"></span>
@@ -1085,10 +1085,12 @@
       </div>
     </div>
 
-    <div class="sketchy-panel">
-      <div class="panel-header">Distribución Global (Proporción)</div>
-      <div class="canvas-container">
-        <canvas id="pieChartGeneral" width="500" height="320"></canvas>
+    <div class="month-right-column" id="globalRightColumn">
+      <div class="sketchy-panel">
+        <div class="panel-header">Distribución Global (Proporción)</div>
+        <div class="canvas-container">
+          <canvas id="pieChartGeneral" width="500" height="320"></canvas>
+        </div>
       </div>
     </div>
   </section>
@@ -2569,15 +2571,24 @@
 
     const sectionMonth = document.getElementById("sectionMonth");
     const sectionGlobal = document.getElementById("sectionGlobal");
+    const pendientesPanel = document.getElementById("pendientesPanel");
+    const monthRightColumn = document.getElementById("monthRightColumn");
+    const globalRightColumn = document.getElementById("globalRightColumn");
 
     if (isGlobalView) {
       sectionMonth.style.display = "none";
       sectionGlobal.style.display = "grid";
+      if (pendientesPanel && globalRightColumn && pendientesPanel.parentNode !== globalRightColumn) {
+        globalRightColumn.appendChild(pendientesPanel);
+      }
       drawMonthlyPieChart("pieChartGeneral", null);
       drawBarChartOrdered("barGeneralCanvas", null);
     } else {
       sectionMonth.style.display = "grid";
       sectionGlobal.style.display = "none";
+      if (pendientesPanel && monthRightColumn && pendientesPanel.parentNode !== monthRightColumn) {
+        monthRightColumn.appendChild(pendientesPanel);
+      }
 
       const [yStr, mStr] = currentView.split("-");
       const year = parseInt(yStr, 10);
